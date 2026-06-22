@@ -82,17 +82,37 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Which phases cover which requirements. Filled during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (to be populated by roadmap) | — | Pending |
+| LOOP-03 | Phase 1 | Pending |
+| LOOP-04 | Phase 1 | Pending |
+| PLAT-03 | Phase 1 | Pending |
+| LOOP-01 | Phase 2 | Pending |
+| THEORY-01 | Phase 3 | Pending |
+| THEORY-02 | Phase 3 | Pending |
+| INPUT-01 | Phase 4 | Pending |
+| INPUT-02 | Phase 4 | Pending |
+| INPUT-03 | Phase 4 | Pending |
+| PLAT-01 | Phase 4 | Pending |
+| PLAT-02 | Phase 4 | Pending |
+| NOTATE-01 | Phase 5 | Pending |
+| PLAY-01 | Phase 5 | Pending |
+| EXPORT-01 | Phase 6 | Pending |
+| EXPORT-02 | Phase 6 | Pending |
+| LOOP-02 | Phase 7 | Pending |
+| TEST-01 | Phase 8 | Pending |
+| TEST-02 | Phase 8 | Pending |
+| TEST-03 | Phase 8 | Pending |
+| FEEDBACK-01 | Phase 9 | Pending |
+| FEEDBACK-02 | Phase 9 | Pending |
+| FEEDBACK-03 | Phase 9 | Pending |
+| FEEDBACK-04 | Phase 9 | Pending |
 
 **Coverage:**
 - v1 requirements: 21 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 21 ⚠️
+- Mapped to phases: 21
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-22*
-*Last updated: 2026-06-22 after initial definition*
+*Last updated: 2026-06-22 after roadmap creation — traceability table populated*

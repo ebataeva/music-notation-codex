@@ -1,0 +1,83 @@
+---
+gsd_state_version: '1.0'
+status: planning
+progress:
+  total_phases: 9
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
+---
+
+# Project State
+
+## Project Reference
+
+See: .planning/PROJECT.md (updated 2026-06-22)
+
+**Core value:** Turn a chord progression into several playable electric-cello loop ideas, each explained by the music theory behind why it works.
+**Current focus:** Phase 1 — Core Library Skeleton + Validators
+
+## Current Position
+
+Phase: 1 of 9 (Core Library Skeleton + Validators)
+Plan: 0 of 0 in current phase
+Status: Ready to plan
+Last activity: 2026-06-22 — Roadmap created; 9 phases defined, 21/21 v1 requirements mapped
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0
+- Average duration: —
+- Total execution time: 0 hours
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| - | - | - | - |
+
+**Recent Trend:**
+- Last 5 plans: —
+- Trend: —
+
+*Updated after each plan completion*
+
+## Accumulated Context
+
+### Decisions
+
+Decisions are logged in PROJECT.md Key Decisions table.
+Recent decisions affecting current work:
+
+- Roadmap: Brownfield refactor — CLI scripts become thin wrappers over core/ library before any Streamlit work begins
+- Roadmap: must-do-early guards (validate_pitch, validate_bar_duration, session_state arch, MCP degradation) anchored in earliest phases
+- Roadmap: Phases 10-12 from research (duet, drums, looper slots) are v2 — excluded from this roadmap
+
+### Pending Todos
+
+None yet.
+
+### Blockers/Concerns
+
+- Phase 5: FluidSynth + soundfont availability on this macOS machine must be validated before Phase 5 starts (`brew install fluidsynth`)
+- Phase 9: Audio Analysis MCP server status (already built vs to-build?) must be confirmed before Phase 9 planning
+
+## Deferred Items
+
+| Category | Item | Status | Deferred At |
+|----------|------|--------|-------------|
+| v2 | DUET-01 Violin duet mode | Deferred | Roadmap creation |
+| v2 | DRUM-01 Drum machine | Deferred | Roadmap creation |
+| v2 | SLOT-01 Looper slots | Deferred | Roadmap creation |
+| v2 | INPUT-04 Humming/voice input | Deferred | Roadmap creation |
+| v2 | THEORY-03 LLM-generated explanations | Deferred | Roadmap creation |
+
+## Session Continuity
+
+Last session: 2026-06-22
+Stopped at: Roadmap and STATE created; REQUIREMENTS.md traceability updated
+Resume file: None
