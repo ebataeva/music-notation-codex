@@ -19,6 +19,3 @@ Thumbs.db
 
 # MIDI and scores — generated files tracked, so no ignore here
 # PDFs are generated and should be tracked if needed
-
-# Planning
-.planning/
