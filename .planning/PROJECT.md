@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A local web app that acts as a **loop coach for an electric cellist**. You enter a chord progression (as text) plus a mood/key, and it returns several playable loop ideas as cello notation — each one explained with the music theory behind *why* it works, plus guidance on how to start, develop, end, and transition the loop. You can hear the vibe in the browser before playing it live, and export to MusicXML/MIDI. It grows to add a violin layer (duet) and a drum machine.
+A local web app that acts as a **loop coach and practice partner for an electric cellist**. You enter a chord progression (as text) plus a mood/key, and it returns several playable loop ideas as cello notation — each one explained with the music theory behind *why* it works, plus guidance on how to start, develop, end, and transition the loop. You can hear the vibe in the browser before playing it live, and export to MusicXML/MIDI. It also lets you **record your own playing and get analysis + concrete suggestions on how to improve** (via an Audio Analysis MCP), and ask on-demand questions about your music. It grows to add a violin layer (duet) and a drum machine.
 
 ## Core Value
 
@@ -28,6 +28,8 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 - [ ] Explain each variant in plain language: the music theory of *why* it works
 - [ ] Guidance on how to start, develop, end, and make a transition for a loop
 - [ ] In-browser playback to hear the vibe before playing it on the cello
+- [ ] Record the user's own cello playing and get analysis + concrete suggestions on how to improve (via Audio Analysis MCP)
+- [ ] Ask on-demand questions and get music advice about a loop or a recording
 - [ ] Violin layer / duet mode (cello + violin)
 - [ ] Drum-machine pattern generation compatible with Ableton
 - [ ] Looper-style slots/sections that can be regenerated independently
@@ -35,7 +37,7 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 
 ### Out of Scope
 
-- Audio analysis of third-party tracks (extracting chords from an MP3/Spotify/YouTube file) — not needed; chords are found online or known by ear, and audio analysis is high-complexity
+- Audio analysis of *third-party* tracks (extracting chords from someone else's MP3/Spotify/YouTube file) — not needed; chords are found online or known by ear, and full-track transcription is high-complexity. (Note: analysis of the user's *own* playing for feedback IS in scope, via the Audio Analysis MCP.)
 - Humming/voice melody input — deferred to a later version; pitch detection adds significant complexity, and chord-text input covers the main workflow first
 - Mobile app — this is a personal local tool, web-first on the desktop
 - Live audio effects / DAW replacement — Ableton and MuseScore handle performance and final editing downstream
@@ -46,6 +48,7 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 - The user plays **electric cello** live, finds playing straight from chords boring, and is a beginner-to-intermediate in music theory — the app must *explain*, not just generate.
 - Real pain points driving this: theory feels opaque, breaking songs into loops and making covers is hard, transitions and timing are hard, and "vibey/sexy" loops "just don't work out."
 - Runs locally on macOS; existing `.venv` and `requirements.txt` already in place.
+- The performance-feedback feature depends on an external **Audio Analysis MCP** server (to be connected). The user records playing → the MCP analyzes it → the app turns the analysis into plain-language suggestions and answers on-demand questions.
 
 ## Constraints
 
@@ -54,6 +57,7 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 - **Testing**: UI/browser tests live in a *separate* Playwright-based framework under `tests-ui/`, driving Chrome/Chromium via ChromeDriver — locked decision (keeps app code clean, enables real browser regression).
 - **Reporting**: UI test reports generated in Allure format — locked decision.
 - **Platform**: Local desktop tool; no hosting/deployment in scope.
+- **Dependency**: Performance feedback relies on an external Audio Analysis MCP server — the app must degrade gracefully (stay usable for loop coaching) when the MCP is unavailable.
 
 ## Key Decisions
 
@@ -63,6 +67,7 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 | Core value is the cello loop coach with theory; violin duet + drums layer on after | Keeps the heart tight so the project doesn't sprawl, even though v1 scope includes duet + drums | — Pending |
 | Streamlit for the first web interface | Local Python-first project; fastest path to an interactive workspace | — Pending |
 | No audio analysis of third-party songs | High complexity, not required by the actual workflow | — Pending |
+| Use an external Audio Analysis MCP for performance feedback (record → analyze → improve) in v1 | The user wants to record her own playing and ask how to improve; an MCP provides analysis without building DSP from scratch | — Pending |
 | Separate Playwright + ChromeDriver test framework, Allure reports | Keep app code clean; real-browser regression with shareable reports | — Pending |
 
 ## Evolution
