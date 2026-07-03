@@ -41,7 +41,13 @@
   4. `pytest tests/` runs the core unit suite with zero failures (pytest infrastructure established)
   5. Dataclasses include GenerationTrace fields (seed, pattern strategy, register, voice-leading, chord tones) so later phases don't retrofit them
   6. requirements.txt pins the approved stack (music21==10.5.0) and installs cleanly on Python 3.12+
-**Plans:** TBD
+**Plans:** 4 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — core/models.py (5 dataclasses) + pytest scaffold + import-boundary guard
+- [ ] 01-02-PLAN.md — validate_pitch + validate_bar_duration (TDD, LOOP-03/LOOP-04)
+- [ ] 01-03-PLAN.md — requirements.txt bump to music21==10.5.0 + golden baseline capture
+- [ ] 01-04-PLAN.md — MoodPreset registry merge (7 entries) + script data-source swap + golden regression verify
 
 ### Phase 2: LoopEngine + ExportEngine
 **Goal:** The generation logic from generate_cello_dark_ostinato.py lives in core/engine/loop_engine.py and core/export/exporter.py; the script becomes a thin wrapper; a single cello loop variant can be generated and exported entirely from pure-Python code, with an explicit seed policy and a populated GenerationTrace.
