@@ -2,7 +2,7 @@
 gsd_state_version: '1.0'
 status: planning
 progress:
-  total_phases: 9
+  total_phases: 13
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -20,10 +20,10 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 
 ## Current Position
 
-Phase: 1 of 9 (Core Library Skeleton + Validators)
+Phase: 1 of 13 (Core Library Skeleton + Validators)
 Plan: 0 of 0 in current phase
 Status: Ready to plan
-Last activity: 2026-06-22 — Roadmap created; 9 phases defined, 21/21 v1 requirements mapped
+Last activity: 2026-07-04 — Project review applied: Phase 2.5 (progression-driven generation) inserted; trace/seed/pytest criteria added; EXPORT-03/04 + TRACE-01/02 (v1) and CONTENT-01/02/03 (v1.5 phases 10–12) requirements added
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -55,7 +55,10 @@ Recent decisions affecting current work:
 
 - Roadmap: Brownfield refactor — CLI scripts become thin wrappers over core/ library before any Streamlit work begins
 - Roadmap: must-do-early guards (validate_pitch, validate_bar_duration, session_state arch, MCP degradation) anchored in earliest phases
-- Roadmap: Phases 10-12 from research (duet, drums, looper slots) are v2 — excluded from this roadmap
+- Roadmap: duet, drums, looper slots are v2 — excluded from this roadmap
+- Review 2026-07-04: GenerationTrace fields designed into Phase 1 dataclasses (transparency for reflective blog + grounded explanations)
+- Review 2026-07-04: progression-driven generation split out as Phase 2.5 — the hardest musical-algorithm work, previously hidden in Phase 2
+- Review 2026-07-04: content layer = phases 10–12 (Loop Library, Content Pack, Transparency & Compare); content calendar and presentation mode deferred to v2
 
 ### Pending Todos
 
@@ -65,6 +68,7 @@ None yet.
 
 - Phase 5: FluidSynth + soundfont availability on this macOS machine must be validated before Phase 5 starts (`brew install fluidsynth`)
 - Phase 9: Audio Analysis MCP server status (already built vs to-build?) must be confirmed before Phase 9 planning
+- Phase 9: FEEDBACK-03 (on-demand Q&A) requires an LLM that is not in the v1 stack — narrow the requirement or add LLM integration; decide before Phase 9 planning
 
 ## Deferred Items
 

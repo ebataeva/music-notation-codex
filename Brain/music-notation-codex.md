@@ -70,22 +70,34 @@ Three layers enforced at import level: `core/` (pure Python, imports music21 nev
 - `CLAUDE.md` — generated project guide
 - `scripts/generate_cello_dark_ostinato.py`, `scripts/harmony_advisor.py` — existing engine to refactor into `core/`
 
-## Approved roadmap (v1 — 9 phases)
+## Approved roadmap (v1 — 13 phases after 2026-07-04 review)
 
-Plan file: `.planning/ROADMAP.md`. Core-first; v2 items (violin duet, drum machine, looper slots, humming input, LLM explanations) are deferred and tracked in REQUIREMENTS.md.
+Plan file: `.planning/ROADMAP.md`. Core-first; v2 items (violin duet, drum machine, looper slots, humming input, LLM explanations, content calendar, presentation mode) are deferred and tracked in REQUIREMENTS.md.
 
-1. **Core library skeleton + validators** — dataclasses, MoodPreset registry, `validate_pitch` (C2–D5) + `validate_bar_duration`. Pure Python, no Streamlit. (LOOP-03, LOOP-04, PLAT-03)
-2. **LoopEngine + ExportEngine** — refactor CLI scripts into pure `core/`; single-variant generation + file export. (LOOP-01)
-3. **TheoryExplainer** — template-driven "why it works" + start/develop/end/transition guidance. (THEORY-01, THEORY-02)
-4. **Streamlit skeleton + session_state** — one-command launch; chord/key/mood input; text output; session_state architecture. (INPUT-01/02/03, PLAT-01/02)
+1. **Core library skeleton + validators** — dataclasses incl. GenerationTrace fields, MoodPreset registry (all 5 scripts, duet data as data-only), pytest scaffold, `validate_pitch` (C2–D5) + `validate_bar_duration`, music21 pin → 10.5.0. (LOOP-03, LOOP-04, PLAT-03)
+2. **LoopEngine + ExportEngine** — refactor CLI scripts into pure `core/`; single-variant generation + file export; explicit seed policy; trace population. (LOOP-01)
+2.5. **Progression-driven generation** — pychord parse "Am F C G" → chord tones → cello register mapping → preset rhythm strategies → validated bars. The hardest musical-algorithm work; previously hidden inside Phase 2. (INPUT-01, TRACE-01)
+3. **TheoryExplainer** — template-driven "why it works" grounded in the variant's GenerationTrace + lifecycle guidance. (THEORY-01, THEORY-02, TRACE-02)
+4. **Streamlit skeleton + session_state** — one-command launch; chord/key/mood input; ≤3 s generation budget; example-input button; explicit LoopVariant serialization decision. (INPUT-02/03, PLAT-01/02)
 5. **Notation + playback** — OSMD score in browser + FluidSynth audio. Highest-risk phase. (NOTATE-01, PLAY-01)
-6. **Export panel** — MusicXML + MIDI download buttons. (EXPORT-01, EXPORT-02)
+6. **Export panel** — MusicXML + MIDI + audio (WAV/MP3) + notation image (PNG/SVG). (EXPORT-01/02/03/04)
 7. **3-variant generation** — three distinct loops per request, side by side. (LOOP-02)
-8. **UI test framework** — Playwright + ChromeDriver + allure-pytest, isolated from app. (TEST-01/02/03)
-9. **MCP gateway + recorder + feedback** — record playing, MCP analysis, on-demand Q&A, graceful offline degradation. (FEEDBACK-01/02/03/04)
+8. **UI test framework** — Playwright + ChromeDriver + allure-pytest, isolated from app. Also "stream insurance" against live regressions. (TEST-01/02/03)
+9. **MCP gateway + recorder + feedback** — record playing, MCP analysis, on-demand Q&A, graceful offline degradation. BLOCKING pre-phase decisions: MCP server built-or-build; FEEDBACK-03 needs an LLM not in the v1 stack. (FEEDBACK-01/02/03/04)
+10. **Loop Library (v1.5)** — persist loops with metadata + seed; survive browser sessions. Foundation for all three content workflows. (CONTENT-01)
+11. **Content Pack Export (v1.5)** — one click: audio + notation image + MIDI + caption from theory explanation. (CONTENT-02)
+12. **Transparency & Compare (v1.5)** — GenerationTrace view, A/B variant compare, markdown post-fragment export. (CONTENT-03)
 
-Pre-phase checks: validate FluidSynth + SF2 soundfont before Phase 5; confirm whether the Audio Analysis MCP server is already built or must be built before Phase 9.
+Pre-phase checks: validate FluidSynth + SF2 soundfont before Phase 5; resolve both Phase 9 blocking decisions before Phase 9 planning.
+
+## Review findings applied (2026-07-04)
+
+Full review delivered in-session by Claude Fable 5; changes committed to ROADMAP/REQUIREMENTS:
+- **Biggest blind spot:** generation from an arbitrary chord progression (the core value) was implied but never scoped — now explicit Phase 2.5.
+- **Contradiction:** FEEDBACK-03 (Q&A) needs an LLM while THEORY-03 (LLM explanations) is deferred to v2 — recorded as a Phase 9 blocking pre-phase decision.
+- **Content-format strategy:** all three blog formats (OnlyFans content, dev-stream, reflective blog) reduce to two shared primitives — Loop Library (persistence) + GenerationTrace (transparency) — plus thin export features. Trace fields go into Phase 1 dataclasses (cheap now, expensive to retrofit); trace-grounded explanations also close research Pitfall 7 (ungrounded theory text).
+- Housekeeping: pytest scaffold added to Phase 1; requirements.txt pin (music21>=9.1,<10) contradicts approved stack (10.5.0) — fixed in Phase 1 scope; roadmap now acknowledges all 5 scripts (3 duet generators added after roadmap creation).
 
 ## Next step
 
-`/gsd-plan-phase 1` — write the detailed plan for Phase 1 (core library skeleton + validators). No per-phase plans exist yet; they are written one phase at a time.
+Phase 1 GSD planning artifacts (CONTEXT/RESEARCH/PATTERNS/PLAN) are being produced via /gsd-plan-phase 1. After that: `/gsd-execute-phase 1`.

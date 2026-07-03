@@ -34,6 +34,13 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 - [ ] **EXPORT-01**: User can download the loop as MusicXML for MuseScore
 - [ ] **EXPORT-02**: User can download the loop as MIDI for Ableton
+- [ ] **EXPORT-03**: User can download the rendered audio (WAV/MP3) of the current loop
+- [ ] **EXPORT-04**: User can download the notation as an image (PNG/SVG) for posts/sharing
+
+### Trace & Transparency
+
+- [ ] **TRACE-01**: Every generated variant carries a GenerationTrace (seed, pattern strategy, register choices, voice-leading steps, chord tones used)
+- [ ] **TRACE-02**: Theory explanations reference the actual notes/decisions from the variant's GenerationTrace (not generic preset text)
 
 ### Feedback (Practice Partner)
 
@@ -54,9 +61,24 @@ Requirements for the initial release. Each maps to roadmap phases.
 - [ ] **TEST-02**: Playwright drives Chrome/Chromium via ChromeDriver
 - [ ] **TEST-03**: UI test reports are generated in Allure format
 
+## v1.5 Requirements
+
+Content-creation layer on top of the v1 loop coach (OnlyFans content, dev-blog/stream, reflective blog). Mapped to phases 10–12.
+
+### Content Workflows
+
+- [ ] **CONTENT-01**: Loop Library — save/load generated loops with metadata (name, mood, chords, date, notes) so loops survive browser sessions
+- [ ] **CONTENT-02**: Content Pack — one click exports a bundle for a post: audio + notation image + MIDI + caption text (from the theory explanation)
+- [ ] **CONTENT-03**: Transparency & Compare — view the GenerationTrace in the UI, compare two variants side by side (A/B), and export a markdown fragment ("this loop works because…") for a blog post
+
 ## v2 Requirements
 
 Deferred to a future release. Tracked but not in the current roadmap.
+
+### Content & Streaming
+
+- **CONTENT-04**: Content calendar fields in the Loop Library (status: draft/posted, planned date)
+- **STREAM-01**: Presentation mode for streaming (large notation, high-contrast theme, minimal chrome)
 
 ### Arrangement
 
@@ -88,9 +110,11 @@ Explicitly excluded. Documented to prevent scope creep.
 | LOOP-04 | Phase 1 | Pending |
 | PLAT-03 | Phase 1 | Pending |
 | LOOP-01 | Phase 2 | Pending |
+| INPUT-01 | Phase 2.5 | Pending |
+| TRACE-01 | Phase 2.5 | Pending |
 | THEORY-01 | Phase 3 | Pending |
 | THEORY-02 | Phase 3 | Pending |
-| INPUT-01 | Phase 4 | Pending |
+| TRACE-02 | Phase 3 | Pending |
 | INPUT-02 | Phase 4 | Pending |
 | INPUT-03 | Phase 4 | Pending |
 | PLAT-01 | Phase 4 | Pending |
@@ -99,6 +123,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | PLAY-01 | Phase 5 | Pending |
 | EXPORT-01 | Phase 6 | Pending |
 | EXPORT-02 | Phase 6 | Pending |
+| EXPORT-03 | Phase 6 | Pending |
+| EXPORT-04 | Phase 6 | Pending |
 | LOOP-02 | Phase 7 | Pending |
 | TEST-01 | Phase 8 | Pending |
 | TEST-02 | Phase 8 | Pending |
@@ -107,12 +133,16 @@ Explicitly excluded. Documented to prevent scope creep.
 | FEEDBACK-02 | Phase 9 | Pending |
 | FEEDBACK-03 | Phase 9 | Pending |
 | FEEDBACK-04 | Phase 9 | Pending |
+| CONTENT-01 | Phase 10 | Pending |
+| CONTENT-02 | Phase 11 | Pending |
+| CONTENT-03 | Phase 12 | Pending |
 
 **Coverage:**
-- v1 requirements: 21 total
-- Mapped to phases: 21
+- v1 requirements: 25 total
+- v1.5 requirements: 3 total
+- Mapped to phases: 28
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-22*
-*Last updated: 2026-06-22 after roadmap creation — traceability table populated*
+*Last updated: 2026-07-04 — added TRACE/EXPORT-03/04 (v1), CONTENT (v1.5) requirements for the three content formats; INPUT-01 moved to new Phase 2.5*
