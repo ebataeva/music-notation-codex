@@ -1,12 +1,12 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.5
-milestone_name: milestone
+milestone: v1
+milestone_name: Loop Coach MVP
 status: executing
 last_updated: "2026-07-03T23:36:40.241Z"
 last_activity: 2026-07-03 -- Phase 1 planning complete
 progress:
-  total_phases: 10
+  total_phases: 13
   completed_phases: 0
   total_plans: 4
   completed_plans: 0
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 1 of 13 (Core Library Skeleton + Validators)
-Plan: 0 of 0 in current phase
+Plan: 0 of 4 in current phase
 Status: Ready to execute
 Last activity: 2026-07-03 -- Phase 1 planning complete
 
