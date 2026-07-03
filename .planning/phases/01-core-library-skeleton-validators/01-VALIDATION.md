@@ -1,8 +1,8 @@
 ---
 phase: 1
 slug: core-library-skeleton-validators
-status: draft
-nyquist_compliant: false
+status: approved
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-07-04
 ---
@@ -36,13 +36,16 @@ created: 2026-07-04
 
 ## Per-Task Verification Map
 
-*To be filled by the planner per task. Anchors from ROADMAP success criteria:*
-
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | TBD | LOOP-03 | — | out-of-range pitch raises ValueError | unit | `.venv/bin/python -m pytest tests/ -q -k pitch` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | LOOP-04 | — | bad bar-duration sum raises ValueError | unit | `.venv/bin/python -m pytest tests/ -q -k bar_duration` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | PLAT-03 | — | N/A | manual | — | — | ⬜ pending |
+| 01-01-01 | 01-01 | 1 | PLAT-03 | — | core/ dataclasses (incl. GenerationTrace) importable, serialization-friendly | unit | `.venv/bin/python -m pytest tests/test_models.py -q` | ❌ W0 | ⬜ pending |
+| 01-01-02 | 01-01 | 1 | PLAT-03 | — | core/ never imports streamlit/argparse (positive-detection boundary test) | unit | `.venv/bin/python -m pytest tests/test_import_boundary.py -q` | ❌ W0 | ⬜ pending |
+| 01-02-01/02 | 01-02 | 1 | LOOP-03 | — | out-of-range pitch (e.g. B1/D#5+) raises ValueError with readable message | unit (TDD) | `.venv/bin/python -m pytest tests/test_validators.py -q -k pitch` | ❌ W0 | ⬜ pending |
+| 01-02-01/02 | 01-02 | 1 | LOOP-04 | — | rhythm sum ≠ TimeSignature.barDuration.quarterLength raises ValueError | unit (TDD) | `.venv/bin/python -m pytest tests/test_validators.py -q -k bar_duration` | ❌ W0 | ⬜ pending |
+| 01-03-01 | 01-03 | 2 | PLAT-03 | — | requirements.txt pins music21==10.5.0; installs cleanly | CLI | `.venv/bin/python -m pip install -r requirements.txt && .venv/bin/python -c "import music21; print(music21.__version__)"` | ✅ | ⬜ pending |
+| 01-03-02 | 01-03 | 2 | (criterion 3) | — | golden baseline captured on 10.5.0 BEFORE data move (MIDI SHA1 primary) | CLI | golden-capture script per plan; hashes stored under tests/golden/ | ❌ W0 | ⬜ pending |
+| 01-04-01 | 01-04 | 3 | LOOP-03/04 (data) | — | MOOD_PRESETS registry (7 entries) merged verbatim, A1 note flagged not fixed | unit | `.venv/bin/python -m pytest tests/ -q` | ❌ W0 | ⬜ pending |
+| 01-04-02 | 01-04 | 3 | (criterion 3) | — | all 5 scripts byte-identical MIDI vs golden after data-source swap | CLI | golden-compare per plan + run all 5 scripts | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -67,11 +70,11 @@ created: 2026-07-04
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 30s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies (all 8 tasks across 4 plans — confirmed by plan-checker)
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 30s
+- [x] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved 2026-07-04 (plan-checker VERIFICATION PASSED, Dimension 8 checks 8a–8d)

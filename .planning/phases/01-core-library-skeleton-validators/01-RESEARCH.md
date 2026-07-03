@@ -350,14 +350,18 @@ print(meter.TimeSignature('3/4').barDuration.quarterLength)  # 3.0
 | A2 | Recommended `duet_rhythm`/`duet_bars` dict-of-dicts shape for `MoodPreset` (keyed by instrument name) is the best schema choice | Architecture Patterns, Pattern 1 | Medium — this is explicitly "Claude's Discretion" per CONTEXT.md, so it is a recommendation, not a locked fact; the planner or executor could reasonably choose a different shape (e.g. a nested `InstrumentPart` dataclass) as long as it stays data-only and captures the three duet scripts' actual divergent shapes (see Pitfall 3) |
 | A3 | The `"A1"` pitch in `generate_simple_sexy_duet_loop.py` is a genuine pre-existing out-of-range note relative to the CONTEXT.md-locked C2 floor, not a typo that should be silently "fixed" during data migration | Code Examples | Medium — if the plan silently changes this note during the data-move, it would violate the "existing scripts still produce the same output" success criterion (Roadmap criterion 3); this needs an explicit decision (flag + defer to Phase 2, or ask the user) rather than a silent data edit |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+*Both questions resolved during planning (2026-07-04): plans 01-04 and 01-03 implement the recommendations below verbatim.*
 
 1. **Should the out-of-range `"A1"` note in `generate_simple_sexy_duet_loop.py` be fixed, left as-is, or flagged?**
+   - RESOLVED: plan 01-04 migrates the note verbatim with an inline flag comment; validators are not wired into generation this phase (decision deferred to Phase 2, per recommendation).
    - What we know: MIDI 33 is below the locked C2 (MIDI 36) floor; the note exists in git-committed script data as of this research session.
    - What's unclear: Whether this was intentional (e.g. representing a scordatura/extended-range electric cello, which the project's tech stack does describe as "electric cellist") or a data-entry oversight from the duet script's original prototyping.
    - Recommendation: Phase 1 should NOT silently alter this data (it must migrate verbatim per CONTEXT.md and the "identical output" success criterion). The plan should add a task or note documenting this as a known pre-existing edge case, deferred to whoever wires validators into the generation path (Phase 2), since Phase 1's validators are unit-tested standalone but not yet called by the scripts.
 
 2. **Exact golden-file comparison mechanism for MusicXML (regex-strip vs. parse-and-compare)?**
+   - RESOLVED: plan 01-03 uses MIDI SHA1 hashing as the primary guard and regex-normalized MusicXML (strip `<encoding-date>` + `id` attrs) as secondary, per recommendation.
    - What we know: Raw byte hashing fails; MIDI hashing works cleanly; the volatile MusicXML fields are `<encoding-date>` and `id="P..."`/`id="I..."` attributes on `score-part`, `score-instrument`, and `midi-instrument` elements.
    - What's unclear: Whether a simple regex-strip-then-hash approach is robust enough, or whether music21's own `id()` generation could introduce other volatile fields not surfaced by the two test runs in this session (only ostinato + 3 duet scripts were tested with 2 runs each; not exhaustively fuzzed).
    - Recommendation: Use MIDI-file hashing as the PRIMARY golden-file guard (it is verified fully deterministic) and treat MusicXML comparison as secondary/best-effort via regex-normalization, documented inline in the test with a comment explaining why raw hashing doesn't work. This satisfies CONTEXT.md's "byte-identical... vs pre-refactor" requirement in spirit (musical content identical) without a fragile literal-byte assertion on MusicXML.
