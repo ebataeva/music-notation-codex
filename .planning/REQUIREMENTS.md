@@ -15,7 +15,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 ### Loop Generation
 
-- [ ] **LOOP-01**: App generates a playable cello loop from the chord progression + mood
+- [x] **LOOP-01**: App generates a playable cello loop from the chord progression + mood
 - [ ] **LOOP-02**: App generates 3 distinct loop variants for the same input
 - [x] **LOOP-03**: Every generated note is within playable cello range (C2–D5) — validated at generation time
 - [x] **LOOP-04**: Each bar's rhythm sums exactly to the meter — validated (no silent corruption)
@@ -127,7 +127,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | LOOP-03 | Phase 1 | Complete |
 | LOOP-04 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Complete |
-| LOOP-01 | Phase 2 | Pending |
+| LOOP-01 | Phase 2 | Complete |
 | INPUT-01 | Phase 2.5 | Pending |
 | TRACE-01 | Phase 2.5 | Pending |
 | THEORY-01 | Phase 3 | Pending |
