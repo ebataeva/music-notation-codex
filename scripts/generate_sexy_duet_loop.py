@@ -15,8 +15,6 @@ from core.export.exporter import ExportEngine  # noqa: E402
 from core.presets.registry import get_preset  # noqa: E402
 
 OUTPUT_NAME = "sexy_d_minor_violin_cello_loop"
-MUSICXML_PATH = PROJECT_ROOT / "scores" / "musicxml" / f"{OUTPUT_NAME}.musicxml"
-MIDI_PATH = PROJECT_ROOT / "scores" / "midi" / f"{OUTPUT_NAME}.mid"
 
 
 def main() -> None:
