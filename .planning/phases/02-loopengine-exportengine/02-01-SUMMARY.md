@@ -107,6 +107,15 @@ None - no external service configuration required.
 - `validate_pitch`/`validate_bar_duration` now guarantee `ValueError` as the sole failure mode, satisfying the prerequisite for Plan 02-02's D-06 requirement (LoopEngine calling these validators inside score assembly)
 - No blockers. Plan 02-02 can proceed to wire these validators into `core/engine/loop_engine.py` and `core/export/exporter.py` extraction work.
 
+## Self-Check: PASSED
+
+- FOUND: core/engine/validators.py
+- FOUND: tests/test_validators.py
+- FOUND: .planning/phases/02-loopengine-exportengine/02-01-SUMMARY.md
+- FOUND commit: 323d02a (test RED)
+- FOUND commit: c7e911f (feat GREEN)
+- FOUND commit: 93d8f77 (docs SUMMARY)
+
 ---
 *Phase: 02-loopengine-exportengine*
 *Completed: 2026-07-04*
