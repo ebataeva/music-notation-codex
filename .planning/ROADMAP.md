@@ -12,7 +12,7 @@
 ## Phases
 
 - [x] **Phase 1: Core Library Skeleton + Validators** - Pure-Python data structures, dataclasses (incl. GenerationTrace fields), pytest scaffold, and guards (range + bar duration) (completed 2026-07-04)
-- [ ] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population
+- [x] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population (completed 2026-07-04)
 - [ ] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies)
 - [ ] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance
 - [ ] **Phase 4: Streamlit Skeleton + Session State** - Interactive UI with chord/key/mood input; text output only; session_state architecture
@@ -73,11 +73,11 @@ Plans:
   4. Generation accepts an explicit seed; the same seed reproduces an identical variant (reproducibility for caching, tests, and blog posts)
   5. Every generated variant carries a populated GenerationTrace (strategy, register, chord tones used)
 
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 02-01-PLAN.md — Harden validators (WR-02/WR-03 fixes)
 - [x] 02-02-PLAN.md — LoopEngine + ExportEngine core, solo wrapper refactor (seed, trace, WR-01/WR-04)
-- [ ] 02-03-PLAN.md — Internal duet build path, 3 duet wrapper refactors (WR-04)
+- [x] 02-03-PLAN.md — Internal duet build path, 3 duet wrapper refactors (WR-04)
 
 ### Phase 2.5: Progression-Driven Generation
 
@@ -265,7 +265,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Library Skeleton + Validators | 4/4 | Complete    | 2026-07-04 |
-| 2. LoopEngine + ExportEngine | 2/3 | In Progress|  |
+| 2. LoopEngine + ExportEngine | 3/3 | Complete   | 2026-07-04 |
 | 2.5. Progression-Driven Generation | 0/0 | Not started | - |
 | 3. TheoryExplainer | 0/0 | Not started | - |
 | 4. Streamlit Skeleton + Session State | 0/0 | Not started | - |
