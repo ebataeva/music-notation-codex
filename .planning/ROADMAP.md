@@ -13,7 +13,7 @@
 
 - [x] **Phase 1: Core Library Skeleton + Validators** - Pure-Python data structures, dataclasses (incl. GenerationTrace fields), pytest scaffold, and guards (range + bar duration) (completed 2026-07-04)
 - [x] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population (completed 2026-07-04)
-- [ ] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies)
+- [x] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies) (completed 2026-07-04)
 - [ ] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance
 - [ ] **Phase 4: Streamlit Skeleton + Session State** - Interactive UI with chord/key/mood input; text output only; session_state architecture
 - [ ] **Phase 5: Notation + Playback** - In-browser score rendering (OSMD) and audio playback (FluidSynth pipeline)
@@ -92,7 +92,7 @@ Plans:
   3. Generated bars use chord tones of the user's progression (verified by unit test), voiced in idiomatic cello register (monophonic, C2–D5)
   4. The GenerationTrace records which chord tones, register choices, and pattern strategy were used per bar
 
-**Plans:** TBD
+**Plans:** 1/1 plans complete
 
 ### Phase 3: TheoryExplainer
 
@@ -266,7 +266,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Core Library Skeleton + Validators | 4/4 | Complete    | 2026-07-04 |
 | 2. LoopEngine + ExportEngine | 3/3 | Complete    | 2026-07-04 |
-| 2.5. Progression-Driven Generation | 0/0 | Not started | - |
+| 2.5. Progression-Driven Generation | 1/1 | Complete   | 2026-07-04 |
 | 3. TheoryExplainer | 0/0 | Not started | - |
 | 4. Streamlit Skeleton + Session State | 0/0 | Not started | - |
 | 5. Notation + Playback | 0/0 | Not started | - |
