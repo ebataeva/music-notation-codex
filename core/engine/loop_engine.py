@@ -14,6 +14,7 @@ from music21 import clef, duration, instrument, key, meter, note, stream, tempo
 
 from core.engine.validators import validate_bar_duration, validate_pitch
 from core.models import GenerationTrace, LoopVariant, MoodPreset
+from core.presets.registry import list_solo_presets
 
 # Maximum bars a single generation request may produce (SAFE-02: denial-of-service
 # guard against unbounded loop generation).
@@ -95,6 +96,14 @@ def generate_variant(preset: MoodPreset, seed: int | None = None) -> LoopVariant
     (SAFE-07): it builds exactly one Score per invocation, enforced by this
     flat, non-recursive structure rather than by documentation alone.
     """
+    # WR-06: duet-only presets carry empty solo bars/rhythm; failing here gives
+    # the caller an actionable message instead of the internal "Rhythm is empty".
+    if not preset.bars:
+        raise ValueError(
+            f"Preset {preset.name!r} has no solo bars (duet-only preset); "
+            f"choose one of: {', '.join(list_solo_presets())}."
+        )
+
     # SAFE-02: guard here too, before build_score is even invoked, so the trace
     # accumulation loop below never starts for an oversized request either.
     if len(preset.bars) > MAX_BARS:
