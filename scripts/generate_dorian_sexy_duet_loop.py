@@ -15,16 +15,16 @@ from core.export.exporter import ExportEngine  # noqa: E402
 from core.presets.registry import get_preset  # noqa: E402
 
 OUTPUT_NAME = "dorian_sexy_violin_cello_loop"
-MUSICXML_PATH = PROJECT_ROOT / "scores" / "musicxml" / f"{OUTPUT_NAME}.musicxml"
-MIDI_PATH = PROJECT_ROOT / "scores" / "midi" / f"{OUTPUT_NAME}.mid"
 
 
 def main() -> None:
     environment.Environment()["warnings"] = 0  # WR-04 fix -- in-memory only, no disk write
     preset = get_preset("dorian_sexy_duet")
-    score = build_duet_score(preset, tempo_bpm=88, cello_velocity=74, violin_velocity=62)
+    score = build_duet_score(
+        preset, tempo_bpm=preset.duet_tempo_bpm, cello_velocity=74, violin_velocity=62
+    )
     musicxml_path, midi_path = ExportEngine().export(score, OUTPUT_NAME)
-    print("Dorian sexy duet loop: Dm9 -> G9, 88 bpm, 8 bars, violin + cello")
+    print(f"Dorian sexy duet loop: Dm9 -> G9, {preset.duet_tempo_bpm} bpm, 8 bars, violin + cello")
     print(f"MusicXML: {musicxml_path}")
     print(f"MIDI: {midi_path}")
 
