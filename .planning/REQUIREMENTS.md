@@ -152,25 +152,34 @@ Explicitly excluded. Documented to prevent scope creep.
 | FEEDBACK-03 | Phase 9 | Pending |
 | FEEDBACK-04 | Phase 9 | Pending |
 | SAFE-01 | Phase 1 | Pending |
-| SAFE-02 | Phase 2 | Pending |
+| SAFE-02 | Phase 2 | Complete |
 | SAFE-03 | Phase 5 | Pending |
 | SAFE-04 | Phase 9 | Pending |
 | SAFE-05 | Phase 3 | Pending |
 | SAFE-06 | Phase 6 | Pending |
-| SAFE-07 | Phase 2 | Pending |
+| SAFE-07 | Phase 2 | Complete |
 | SAFE-08 | Phase 4 | Pending |
 | SAFE-09 | All phases | Pending |
 | SAFE-10 | All phases | Pending |
 | CONTENT-01 | Phase 10 | Pending |
 | CONTENT-02 | Phase 11 | Pending |
 | CONTENT-03 | Phase 12 | Pending |
+| CONTENT-04 | — | Deferred (v2) |
+| STREAM-01 | — | Deferred (v2) |
+| DUET-01 | — | Deferred (v2) |
+| DRUM-01 | — | Deferred (v2) |
+| SLOT-01 | — | Deferred (v2) |
+| INPUT-04 | — | Deferred (v2) |
+| THEORY-03 | — | Deferred (v2) |
 
 **Coverage:**
 - v1 requirements: 25 total
 - v1.5 requirements: 3 total
+- v2 requirements (deferred): 7 total
 - Mapped to phases: 28
-- Unmapped: 0 ✓
+- Unmapped (deferred to v2, no phase by design): 7
+- Unmapped v1/v1.5: 0 ✓
 
 ---
 *Requirements defined: 2026-06-22*
-*Last updated: 2026-07-04 — added TRACE/EXPORT-03/04 (v1), CONTENT (v1.5) requirements for the three content formats; INPUT-01 moved to new Phase 2.5*
+*Last updated: 2026-07-05 — added 7 deferred v2 requirement IDs to the Traceability table; SAFE-02/SAFE-07 marked Complete with Phase 2*
