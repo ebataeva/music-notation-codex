@@ -159,6 +159,22 @@ def build_duet_score(
     by the 3 duet scripts only. Extracted from their identical build_score()
     (renamed here to avoid colliding with this module's solo build_score).
     """
+    cello_rhythm = preset.duet_rhythm["cello"]
+    violin_rhythm = preset.duet_rhythm["violin"]
+    cello_bars = preset.duet_bars["cello"]
+    violin_bars = preset.duet_bars["violin"]
+
+    # SAFE-02 (WR-03): reject oversized requests before any Score object is
+    # constructed, matching the solo path's guard in build_score/generate_variant.
+    for part_name, bars in (("cello", cello_bars), ("violin", violin_bars)):
+        if len(bars) > MAX_BARS:
+            raise ValueError(
+                f"{part_name} part: {len(bars)} bars exceeds the maximum of {MAX_BARS}."
+            )
+
+    validate_bar_duration(cello_rhythm, preset.meter_signature)
+    validate_bar_duration(violin_rhythm, preset.meter_signature)
+
     score = stream.Score(id=f"duet_{preset.name}")
 
     violin = stream.Part(id="violin")
@@ -173,14 +189,6 @@ def build_duet_score(
         part.append(tempo.MetronomeMark(number=tempo_bpm))
         part.append(key.Key(preset.key_tonic, preset.key_mode))
         part.append(meter.TimeSignature(preset.meter_signature))
-
-    cello_rhythm = preset.duet_rhythm["cello"]
-    violin_rhythm = preset.duet_rhythm["violin"]
-    cello_bars = preset.duet_bars["cello"]
-    violin_bars = preset.duet_bars["violin"]
-
-    validate_bar_duration(cello_rhythm, preset.meter_signature)
-    validate_bar_duration(violin_rhythm, preset.meter_signature)
 
     for measure_number, pitches in enumerate(cello_bars, start=1):
         for pitch_name in pitches:
