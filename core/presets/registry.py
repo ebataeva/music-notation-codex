@@ -16,3 +16,8 @@ def get_preset(name: str) -> MoodPreset:
 
 def list_presets() -> list[str]:
     return sorted(MOOD_PRESETS)
+
+
+def list_solo_presets() -> list[str]:
+    """Solo-capable presets only (non-empty `.bars`) -- excludes duet-only presets (WR-01)."""
+    return sorted(name for name, preset in MOOD_PRESETS.items() if preset.bars)
