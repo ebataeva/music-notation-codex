@@ -73,7 +73,11 @@ Plans:
   4. Generation accepts an explicit seed; the same seed reproduces an identical variant (reproducibility for caching, tests, and blog posts)
   5. Every generated variant carries a populated GenerationTrace (strategy, register, chord tones used)
 
-**Plans:** TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 02-01-PLAN.md — Harden validators (WR-02/WR-03 fixes)
+- [ ] 02-02-PLAN.md — LoopEngine + ExportEngine core, solo wrapper refactor (seed, trace, WR-01/WR-04)
+- [ ] 02-03-PLAN.md — Internal duet build path, 3 duet wrapper refactors (WR-04)
 
 ### Phase 2.5: Progression-Driven Generation
 
