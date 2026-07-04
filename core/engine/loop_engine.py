@@ -179,6 +179,15 @@ def build_duet_score(
                 f"{part_name} part: {len(bars)} bars exceeds the maximum of {MAX_BARS}."
             )
 
+    # WR-05: parts of different lengths would silently produce a misaligned
+    # score -- enforce inter-part bar-count alignment, matching the strictness
+    # of the intra-bar zip(..., strict=True) check in add_measure.
+    if len(cello_bars) != len(violin_bars):
+        raise ValueError(
+            f"Duet parts have mismatched bar counts: "
+            f"cello={len(cello_bars)}, violin={len(violin_bars)}."
+        )
+
     validate_bar_duration(cello_rhythm, preset.meter_signature)
     validate_bar_duration(violin_rhythm, preset.meter_signature)
 
