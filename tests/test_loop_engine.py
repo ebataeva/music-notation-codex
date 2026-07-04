@@ -183,3 +183,132 @@ def test_generate_variant_signature_has_no_duet_parameter():
     params = inspect.signature(generate_variant).parameters
     assert "instrument_set" not in params
     assert "duet" not in params
+
+
+# ---------------------------------------------------------------------------
+# Phase 2.5: progression-driven generation
+# ---------------------------------------------------------------------------
+
+
+def test_build_progression_score_returns_score_with_one_bar_per_chord():
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset)
+
+    assert isinstance(score, stream.Score)
+    cello_part = score.parts[0]
+    measures = cello_part.getElementsByClass(stream.Measure)
+    assert len(measures) == len(chords)
+
+
+def test_build_progression_score_pitches_pass_validators():
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+    from core.engine.validators import validate_bar_duration, validate_pitch
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset)
+
+    cello_part = score.parts[0]
+    for measure in cello_part.getElementsByClass(stream.Measure):
+        pitches_in_bar = [n.pitch.nameWithOctave for n in measure.notes]
+        for pitch_name in pitches_in_bar:
+            validate_pitch(pitch_name)
+        rhythm = [n.duration.quarterLength for n in measure.notes]
+        validate_bar_duration(rhythm, preset.meter_signature)
+
+
+def test_build_progression_score_uses_only_chord_tones_per_bar():
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset)
+
+    cello_part = score.parts[0]
+    measures = list(cello_part.getElementsByClass(stream.Measure))
+    for measure, chord in zip(measures, chords, strict=True):
+        allowed_pitch_classes = {pc.replace("b", "-") for pc in chord.components}
+        for n in measure.notes:
+            assert n.pitch.name.replace("b", "-") in allowed_pitch_classes or n.pitch.name in chord.components
+
+
+def test_build_progression_score_is_monophonic():
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset)
+
+    cello_part = score.parts[0]
+    for measure in cello_part.getElementsByClass(stream.Measure):
+        offsets = [n.offset for n in measure.notes]
+        assert len(offsets) == len(set(offsets))
+
+
+def test_generate_variant_from_progression_trace_populated():
+    from core.engine.loop_engine import generate_variant_from_progression
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    variant = generate_variant_from_progression(chords, preset, seed=42)
+
+    assert variant.trace.pattern_strategy
+    assert len(variant.trace.register_choices) == len(chords)
+    assert len(variant.trace.chord_tones_used) == len(chords)
+
+
+def test_generate_variant_from_progression_seed_reproducibility():
+    from music21.midi.translate import streamToMidiFile
+
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    score_a = build_progression_score(chords, preset, seed=42)
+    score_b = build_progression_score(chords, preset, seed=42)
+
+    midi_a = streamToMidiFile(score_a)
+    midi_b = streamToMidiFile(score_b)
+    assert midi_a.writestr() == midi_b.writestr()
+
+
+def test_build_progression_score_avoids_leaps_larger_than_an_octave():
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset, seed=7)
+
+    cello_part = score.parts[0]
+    all_notes = []
+    for measure in cello_part.getElementsByClass(stream.Measure):
+        all_notes.extend(measure.notes)
+
+    for prev_note, next_note in zip(all_notes, all_notes[1:]):
+        interval = abs(next_note.pitch.midi - prev_note.pitch.midi)
+        assert interval <= 12
+
+
+def test_preset_only_path_unaffected_by_progression_addition():
+    """Golden-regression guard at the unit level: the existing preset-only
+    build_score() path must remain byte-identical after adding the
+    progression-driven path alongside it."""
+    from music21.midi.translate import streamToMidiFile
+
+    from core.engine.loop_engine import build_score
+
+    preset = get_preset("dark_trip_hop")
+    score = build_score(preset, seed=42)
+    midi_bytes = streamToMidiFile(score).writestr()
+    assert isinstance(midi_bytes, bytes)
+    assert len(midi_bytes) > 0

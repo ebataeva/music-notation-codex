@@ -10,9 +10,15 @@ from __future__ import annotations
 import random
 import warnings
 
-from music21 import clef, duration, instrument, key, meter, note, stream, tempo
+from music21 import clef, duration, instrument, key, meter, note, pitch, stream, tempo
 
-from core.engine.validators import validate_bar_duration, validate_pitch
+from core.engine.progression import ParsedChord
+from core.engine.validators import (
+    CELLO_MAX_MIDI_DEFAULT,
+    CELLO_MIN_MIDI,
+    validate_bar_duration,
+    validate_pitch,
+)
 from core.models import GenerationTrace, LoopVariant, MoodPreset
 from core.presets.registry import list_solo_presets
 
@@ -265,3 +271,213 @@ def _classify_register(pitches: list[str]) -> str:
     if lowest == 3:
         return "mid register"
     return "high register"
+
+
+# ---------------------------------------------------------------------------
+# Phase 2.5: progression-driven generation
+# ---------------------------------------------------------------------------
+#
+# Chord-tone -> cello-register mapping. Given a chord's pitch-class tones
+# (from core.engine.progression.ParsedChord), choose concrete octave-bearing
+# pitches within C2-D5 (the same range validate_pitch's default enforces --
+# confirmed C2 == MIDI 36 == CELLO_MIN_MIDI, D5 == MIDI 74 ==
+# CELLO_MAX_MIDI_DEFAULT). This is new logic with no direct extraction
+# analog: the preset-verbatim path (build_score/generate_variant) already
+# has its pitches baked into MoodPreset.bars and is left completely
+# untouched by everything below.
+
+# All candidate octaves within the cello's default playable range, low to
+# high -- register choice tries these in order, preferring the lowest
+# register that satisfies root/fifth preference and the max-leap constraint.
+_CANDIDATE_OCTAVES = [2, 3, 4, 5]
+
+
+def _all_candidate_pitches(pitch_class: str) -> list[pitch.Pitch]:
+    """Every concrete Pitch for a pitch class across the cello's playable
+    octaves (C2-D5 inclusive), sorted low to high."""
+    candidates = []
+    for octave in _CANDIDATE_OCTAVES:
+        p = pitch.Pitch(pitch_class)
+        p.octave = octave
+        if CELLO_MIN_MIDI <= p.midi <= CELLO_MAX_MIDI_DEFAULT:
+            candidates.append(p)
+    return sorted(candidates, key=lambda p: p.midi)
+
+
+def _choose_register_for_chord_tone(
+    pitch_class: str,
+    is_root_or_fifth: bool,
+    previous_pitch: pitch.Pitch | None,
+    rng: random.Random,
+) -> pitch.Pitch:
+    """Pick one concrete octave for a chord-tone pitch class.
+
+    Judgment call (per the plan's autonomy contract -- register mapping has
+    no single obviously-correct answer, but this stays within Task 2's blast
+    radius as an algorithmic choice, not an architectural one): root/fifth
+    tones are biased toward the low register (octaves 2-3); other chord
+    tones (e.g. the third) default to the mid register (octave 3-4) so the
+    line doesn't collapse onto a single drone pitch. Whenever a previous
+    note exists, the candidate closest to it -- within an octave leap -- is
+    preferred over the register bias, so voice-leading stays smooth.
+    """
+    candidates = _all_candidate_pitches(pitch_class)
+    if not candidates:
+        # Chord tone has no representative pitch inside the cello's playable
+        # range at all (shouldn't happen for natural/sharp/flat pitch
+        # classes given the 4-octave candidate span, but fail loudly rather
+        # than silently producing an unplayable note).
+        raise ValueError(
+            f"No playable octave found for pitch class {pitch_class!r} within "
+            f"the cello's default range (MIDI {CELLO_MIN_MIDI}-{CELLO_MAX_MIDI_DEFAULT})."
+        )
+
+    if previous_pitch is not None:
+        within_leap = [c for c in candidates if abs(c.midi - previous_pitch.midi) <= 12]
+        if within_leap:
+            # Closest-to-previous-note wins when voice-leading constrains us;
+            # ties broken toward the lower octave, matching the low-register
+            # preference for root/fifth tones.
+            return min(within_leap, key=lambda c: (abs(c.midi - previous_pitch.midi), c.midi))
+
+    if is_root_or_fifth:
+        low_register = [c for c in candidates if c.octave <= 3]
+        pool = low_register or candidates
+    else:
+        mid_register = [c for c in candidates if c.octave in (3, 4)]
+        pool = mid_register or candidates
+
+    return rng.choice(pool)
+
+
+def _register_map_chord(
+    chord: ParsedChord,
+    count: int,
+    previous_pitch: pitch.Pitch | None,
+    rng: random.Random,
+) -> tuple[list[pitch.Pitch], pitch.Pitch]:
+    """Map a single chord's tones onto `count` concrete pitches (one per
+    rhythm slot in a bar), monophonic, favoring root/fifth in the low
+    register and avoiding leaps larger than an octave between consecutive
+    notes. Returns (pitches, last_pitch) so the caller can thread
+    voice-leading continuity into the next bar."""
+    root = chord.components[0]
+    fifth = chord.components[2] if len(chord.components) >= 3 else None
+
+    bar_pitches: list[pitch.Pitch] = []
+    current_previous = previous_pitch
+    for i in range(count):
+        pitch_class = chord.components[i % len(chord.components)]
+        is_root_or_fifth = pitch_class in (root, fifth)
+        chosen = _choose_register_for_chord_tone(
+            pitch_class, is_root_or_fifth, current_previous, rng
+        )
+        bar_pitches.append(chosen)
+        current_previous = chosen
+
+    return bar_pitches, current_previous
+
+
+def build_progression_score(
+    chords: list[ParsedChord],
+    preset: MoodPreset,
+    seed: int | None = None,
+) -> stream.Score:
+    """Build a music21 Score from an arbitrary parsed chord progression, using
+    `preset` only for its rhythm/tempo/meter/velocity strategy (the *when* --
+    existing MoodPreset data), while this function decides *which* pitch (the
+    chord-tone -> register mapping above). One bar per chord, matching the
+    preset's rhythm pattern per bar. The preset-verbatim build_score() path
+    above is completely untouched by this function.
+    """
+    # SAFE-02: same bar-count guard as the preset-only path, applied to the
+    # progression's chord count (each chord produces exactly one bar here).
+    if len(chords) > MAX_BARS:
+        raise ValueError(f"Requested {len(chords)} bars exceeds the maximum of {MAX_BARS}.")
+    if not chords:
+        raise ValueError("Progression must contain at least one chord to build a score.")
+
+    _resolved_seed, rng = _resolve_seed(seed)
+
+    validate_bar_duration(preset.rhythm, preset.meter_signature)
+    notes_per_bar = len(preset.rhythm)
+
+    score = stream.Score(id=f"progression_{preset.name}")
+    cello_part = stream.Part(id="cello")
+
+    cello_part.append(instrument.Violoncello())
+    cello_part.append(clef.BassClef())
+
+    cello_part.append(tempo.MetronomeMark(number=preset.tempo_bpm))
+    cello_part.append(key.Key(preset.key_tonic, preset.key_mode))
+    cello_part.append(meter.TimeSignature(preset.meter_signature))
+
+    previous_pitch: pitch.Pitch | None = None
+    for measure_number, chord in enumerate(chords, start=1):
+        bar_pitches, previous_pitch = _register_map_chord(
+            chord, notes_per_bar, previous_pitch, rng
+        )
+
+        measure = stream.Measure(number=measure_number)
+        for concrete_pitch, quarter_length in zip(bar_pitches, preset.rhythm, strict=True):
+            pitch_name = concrete_pitch.nameWithOctave
+            validate_pitch(pitch_name)
+            cello_note = note.Note(pitch_name)
+            cello_note.duration = duration.Duration(quarterLength=quarter_length)
+            cello_note.volume.velocity = preset.velocity
+            measure.append(cello_note)
+        cello_part.append(measure)
+
+    score.insert(0, cello_part)
+    return score
+
+
+def generate_variant_from_progression(
+    chords: list[ParsedChord],
+    preset: MoodPreset,
+    seed: int | None = None,
+) -> LoopVariant:
+    """High-level API mirroring generate_variant(), but for an arbitrary
+    parsed chord progression instead of a preset's own baked-in bars.
+    Populates a full per-bar GenerationTrace: chord tones chosen, register
+    decision, and pattern strategy used.
+    """
+    if len(chords) > MAX_BARS:
+        raise ValueError(f"Requested {len(chords)} bars exceeds the maximum of {MAX_BARS}.")
+    if not chords:
+        raise ValueError("Progression must contain at least one chord to generate a variant.")
+
+    resolved_seed, _rng = _resolve_seed(seed)
+
+    score = build_progression_score(chords, preset, seed=resolved_seed)
+
+    register_choices: list[str] = []
+    chord_tones_used: list[list[str]] = []
+    cello_part = score.parts[0]
+    for measure, chord in zip(
+        cello_part.getElementsByClass(stream.Measure), chords, strict=True
+    ):
+        bar_pitch_names = [n.pitch.nameWithOctave for n in measure.notes]
+        chord_tones_used.append(list(chord.components))
+        register_choices.append(_classify_register(bar_pitch_names))
+
+    generation_trace = GenerationTrace(
+        seed=resolved_seed,
+        pattern_strategy="progression_driven_register_mapped",
+        register_choices=register_choices,
+        voice_leading_steps=None,  # Explicit step-interval trace is a future refinement.
+        chord_tones_used=chord_tones_used,
+    )
+
+    progression_label = " ".join(chord.name for chord in chords)
+    return LoopVariant(
+        id=f"progression-{preset.name}-{resolved_seed}",
+        preset_name=preset.name,
+        label=f"{progression_label} ({preset.feel or preset.name})",
+        musicxml_path=None,
+        midi_path=None,
+        svg_bytes=None,
+        midi_bytes=None,
+        theory_explanation=None,  # Phase 3 (TheoryExplainer) concern.
+        trace=generation_trace,
+    )
