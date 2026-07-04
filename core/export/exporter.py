@@ -21,14 +21,21 @@ class ExportEngine:
     def __init__(self, base_dir: Path | None = None) -> None:
         self.base_dir = base_dir or (PROJECT_ROOT / "scores")
 
+    def _safe_path(self, subdir: str, output_name: str, ext: str) -> Path:
+        # WR-01: output_name must be a bare file name -- reject separators and
+        # traversal components so writes can never escape base_dir.
+        if Path(output_name).name != output_name or output_name in ("", ".", ".."):
+            raise ValueError(f"output_name {output_name!r} must be a bare file name.")
+        return self.base_dir / subdir / f"{output_name}{ext}"
+
     def export_to_musicxml(self, score: stream.Score, output_name: str) -> Path:
-        musicxml_path = self.base_dir / "musicxml" / f"{output_name}.musicxml"
+        musicxml_path = self._safe_path("musicxml", output_name, ".musicxml")
         musicxml_path.parent.mkdir(parents=True, exist_ok=True)
         score.write("musicxml", fp=str(musicxml_path))
         return musicxml_path
 
     def export_to_midi(self, score: stream.Score, output_name: str) -> Path:
-        midi_path = self.base_dir / "midi" / f"{output_name}.mid"
+        midi_path = self._safe_path("midi", output_name, ".mid")
         midi_path.parent.mkdir(parents=True, exist_ok=True)
         midi_file = midi.translate.streamToMidiFile(score)
         midi_file.open(str(midi_path), "wb")
