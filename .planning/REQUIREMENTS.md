@@ -61,6 +61,24 @@ Requirements for the initial release. Each maps to roadmap phases.
 - [ ] **TEST-02**: Playwright drives Chrome/Chromium via ChromeDriver
 - [ ] **TEST-03**: UI test reports are generated in Allure format
 
+### Specification Gaming Guards (SAFE)
+
+Hard limits that prevent AI agents (and the app itself) from finding loopholes in the spec —
+optimising for a metric while violating intent. Inspired by the 111-agent deep-research incident
+(Anthropic, 2026-06-02): no token budget guard, no fetch limit enforcement, no StructuredOutput
+enforcement → 111 agents, 1.2M tokens, zero output.
+
+- [ ] **SAFE-01**: Max notes per loop — generation stops with an error if a single variant exceeds 512 notes (covers ~32 bars of 4/4 at 16th-note density; any real cello loop is well within this)
+- [ ] **SAFE-02**: Max bars per loop — generation rejects requests for loops longer than 64 bars
+- [ ] **SAFE-03**: MIDI render timeout — FluidSynth render is killed if it exceeds 30 seconds; user sees a clear error, not a hung browser
+- [ ] **SAFE-04**: MCP call rate limit — no more than 5 MCP analysis calls per browser session; subsequent calls show "analysis quota reached" with a reset hint
+- [ ] **SAFE-05**: Max explanation length — TheoryExplainer output is truncated at 500 words per explanation field; no wall-of-text loophole
+- [ ] **SAFE-06**: MusicXML size guard — export is rejected if the generated MusicXML exceeds 10 MB; user sees "loop too large to export, try fewer bars"
+- [ ] **SAFE-07**: Variant generation depth guard — variant generation is flat (one level): a variant does not recursively spawn sub-variants; enforced in LoopEngine, not in documentation
+- [ ] **SAFE-08**: Streamlit rerun loop guard — session_state tracks consecutive unproductive reruns; after 10 reruns within 5 seconds with no state change, app shows an error and stops
+- [ ] **SAFE-09**: GSD plan step budget — any GSD execution plan for a single phase is capped at 15 steps; if more steps are needed, the phase must be split
+- [ ] **SAFE-10**: Hard numeric guards are enforced in code (assert / raise), not in comments or docs — comments can be ignored, code cannot
+
 ## v1.5 Requirements
 
 Content-creation layer on top of the v1 loop coach (OnlyFans content, dev-blog/stream, reflective blog). Mapped to phases 10–12.
@@ -133,6 +151,16 @@ Explicitly excluded. Documented to prevent scope creep.
 | FEEDBACK-02 | Phase 9 | Pending |
 | FEEDBACK-03 | Phase 9 | Pending |
 | FEEDBACK-04 | Phase 9 | Pending |
+| SAFE-01 | Phase 1 | Pending |
+| SAFE-02 | Phase 2 | Pending |
+| SAFE-03 | Phase 5 | Pending |
+| SAFE-04 | Phase 9 | Pending |
+| SAFE-05 | Phase 3 | Pending |
+| SAFE-06 | Phase 6 | Pending |
+| SAFE-07 | Phase 2 | Pending |
+| SAFE-08 | Phase 4 | Pending |
+| SAFE-09 | All phases | Pending |
+| SAFE-10 | All phases | Pending |
 | CONTENT-01 | Phase 10 | Pending |
 | CONTENT-02 | Phase 11 | Pending |
 | CONTENT-03 | Phase 12 | Pending |
