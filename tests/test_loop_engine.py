@@ -126,3 +126,60 @@ def test_generate_variant_raises_for_more_than_64_bars_before_score_built():
     )
     with pytest.raises(ValueError):
         generate_variant(too_many_bars_preset)
+
+
+def test_build_duet_score_returns_score_with_no_exception():
+    from core.engine.loop_engine import build_duet_score
+
+    score = build_duet_score(get_preset("sexy_duet"), tempo_bpm=76, cello_velocity=82, violin_velocity=70)
+    assert isinstance(score, stream.Score)
+
+
+def test_build_duet_score_has_violin_and_cello_parts():
+    from core.engine.loop_engine import build_duet_score
+
+    score = build_duet_score(get_preset("sexy_duet"), tempo_bpm=76, cello_velocity=82, violin_velocity=70)
+    part_ids = {part.id for part in score.parts}
+    assert part_ids == {"violin", "cello"}
+
+
+def test_build_duet_score_measure_counts_match_preset_duet_bars():
+    from core.engine.loop_engine import build_duet_score
+
+    preset = get_preset("sexy_duet")
+    score = build_duet_score(preset, tempo_bpm=76, cello_velocity=82, violin_velocity=70)
+    parts_by_id = {part.id: part for part in score.parts}
+
+    cello_measures = parts_by_id["cello"].getElementsByClass(stream.Measure)
+    violin_measures = parts_by_id["violin"].getElementsByClass(stream.Measure)
+
+    assert len(cello_measures) == len(preset.duet_bars["cello"])
+    assert len(violin_measures) == len(preset.duet_bars["violin"])
+
+
+def test_build_duet_score_simple_sexy_duet_a1_legacy_note_does_not_raise():
+    from core.engine.loop_engine import build_duet_score
+
+    score = build_duet_score(
+        get_preset("simple_sexy_duet"), tempo_bpm=64, cello_velocity=68, violin_velocity=58
+    )
+    assert isinstance(score, stream.Score)
+
+
+def test_build_duet_score_dorian_sexy_duet_returns_score_with_no_exception():
+    from core.engine.loop_engine import build_duet_score
+
+    score = build_duet_score(
+        get_preset("dorian_sexy_duet"), tempo_bpm=88, cello_velocity=74, violin_velocity=62
+    )
+    assert isinstance(score, stream.Score)
+
+
+def test_generate_variant_signature_has_no_duet_parameter():
+    import inspect
+
+    from core.engine.loop_engine import generate_variant
+
+    params = inspect.signature(generate_variant).parameters
+    assert "instrument_set" not in params
+    assert "duet" not in params
