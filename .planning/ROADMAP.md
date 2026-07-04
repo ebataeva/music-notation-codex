@@ -11,7 +11,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Core Library Skeleton + Validators** - Pure-Python data structures, dataclasses (incl. GenerationTrace fields), pytest scaffold, and guards (range + bar duration)
+- [x] **Phase 1: Core Library Skeleton + Validators** - Pure-Python data structures, dataclasses (incl. GenerationTrace fields), pytest scaffold, and guards (range + bar duration) (completed 2026-07-04)
 - [ ] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population
 - [ ] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies)
 - [ ] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance
@@ -44,7 +44,7 @@
   5. Dataclasses include GenerationTrace fields (seed, pattern strategy, register, voice-leading, chord tones) so later phases don't retrofit them
   6. requirements.txt pins the approved stack (music21==10.5.0) and installs cleanly on Python 3.12+
 
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 Plans:
 **Wave 1**
 
@@ -57,7 +57,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-04-PLAN.md — MoodPreset registry merge (7 entries) + script data-source swap + golden regression verify
+- [x] 01-04-PLAN.md — MoodPreset registry merge (7 entries) + script data-source swap + golden regression verify
 
 ### Phase 2: LoopEngine + ExportEngine
 
@@ -260,7 +260,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Library Skeleton + Validators | 3/4 | In Progress|  |
+| 1. Core Library Skeleton + Validators | 4/4 | Complete   | 2026-07-04 |
 | 2. LoopEngine + ExportEngine | 0/0 | Not started | - |
 | 2.5. Progression-Driven Generation | 0/0 | Not started | - |
 | 3. TheoryExplainer | 0/0 | Not started | - |
