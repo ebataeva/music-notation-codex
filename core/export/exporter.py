@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from music21 import midi
 from music21 import stream
 
 # core/export/exporter.py -> core/export -> core -> project root: parents[2]
@@ -37,10 +36,9 @@ class ExportEngine:
     def export_to_midi(self, score: stream.Score, output_name: str) -> Path:
         midi_path = self._safe_path("midi", output_name, ".mid")
         midi_path.parent.mkdir(parents=True, exist_ok=True)
-        midi_file = midi.translate.streamToMidiFile(score)
-        midi_file.open(str(midi_path), "wb")
-        midi_file.write()
-        midi_file.close()
+        # WR-07: music21 exports MIDI natively; the manual open/write/close dance
+        # leaked the file handle when write() raised.
+        score.write("midi", fp=str(midi_path))
         return midi_path
 
     def export(self, score: stream.Score, output_name: str) -> tuple[Path, Path]:
