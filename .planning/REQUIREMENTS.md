@@ -17,8 +17,8 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 - [ ] **LOOP-01**: App generates a playable cello loop from the chord progression + mood
 - [ ] **LOOP-02**: App generates 3 distinct loop variants for the same input
-- [ ] **LOOP-03**: Every generated note is within playable cello range (C2–D5) — validated at generation time
-- [ ] **LOOP-04**: Each bar's rhythm sums exactly to the meter — validated (no silent corruption)
+- [x] **LOOP-03**: Every generated note is within playable cello range (C2–D5) — validated at generation time
+- [x] **LOOP-04**: Each bar's rhythm sums exactly to the meter — validated (no silent corruption)
 
 ### Theory
 
@@ -53,7 +53,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 - [ ] **PLAT-01**: App runs locally from a single command and opens a web UI
 - [ ] **PLAT-02**: All visible UI copy is written in English
-- [ ] **PLAT-03**: Code comments are in English and only where they clarify non-obvious logic
+- [x] **PLAT-03**: Code comments are in English and only where they clarify non-obvious logic
 
 ### Testing
 
@@ -106,9 +106,9 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| LOOP-03 | Phase 1 | Pending |
-| LOOP-04 | Phase 1 | Pending |
-| PLAT-03 | Phase 1 | Pending |
+| LOOP-03 | Phase 1 | Complete |
+| LOOP-04 | Phase 1 | Complete |
+| PLAT-03 | Phase 1 | Complete |
 | LOOP-01 | Phase 2 | Pending |
 | INPUT-01 | Phase 2.5 | Pending |
 | TRACE-01 | Phase 2.5 | Pending |
