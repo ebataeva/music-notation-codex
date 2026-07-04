@@ -19,21 +19,21 @@
     </scaling>
   </defaults>
   <part-list>
-    <score-part id="P7e7edaaad1265bb65243b4f8f9701d2c">
+    <score-part id="P2d1010fa4945b2677abf9db5abb83933">
       <part-name>Violoncello</part-name>
       <part-abbreviation>Vc</part-abbreviation>
-      <score-instrument id="I460bfbe777ff21df6998637d026b2cdc">
+      <score-instrument id="I8af166708d5970d11bd9289aec576103">
         <instrument-name>Violoncello</instrument-name>
         <instrument-abbreviation>Vc</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I460bfbe777ff21df6998637d026b2cdc">
+      <midi-instrument id="I8af166708d5970d11bd9289aec576103">
         <midi-channel>1</midi-channel>
         <midi-program>43</midi-program>
       </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
-  <part id="P7e7edaaad1265bb65243b4f8f9701d2c">
+  <part id="P2d1010fa4945b2677abf9db5abb83933">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>

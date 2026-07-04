@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from music21 import clef, duration, environment, instrument, key, meter, midi, note, stream, tempo
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Позволяет запускать скрипт напрямую (python3 scripts/...), не устанавливая пакет.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from core.presets.registry import get_preset  # noqa: E402
+
 OUTPUT_NAME = "dorian_sexy_violin_cello_loop"
 MUSICXML_PATH = PROJECT_ROOT / "scores" / "musicxml" / f"{OUTPUT_NAME}.musicxml"
 MIDI_PATH = PROJECT_ROOT / "scores" / "midi" / f"{OUTPUT_NAME}.mid"
@@ -42,30 +48,11 @@ def build_score() -> stream.Score:
         part.append(meter.TimeSignature("4/4"))
 
     # D Dorian vamp: Dm9 -> G9. The B natural keeps it warm instead of funeral-dark.
-    cello_rhythm = [0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 0.5]
-    violin_rhythm = [0.5, 0.5, 1.0, 0.5, 0.5, 1.0]
-
-    cello_bars = [
-        ["D2", "A2", "D3", "E3", "F3", "E3", "D3"],
-        ["G2", "D3", "F3", "A2", "B2", "A2", "G2"],
-        ["D2", "A2", "D3", "E3", "F3", "E3", "D3"],
-        ["G2", "D3", "F3", "A2", "B2", "A2", "G2"],
-        ["D2", "A2", "C3", "E3", "F3", "E3", "D3"],
-        ["G2", "D3", "F3", "A2", "B2", "C3", "B2"],
-        ["D2", "A2", "D3", "E3", "F3", "E3", "D3"],
-        ["G2", "D3", "F3", "A2", "B2", "A2", "D2"],
-    ]
-
-    violin_bars = [
-        ["A4", "B4", "C5", "B4", "A4", "F4"],
-        ["G4", "A4", "B4", "A4", "G4", "E4"],
-        ["A4", "B4", "C5", "B4", "A4", "F4"],
-        ["G4", "A4", "B4", "C5", "B4", "A4"],
-        ["F4", "A4", "B4", "A4", "F4", "E4"],
-        ["G4", "A4", "B4", "A4", "G4", "E4"],
-        ["A4", "B4", "C5", "B4", "A4", "F4"],
-        ["G4", "A4", "B4", "A4", "F4", "D4"],
-    ]
+    preset = get_preset("dorian_sexy_duet")
+    cello_rhythm = preset.duet_rhythm["cello"]
+    violin_rhythm = preset.duet_rhythm["violin"]
+    cello_bars = preset.duet_bars["cello"]
+    violin_bars = preset.duet_bars["violin"]
 
     for measure_number, pitches in enumerate(cello_bars, start=1):
         add_measure(cello, measure_number, pitches, cello_rhythm, velocity=74)

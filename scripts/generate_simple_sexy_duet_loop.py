@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from music21 import clef, duration, environment, instrument, key, meter, midi, note, stream, tempo
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Позволяет запускать скрипт напрямую (python3 scripts/...), не устанавливая пакет.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from core.presets.registry import get_preset  # noqa: E402
+
 OUTPUT_NAME = "simple_sexy_d_minor_violin_cello_loop"
 MUSICXML_PATH = PROJECT_ROOT / "scores" / "musicxml" / f"{OUTPUT_NAME}.musicxml"
 MIDI_PATH = PROJECT_ROOT / "scores" / "midi" / f"{OUTPUT_NAME}.mid"
@@ -42,36 +48,18 @@ def build_score() -> stream.Score:
         part.append(meter.TimeSignature("4/4"))
 
     # Two-chord vamp: Dm9 for breath, A7 for heat, repeated without heroic movement.
-    cello_bars = [
-        ["D2", "A2", "D3", "E3"],
-        ["A1", "E2", "G2", "C#3"],
-        ["D2", "A2", "D3", "E3"],
-        ["A1", "E2", "G2", "C#3"],
-        ["D2", "A2", "F2", "E2"],
-        ["A1", "E2", "G2", "C#3"],
-        ["D2", "A2", "D3", "E3"],
-        ["A1", "E2", "G2", "C#3"],
-    ]
-
     # The violin whispers around F-E-D, then lets C# pull back into D.
-    violin_bars = [
-        ["F4", "E4", "D4", "E4"],
-        ["E4", "G4", "C#5", "Bb4"],
-        ["F4", "E4", "D4", "A4"],
-        ["G4", "E4", "C#4", "D4"],
-        ["A4", "F4", "E4", "D4"],
-        ["E4", "G4", "C#5", "Bb4"],
-        ["F4", "E4", "D4", "E4"],
-        ["C#4", "E4", "G4", "D4"],
-    ]
-
-    rhythm = [1.0, 1.0, 1.0, 1.0]
+    preset = get_preset("simple_sexy_duet")
+    cello_rhythm = preset.duet_rhythm["cello"]
+    violin_rhythm = preset.duet_rhythm["violin"]
+    cello_bars = preset.duet_bars["cello"]
+    violin_bars = preset.duet_bars["violin"]
 
     for measure_number, pitches in enumerate(cello_bars, start=1):
-        add_measure(cello, measure_number, pitches, rhythm, velocity=68)
+        add_measure(cello, measure_number, pitches, cello_rhythm, velocity=68)
 
     for measure_number, pitches in enumerate(violin_bars, start=1):
-        add_measure(violin, measure_number, pitches, rhythm, velocity=58)
+        add_measure(violin, measure_number, pitches, violin_rhythm, velocity=58)
 
     score.insert(0, violin)
     score.insert(0, cello)

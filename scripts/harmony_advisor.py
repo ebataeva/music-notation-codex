@@ -1,71 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import sys
+from pathlib import Path
 from textwrap import dedent
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Позволяет запускать скрипт напрямую (python3 scripts/...), не устанавливая пакет.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
-GENRE_IDEAS = {
-    "dark_trip_hop": {
-        "progressions": [
-            "i - VI - v - i: C minor -> Ab -> G minor -> C minor. Работает, потому что низкая тоника держит гипноз, VI дает темное тепло, v возвращает без слишком яркого классического разрешения.",
-            "i - bVII - VI - V: C minor -> Bb -> Ab -> G. Работает как спуск вниз: ощущение соблазна, опасности и неизбежного возврата.",
-        ],
-        "modulations": [
-            "Через общий аккорд: C minor -> Eb major. Eb major является относительным мажором, поэтому переход мягкий, но свет становится холоднее и кинематографичнее.",
-            "Через доминанту: C minor -> G minor. Повтори D или G в басу, затем закрепи G minor. Это дает ощущение темного поворота без разрушения грува.",
-        ],
-        "mood": [
-            "Загадочность: добавь b2 или натуральную 7 ступень как проходящую ноту, например Db или B в C minor. Эти звуки слегка конфликтуют с ладом и создают тень.",
-            "Секси-эффект: оставь устойчивый низкий пульс, а верхние ноты двигай хроматически на полтона. Полутон звучит телесно и напряженно, потому что ухо ждет разрешения.",
-            "Драйв: укороти длительности до шестнадцатых и повторяй опорную ноту между движущимися нотами. Повтор дает мотор, движение нот дает направление.",
-        ],
-    },
-    "ritual_tribal": {
-        "progressions": [
-            "i - bVII - i - bVI: D minor -> C -> D minor -> Bb. Работает как круговой обряд: тоника возвращается часто, а соседние ступени дают первобытное качание.",
-            "i - iv - bVII - i: D minor -> G minor -> C -> D minor. Хорошо для телесного, танцевального движения без попсовой сладости.",
-        ],
-        "modulations": [
-            "Смести центр на кварту: D minor -> G minor. Держи D как общий звук, затем сделай G новой опорой. Это звучит естественно для струнных и усиливает ритуальность.",
-            "Параллельная окраска: D minor -> D Phrygian. Замени E на Eb. Модуляция почти незаметная, но сразу появляется древний, опасный оттенок.",
-        ],
-        "mood": [
-            "Загадочность: используй фригийскую b2 ступень. В D это Eb. Она работает, потому что полутон над тоникой звучит как запретная дверь рядом с домом.",
-            "Драйв: ставь акценты не только на 1 и 3, а на 1, последнюю восьмую 2-й доли и 4. Сдвинутый акцент создает племенной толчок.",
-            "Секси-эффект: чередуй сухой низкий пульс и мягкий ответ выше на кварту/квинту. Контраст тела и ответа создает разговорность.",
-        ],
-    },
-    "noir_slow_burn": {
-        "progressions": [
-            "i - iv - bVI - V: A minor -> D minor -> F -> E. Работает как noir: минорная тягучесть, затем яркая доминанта E просит разрешения.",
-            "i - bVI - iiø - V: A minor -> F -> B half-diminished -> E. Это более джазовый путь, сразу появляется дымная неопределенность.",
-        ],
-        "modulations": [
-            "A minor -> C major через общий аккорд Am/C. Это даст холодное просветление без потери меланхолии.",
-            "A minor -> C minor через хроматическое понижение E до Eb. Это резкий noir-поворот: знакомый материал внезапно темнеет.",
-        ],
-        "mood": [
-            "Загадочность: оставляй паузы после напряженных нот. Пауза работает, потому что слушатель сам достраивает угрозу.",
-            "Секси-эффект: используй медленные нисходящие полутона, например C -> B -> Bb -> A. Нисходящий хроматизм звучит как выдох и притяжение.",
-            "Драйв без ускорения: добавь ghost-notes на слабые доли. Темп остается медленным, но внутри появляется нерв.",
-        ],
-    },
-    "driving_cinematic": {
-        "progressions": [
-            "i - bVI - bVII - i: C minor -> Ab -> Bb -> C minor. Работает эпично: bVI дает масштаб, bVII поднимает энергию без слишком классического V-I.",
-            "i - iv - VI - V: C minor -> F minor -> Ab -> G. Более драматично, потому что V создает сильное ожидание возврата.",
-        ],
-        "modulations": [
-            "C minor -> Eb minor через общий тон Eb. Это темный кинематографичный скачок: общий звук связывает, новая тональность пугает.",
-            "C minor -> D minor секвенцией: подними весь остинатный рисунок на тон. Это простой способ усилить сцену без сложной теории.",
-        ],
-        "mood": [
-            "Драйв: держи pedal tone, например C или G, между каждой движущейся нотой. Pedal tone фиксирует землю, а верхнее движение разгоняет мотор.",
-            "Загадочность: перед сменой гармонии вставь чужую ноту на слабую долю. Она мелькает и исчезает, поэтому интригует, но не ломает лад.",
-            "Секси-эффект: добавь синкопу перед сильной долей. Тело слышит ожидание удара, а задержка делает грув более липким.",
-        ],
-    },
-}
+from core.presets.registry import get_preset, list_presets  # noqa: E402
 
 
 def print_section(title: str, items: list[str]) -> None:
@@ -78,7 +23,7 @@ def print_section(title: str, items: list[str]) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Suggest harmonic development, modulation, and mood ideas.")
-    parser.add_argument("--genre", choices=sorted(GENRE_IDEAS), default="dark_trip_hop")
+    parser.add_argument("--genre", choices=sorted(list_presets()), default="dark_trip_hop")
     parser.add_argument("--list-genres", action="store_true")
     return parser.parse_args()
 
@@ -88,18 +33,18 @@ def main() -> None:
 
     if args.list_genres:
         print("Доступные жанры:")
-        for genre in sorted(GENRE_IDEAS):
+        for genre in sorted(list_presets()):
             print(f"- {genre}")
         return
 
-    ideas = GENRE_IDEAS[args.genre]
+    preset = get_preset(args.genre)
     print(dedent(f"""
     Harmony advisor: {args.genre}
     Это не автокомпозитор, а карта вариантов: выбирай направление, затем меняй ноты/аккорды в генераторе.
     """).strip())
-    print_section("Гармоническое развитие", ideas["progressions"])
-    print_section("Модуляции", ideas["modulations"])
-    print_section("Загадочность, драйв, секси-эффект", ideas["mood"])
+    print_section("Гармоническое развитие", preset.progressions)
+    print_section("Модуляции", preset.modulations)
+    print_section("Загадочность, драйв, секси-эффект", preset.mood_tips)
 
 
 if __name__ == "__main__":

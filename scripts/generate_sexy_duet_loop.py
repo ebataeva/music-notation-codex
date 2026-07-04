@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 from music21 import clef, duration, environment, instrument, key, meter, midi, note, stream, tempo
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+# Позволяет запускать скрипт напрямую (python3 scripts/...), не устанавливая пакет.
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from core.presets.registry import get_preset  # noqa: E402
+
 OUTPUT_NAME = "sexy_d_minor_violin_cello_loop"
 MUSICXML_PATH = PROJECT_ROOT / "scores" / "musicxml" / f"{OUTPUT_NAME}.musicxml"
 MIDI_PATH = PROJECT_ROOT / "scores" / "midi" / f"{OUTPUT_NAME}.mid"
@@ -41,32 +47,15 @@ def build_score() -> stream.Score:
         part.append(key.Key("D", "minor"))
         part.append(meter.TimeSignature("4/4"))
 
-    cello_rhythm = [0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5]
-    violin_rhythm = [1.0, 0.5, 0.5, 1.0, 1.0]
+    preset = get_preset("sexy_duet")
+    cello_rhythm = preset.duet_rhythm["cello"]
+    violin_rhythm = preset.duet_rhythm["violin"]
 
     # The cello keeps the body of the loop: low pulse, fifths, and a chromatic pull back home.
-    cello_bars = [
-        ["D2", "A2", "D3", "C3", "A2", "F2", "A2"],
-        ["D2", "A2", "F3", "E3", "C3", "A2", "F2"],
-        ["Bb2", "F3", "A3", "G3", "F3", "D3", "Bb2"],
-        ["A2", "E3", "G3", "F3", "E3", "C#3", "D2"],
-        ["D2", "A2", "D3", "C3", "A2", "F2", "A2"],
-        ["F2", "C3", "E3", "D3", "C3", "A2", "F2"],
-        ["G2", "D3", "F3", "E3", "D3", "Bb2", "G2"],
-        ["A2", "E3", "G3", "F3", "E3", "C#3", "D2"],
-    ]
+    cello_bars = preset.duet_bars["cello"]
 
     # The violin answers in a breathy register: suspensions and half-step tension make it seductive.
-    violin_bars = [
-        ["A4", "C5", "D5", "F5", "E5"],
-        ["A4", "C5", "E5", "D5", "C5"],
-        ["Bb4", "D5", "F5", "E5", "D5"],
-        ["A4", "C#5", "E5", "G5", "F5"],
-        ["A4", "C5", "D5", "F5", "E5"],
-        ["C5", "A4", "D5", "E5", "F5"],
-        ["Bb4", "D5", "G5", "F5", "E5"],
-        ["A4", "C#5", "E5", "G5", "D5"],
-    ]
+    violin_bars = preset.duet_bars["violin"]
 
     for measure_number, pitches in enumerate(cello_bars, start=1):
         add_measure(cello, measure_number, pitches, cello_rhythm, velocity=82)

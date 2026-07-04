@@ -19,33 +19,33 @@
     </scaling>
   </defaults>
   <part-list>
-    <score-part id="Pa714d5b1ab89a1b64e7ff5c36201383b">
+    <score-part id="P3c329f24d17f17c1db3e89af7bc3c8d6">
       <part-name>Violin</part-name>
       <part-abbreviation>Vln</part-abbreviation>
-      <score-instrument id="I2f09a88d5838affc5527a77e0f26eb01">
+      <score-instrument id="I4e4ab16b14b202994a24bf37dc7ea46f">
         <instrument-name>Violin</instrument-name>
         <instrument-abbreviation>Vln</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I2f09a88d5838affc5527a77e0f26eb01">
+      <midi-instrument id="I4e4ab16b14b202994a24bf37dc7ea46f">
         <midi-channel>1</midi-channel>
         <midi-program>41</midi-program>
       </midi-instrument>
     </score-part>
-    <score-part id="Pd12066cf4a06e24d4670ac7f7530f107">
+    <score-part id="Pc14f6822f25048a068da8335d20193cd">
       <part-name>Violoncello</part-name>
       <part-abbreviation>Vc</part-abbreviation>
-      <score-instrument id="Ie23b24529b1b5c4f0730359c256eb9b9">
+      <score-instrument id="I84ebba0f45701b74f211c03b79dd4dd8">
         <instrument-name>Violoncello</instrument-name>
         <instrument-abbreviation>Vc</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="Ie23b24529b1b5c4f0730359c256eb9b9">
+      <midi-instrument id="I84ebba0f45701b74f211c03b79dd4dd8">
         <midi-channel>2</midi-channel>
         <midi-program>43</midi-program>
       </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
-  <part id="Pa714d5b1ab89a1b64e7ff5c36201383b">
+  <part id="P3c329f24d17f17c1db3e89af7bc3c8d6">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>
@@ -551,7 +551,7 @@
     </measure>
   </part>
   <!--=========================== Part 2 ===========================-->
-  <part id="Pd12066cf4a06e24d4670ac7f7530f107">
+  <part id="Pc14f6822f25048a068da8335d20193cd">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>
