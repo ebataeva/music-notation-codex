@@ -131,6 +131,94 @@ def generate_variant(preset: MoodPreset, seed: int | None = None) -> LoopVariant
     )
 
 
+def make_note(pitch_name: str, quarter_length: float, velocity: int) -> note.Note:
+    """Build a single music21 Note with duration and velocity set (extracted
+    verbatim from the 3 duet scripts' identical helper -- Plan 03, D-13)."""
+    n = note.Note(pitch_name)
+    n.duration = duration.Duration(quarterLength=quarter_length)
+    n.volume.velocity = velocity
+    return n
+
+
+def add_measure(
+    part: stream.Part, number: int, pitches: list[str], rhythm: list[float], velocity: int
+) -> None:
+    """Append one Measure built from pitches/rhythm/velocity to a Part
+    (extracted verbatim from the 3 duet scripts' identical helper -- Plan 03)."""
+    measure = stream.Measure(number=number)
+    for pitch_name, quarter_length in zip(pitches, rhythm, strict=True):
+        measure.append(make_note(pitch_name, quarter_length, velocity))
+    part.append(measure)
+
+
+def build_duet_score(
+    preset: MoodPreset, tempo_bpm: int, cello_velocity: int, violin_velocity: int
+) -> stream.Score:
+    """Internal-only two-part (cello+violin) path (D-13) -- not exposed via
+    generate_variant(); DUET-01 public duet API is v2 scope. Called directly
+    by the 3 duet scripts only. Extracted from their identical build_score()
+    (renamed here to avoid colliding with this module's solo build_score).
+    """
+    score = stream.Score(id=f"duet_{preset.name}")
+
+    violin = stream.Part(id="violin")
+    violin.append(instrument.Violin())
+    violin.append(clef.TrebleClef())
+
+    cello = stream.Part(id="cello")
+    cello.append(instrument.Violoncello())
+    cello.append(clef.BassClef())
+
+    for part in (violin, cello):
+        part.append(tempo.MetronomeMark(number=tempo_bpm))
+        part.append(key.Key(preset.key_tonic, preset.key_mode))
+        part.append(meter.TimeSignature(preset.meter_signature))
+
+    cello_rhythm = preset.duet_rhythm["cello"]
+    violin_rhythm = preset.duet_rhythm["violin"]
+    cello_bars = preset.duet_bars["cello"]
+    violin_bars = preset.duet_bars["violin"]
+
+    validate_bar_duration(cello_rhythm, preset.meter_signature)
+    validate_bar_duration(violin_rhythm, preset.meter_signature)
+
+    for measure_number, pitches in enumerate(cello_bars, start=1):
+        for pitch_name in pitches:
+            if _is_legacy_exception(preset.name, pitch_name):
+                warnings.warn(
+                    f"Skipping validate_pitch for legacy out-of-range note "
+                    f"{pitch_name!r} in preset {preset.name!r} (D-07).",
+                    stacklevel=2,
+                )
+            else:
+                # Cello part: default (non-extended) cello range, matching build_score.
+                validate_pitch(pitch_name)
+        add_measure(cello, measure_number, pitches, cello_rhythm, velocity=cello_velocity)
+
+    for measure_number, pitches in enumerate(violin_bars, start=1):
+        for pitch_name in pitches:
+            if _is_legacy_exception(preset.name, pitch_name):
+                warnings.warn(
+                    f"Skipping validate_pitch for legacy out-of-range note "
+                    f"{pitch_name!r} in preset {preset.name!r} (D-07).",
+                    stacklevel=2,
+                )
+            else:
+                # Violin part sits in a higher register than the cello-tuned
+                # default range (max MIDI 74) -- e.g. sexy_duet's F5 (MIDI 77).
+                # validate_pitch's range check is cello-specific throughout
+                # this module (CELLO_MIN_MIDI/CELLO_MAX_MIDI_*); pass
+                # extended=True so legitimate violin notes aren't rejected as
+                # if they were out-of-range cello notes (Rule 1 fix -- the
+                # plan's action text didn't account for this range mismatch).
+                validate_pitch(pitch_name, extended=True)
+        add_measure(violin, measure_number, pitches, violin_rhythm, velocity=violin_velocity)
+
+    score.insert(0, violin)
+    score.insert(0, cello)
+    return score
+
+
 def _classify_register(pitches: list[str]) -> str:
     """Cheap register label for a bar's pitches, based on the lowest octave digit
     present. Not a music-theoretic register model -- just enough to populate a
