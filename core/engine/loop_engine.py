@@ -159,6 +159,13 @@ def build_duet_score(
     by the 3 duet scripts only. Extracted from their identical build_score()
     (renamed here to avoid colliding with this module's solo build_score).
     """
+    # WR-04: duet fields are typed `dict | None` -- fail with a diagnosable
+    # ValueError instead of a raw TypeError when handed a solo preset.
+    if preset.duet_rhythm is None or preset.duet_bars is None:
+        raise ValueError(
+            f"Preset {preset.name!r} has no duet data; use build_score() for solo presets."
+        )
+
     cello_rhythm = preset.duet_rhythm["cello"]
     violin_rhythm = preset.duet_rhythm["violin"]
     cello_bars = preset.duet_bars["cello"]
