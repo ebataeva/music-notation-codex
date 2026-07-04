@@ -20,9 +20,11 @@ OUTPUT_NAME = "sexy_d_minor_violin_cello_loop"
 def main() -> None:
     environment.Environment()["warnings"] = 0  # WR-04 fix -- in-memory only, no disk write
     preset = get_preset("sexy_duet")
-    score = build_duet_score(preset, tempo_bpm=76, cello_velocity=82, violin_velocity=70)
+    score = build_duet_score(
+        preset, tempo_bpm=preset.duet_tempo_bpm, cello_velocity=82, violin_velocity=70
+    )
     musicxml_path, midi_path = ExportEngine().export(score, OUTPUT_NAME)
-    print("Sexy duet loop: D minor, 76 bpm, 8 bars, violin + cello")
+    print(f"Sexy duet loop: D minor, {preset.duet_tempo_bpm} bpm, 8 bars, violin + cello")
     print(f"MusicXML: {musicxml_path}")
     print(f"MIDI: {midi_path}")
 
