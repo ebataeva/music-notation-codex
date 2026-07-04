@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from music21 import clef, instrument, key, meter, note, stream, tempo
 
 
@@ -59,7 +61,11 @@ def test_export_combined_returns_both_paths_and_writes_both_files(tmp_path):
 
 
 def test_export_engine_defaults_base_dir_to_project_root_scores():
-    from core.export.exporter import ExportEngine, PROJECT_ROOT
+    from core.export.exporter import ExportEngine
 
     engine = ExportEngine()
-    assert engine.base_dir == PROJECT_ROOT / "scores"
+    # Compute the project root independently of the module under test
+    # (tests/ sits one level below the root) so a parents[] miscount
+    # in exporter.PROJECT_ROOT would be caught instead of restated.
+    expected_root = Path(__file__).resolve().parents[1]
+    assert engine.base_dir == expected_root / "scores"
