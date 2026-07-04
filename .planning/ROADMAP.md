@@ -44,7 +44,7 @@
   5. Dataclasses include GenerationTrace fields (seed, pattern strategy, register, voice-leading, chord tones) so later phases don't retrofit them
   6. requirements.txt pins the approved stack (music21==10.5.0) and installs cleanly on Python 3.12+
 
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 Plans:
 **Wave 1**
 
@@ -53,7 +53,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-03-PLAN.md — requirements.txt bump to music21==10.5.0 + golden baseline capture
+- [x] 01-03-PLAN.md — requirements.txt bump to music21==10.5.0 + golden baseline capture
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -260,7 +260,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Library Skeleton + Validators | 2/4 | In Progress|  |
+| 1. Core Library Skeleton + Validators | 3/4 | In Progress|  |
 | 2. LoopEngine + ExportEngine | 0/0 | Not started | - |
 | 2.5. Progression-Driven Generation | 0/0 | Not started | - |
 | 3. TheoryExplainer | 0/0 | Not started | - |
