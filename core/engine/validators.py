@@ -1,4 +1,5 @@
 from music21 import meter, pitch
+from music21.exceptions21 import Music21Exception
 from music21.pitch import PitchException
 
 # Cello playable range, expressed in MIDI note numbers.
@@ -34,7 +35,14 @@ def validate_bar_duration(
         raise ValueError(f"Rhythm is empty for meter {meter_signature}.")
     if any(quarter_length <= 0 for quarter_length in rhythm):
         raise ValueError(f"Rhythm contains non-positive duration(s): {rhythm}")
-    ts = meter.TimeSignature(meter_signature)
+    # WR-02: wrap the raw Music21Exception (whose message is misleading for bad
+    # meter strings) into a ValueError, matching the pitch-wrapping policy above.
+    try:
+        ts = meter.TimeSignature(meter_signature)
+    except Music21Exception as exc:
+        raise ValueError(
+            f"Meter {meter_signature!r} is not a valid time signature: {exc}"
+        ) from exc
     expected_ql = ts.barDuration.quarterLength
     actual_ql = sum(rhythm)
     if abs(actual_ql - expected_ql) > tolerance:
