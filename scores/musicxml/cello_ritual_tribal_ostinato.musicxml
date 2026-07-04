@@ -5,8 +5,11 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2026-06-22</encoding-date>
-      <software>music21 v.9.9.2</software>
+      <encoding-date>2026-07-04</encoding-date>
+      <software>music21 v.10.5.0</software>
+      <supports element="beam" type="yes" />
+      <supports element="stem" type="yes" />
+      <supports element="accidental" type="yes" />
     </encoding>
   </identification>
   <defaults>
@@ -16,21 +19,21 @@
     </scaling>
   </defaults>
   <part-list>
-    <score-part id="Pcc4ab9e87f8e3480287ef6f1fc62940f">
+    <score-part id="Pbe6bfde10d487d323470083d13130ca7">
       <part-name>Violoncello</part-name>
       <part-abbreviation>Vc</part-abbreviation>
-      <score-instrument id="I5db6fc881b4b62db3171f98a26b1c58b">
+      <score-instrument id="Icb4abf76e36d72abd9a981dce5bffc12">
         <instrument-name>Violoncello</instrument-name>
         <instrument-abbreviation>Vc</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I5db6fc881b4b62db3171f98a26b1c58b">
+      <midi-instrument id="Icb4abf76e36d72abd9a981dce5bffc12">
         <midi-channel>1</midi-channel>
         <midi-program>43</midi-program>
       </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
-  <part id="Pcc4ab9e87f8e3480287ef6f1fc62940f">
+  <part id="Pbe6bfde10d487d323470083d13130ca7">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>

@@ -1,0 +1,20 @@
+{
+  "midi": {
+    "cello_dark_trip_hop_ostinato.mid": "9dd155d43bdd2095f9b26350ba31838179d0588f",
+    "cello_driving_cinematic_ostinato.mid": "20fd01d6caa4454335276ec6ed2bcd45a79bf263",
+    "cello_noir_slow_burn_ostinato.mid": "b6629f7597f7f4524bc54d2fd45c31502d7d262b",
+    "cello_ritual_tribal_ostinato.mid": "f6a24c87194ebab3f7d58f90908da3d86155382f",
+    "dorian_sexy_violin_cello_loop.mid": "2ce8426c6c7a6f50af302c95d42a720096cfdd12",
+    "sexy_d_minor_violin_cello_loop.mid": "6822c863db86ad246dc8e2ad561fca9519a311a3",
+    "simple_sexy_d_minor_violin_cello_loop.mid": "8c8c51c6e0ab586b240cd68b00154b73cce06b4f"
+  },
+  "musicxml_normalized": {
+    "cello_dark_trip_hop_ostinato.musicxml": "ddab28bf09f9cd3114674e7318e4cf6709a8135b",
+    "cello_driving_cinematic_ostinato.musicxml": "b4e2562c88801cc28bb59f91d239292bdca2029b",
+    "cello_noir_slow_burn_ostinato.musicxml": "8c02810567e8272ab6e089aa077e0ede13bed247",
+    "cello_ritual_tribal_ostinato.musicxml": "9df4330e0afae6bf199fab98c26a7aa712295a26",
+    "dorian_sexy_violin_cello_loop.musicxml": "4bf2f8575af5b6ad46d90e26b9988d7753bd4d49",
+    "sexy_d_minor_violin_cello_loop.musicxml": "53990f7ffd529b1a8ee307842a1481ca1dad2f64",
+    "simple_sexy_d_minor_violin_cello_loop.musicxml": "0f7146f55b9a3c2f632aa34354c3de6a0cc64be2"
+  }
+}
