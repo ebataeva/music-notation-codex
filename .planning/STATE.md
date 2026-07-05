@@ -4,7 +4,7 @@ milestone: v1
 milestone_name: Loop Coach MVP
 status: phase_complete
 last_updated: "2026-07-05T14:55:00.000Z"
-last_activity: 2026-07-05 -- Phase 02.5 UAT complete (8/8 passed, 0 issues)
+last_activity: 2026-07-06 -- Completed quick task 260706-21y: v1 audit tech-debt tails fixed
 progress:
   total_phases: 10
   completed_phases: 3
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 Phase: 02.5 (progression-driven-generation) — COMPLETE (UAT passed 2026-07-05)
 Plan: 1 of 1
 Status: Phase 02.5 verified; next up Phase 3 (TheoryExplainer)
-Last activity: 2026-07-05 -- Phase 02.5 UAT complete (8/8 passed, 0 issues)
+Last activity: 2026-07-06 -- Completed quick task 260706-21y: v1 audit tech-debt tails (SAFE-01 guard, PLAT-02 translations, WR-05 immutability, phase 2 VALIDATION.md, phase 2.5 VERIFICATION.md)
 
 Progress: [███░░░░░░░] 30%
 
@@ -76,6 +76,12 @@ None yet.
 - Phase 5: FluidSynth + soundfont availability on this macOS machine must be validated before Phase 5 starts (`brew install fluidsynth`)
 - Phase 9: Audio Analysis MCP server status (already built vs to-build?) must be confirmed before Phase 9 planning
 - Phase 9: FEEDBACK-03 (on-demand Q&A) requires an LLM that is not in the v1 stack — narrow the requirement or add LLM integration; decide before Phase 9 planning
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260706-21y | Fix v1 audit tech-debt tails: SAFE-01 max-notes guard, English preset/CLI copy (PLAT-02), MoodPreset deep-immutability (WR-05) | 2026-07-06 | 77594d2 | [260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max](./quick/260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max/) |
 
 ## Deferred Items
 
