@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from core.presets.mood_presets import MOOD_PRESETS
-from core.presets.registry import get_preset, list_presets
+from core.presets.registry import get_preset, list_presets, list_solo_presets
 
 SOLO_MOODS = {"dark_trip_hop", "ritual_tribal", "noir_slow_burn", "driving_cinematic"}
 DUET_MOODS = {"sexy_duet", "simple_sexy_duet", "dorian_sexy_duet"}
@@ -59,3 +59,7 @@ def test_solo_presets_have_no_duet_fields_and_duet_presets_do():
         assert preset.duet_rhythm is not None
         assert preset.duet_bars is not None
         assert preset.duet_tempo_bpm is not None
+
+
+def test_list_solo_presets_returns_only_the_four_solo_moods():
+    assert list_solo_presets() == sorted(SOLO_MOODS)

@@ -26,6 +26,17 @@ class TheoryExplanation:
 
 @dataclass
 class GenerationTrace:
+    """Per-generation provenance for a LoopVariant.
+
+    IN-01: `chord_tones_used` is one inner list per bar, but its element
+    shape depends on `pattern_strategy` -- consumers (e.g. Phase-3
+    TheoryExplainer) must branch on the strategy, not assume one shape:
+      - "preset_verbatim": concrete octave-bearing pitches, e.g. ["C2", "C2"].
+      - "progression_driven_register_mapped": octave-less pitch classes taken
+        from the parsed chord, e.g. ["A", "C", "E"] -- the register actually
+        chosen per bar is recorded separately in `register_choices`.
+    """
+
     seed: int | None
     pattern_strategy: str | None
     register_choices: list[str] | None
