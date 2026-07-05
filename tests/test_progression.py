@@ -46,3 +46,22 @@ def test_parse_progression_tolerates_surrounding_and_duplicate_whitespace():
     chords_normal = parse_progression("Am F C G")
     chords_messy = parse_progression("  Am  F   C G  ")
     assert [c.name for c in chords_messy] == [c.name for c in chords_normal]
+
+
+def test_parse_progression_rejects_slash_chord_naming_bad_token():
+    # CR-01: slash chords must be rejected -- pychord's slash path corrupts its
+    # process-global quality cache. The message names the offending token.
+    with pytest.raises(ValueError) as exc_info:
+        parse_progression("C/G F C G")
+    assert "C/G" in str(exc_info.value)
+
+
+def test_parse_progression_rejects_slash_before_touching_pychord_cache():
+    # CR-01 regression: a rejected slash chord must not have poisoned the shared
+    # cache, so a later slash-free parse still returns root-first components.
+    with pytest.raises(ValueError):
+        parse_progression("Cmaj7/G")  # also covers WR-03 (alias + slash)
+    later = parse_progression("C F G Am")
+    assert later[0].components[0] == "C"
+    assert later[1].components[0] == "F"
+    assert later[2].components[0] == "G"

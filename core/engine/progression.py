@@ -67,6 +67,17 @@ def parse_progression(text: str) -> list[ParsedChord]:
 
     parsed: list[ParsedChord] = []
     for token in tokens:
+        # CR-01: pychord 0.2.8 caches Quality objects process-globally and its
+        # slash-chord path mutates the cached quality in place, permanently
+        # corrupting the components of every later chord of that quality in the
+        # process (rotated roots, duplicated sevenths). Reject slash tokens up
+        # front until real slash-chord support is designed -- this keeps the
+        # shared cache clean and also gives a clear error instead of WR-03's
+        # confusing "Unknown quality" for aliases like "Cmaj7/G".
+        if "/" in token:
+            raise ValueError(
+                f"Slash chords are not supported yet: {token!r} in progression {text!r}."
+            )
         normalized = _normalize_token(token)
         try:
             chord = Chord(normalized)
