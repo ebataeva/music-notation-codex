@@ -367,6 +367,41 @@ def test_progression_path_duet_only_preset_raises_actionable_error():
     assert "duet-only preset" in str(exc_info.value)
 
 
+def test_build_progression_score_respells_sharps_to_flats_in_flat_key():
+    # IN-02: pychord spells Gm as G/A#/D; in a flat key (C minor) the score
+    # must read Bb, not A# -- no sharp accidental should survive.
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Bb Eb Gm F")
+    preset = get_preset("dark_trip_hop")  # C minor -> flat key
+    score = build_progression_score(chords, preset, seed=1)
+
+    names = [n.pitch.name for m in score.parts[0].getElementsByClass(stream.Measure) for n in m.notes]
+    assert names  # sanity
+    assert not any("#" in n for n in names)
+
+
+def test_build_progression_score_handles_power_chords():
+    # IN-03: power chords put the fifth at index 1 (C5 -> ['C', 'G']); the
+    # interval-based fifth detection must handle them without crashing, and
+    # notes must stay in the cello range.
+    from core.engine.loop_engine import (
+        CELLO_MAX_MIDI_DEFAULT,
+        CELLO_MIN_MIDI,
+        build_progression_score,
+    )
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("C5 G5 C5 F5")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset, seed=5)
+
+    midis = [n.pitch.midi for m in score.parts[0].getElementsByClass(stream.Measure) for n in m.notes]
+    assert midis
+    assert all(CELLO_MIN_MIDI <= mi <= CELLO_MAX_MIDI_DEFAULT for mi in midis)
+
+
 def test_preset_only_path_unaffected_by_progression_addition():
     """Golden-regression guard at the unit level: the existing preset-only
     build_score() path must remain byte-identical after adding the

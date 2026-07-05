@@ -364,7 +364,16 @@ def _register_map_chord(
     notes. Returns (pitches, last_pitch) so the caller can thread
     voice-leading continuity into the next bar."""
     root = chord.components[0]
-    fifth = chord.components[2] if len(chord.components) >= 3 else None
+    # IN-03: find the fifth by interval from the root (6/7/8 semitones =
+    # dim/perfect/aug fifth) rather than assuming triadic index 2 -- power
+    # chords like C5 put the fifth at index 1, and non-triadic qualities can
+    # push it elsewhere. Only affects which tones get the low-register bias.
+    root_pc = pitch.Pitch(root).pitchClass
+    fifth = next(
+        (c for c in chord.components[1:]
+         if (pitch.Pitch(c).pitchClass - root_pc) % 12 in (6, 7, 8)),
+        None,
+    )
 
     bar_pitches: list[pitch.Pitch] = []
     current_previous = previous_pitch
@@ -378,6 +387,22 @@ def _register_map_chord(
         current_previous = chosen
 
     return bar_pitches, current_previous
+
+
+def _respell_pitch_to_key(p: pitch.Pitch, key_obj: key.Key) -> pitch.Pitch:
+    """IN-02: pychord spells some qualities with sharps regardless of key
+    context (Gm -> G, A#, D), so a flat-key progression can leak A# where the
+    notation should read Bb. Respell a single-accidental pitch to match the
+    key's flat/sharp preference; leave naturals and neutral keys (0 sharps)
+    untouched. Playback is unchanged -- getEnharmonic preserves pitch/MIDI."""
+    if p.accidental is None or p.accidental.alter == 0:
+        return p
+    has_sharp = p.accidental.alter > 0
+    if key_obj.sharps < 0 and has_sharp:
+        return p.getEnharmonic()
+    if key_obj.sharps > 0 and not has_sharp:
+        return p.getEnharmonic()
+    return p
 
 
 def build_progression_score(
@@ -420,7 +445,8 @@ def build_progression_score(
     cello_part.append(clef.BassClef())
 
     cello_part.append(tempo.MetronomeMark(number=preset.tempo_bpm))
-    cello_part.append(key.Key(preset.key_tonic, preset.key_mode))
+    preset_key = key.Key(preset.key_tonic, preset.key_mode)
+    cello_part.append(preset_key)
     cello_part.append(meter.TimeSignature(preset.meter_signature))
 
     previous_pitch: pitch.Pitch | None = None
@@ -431,7 +457,7 @@ def build_progression_score(
 
         measure = stream.Measure(number=measure_number)
         for concrete_pitch, quarter_length in zip(bar_pitches, preset.rhythm, strict=True):
-            pitch_name = concrete_pitch.nameWithOctave
+            pitch_name = _respell_pitch_to_key(concrete_pitch, preset_key).nameWithOctave
             validate_pitch(pitch_name)
             cello_note = note.Note(pitch_name)
             cello_note.duration = duration.Duration(quarterLength=quarter_length)
