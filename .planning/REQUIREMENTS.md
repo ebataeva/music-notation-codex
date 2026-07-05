@@ -68,7 +68,7 @@ optimising for a metric while violating intent. Inspired by the 111-agent deep-r
 (Anthropic, 2026-06-02): no token budget guard, no fetch limit enforcement, no StructuredOutput
 enforcement → 111 agents, 1.2M tokens, zero output.
 
-- [ ] **SAFE-01**: Max notes per loop — generation stops with an error if a single variant exceeds 512 notes (covers ~32 bars of 4/4 at 16th-note density; any real cello loop is well within this)
+- [x] **SAFE-01**: Max notes per loop — generation stops with an error if a single variant exceeds 512 notes (covers ~32 bars of 4/4 at 16th-note density; any real cello loop is well within this)
 - [x] **SAFE-02**: Max bars per loop — generation rejects requests for loops longer than 64 bars
 - [ ] **SAFE-03**: MIDI render timeout — FluidSynth render is killed if it exceeds 30 seconds; user sees a clear error, not a hung browser
 - [ ] **SAFE-04**: MCP call rate limit — no more than 5 MCP analysis calls per browser session; subsequent calls show "analysis quota reached" with a reset hint
@@ -151,7 +151,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | FEEDBACK-02 | Phase 9 | Pending |
 | FEEDBACK-03 | Phase 9 | Pending |
 | FEEDBACK-04 | Phase 9 | Pending |
-| SAFE-01 | Phase 1 | Gap — Phase 1 closed without it; no max-notes guard in code (see v1-MILESTONE-AUDIT.md) |
+| SAFE-01 | Phase 2 | Complete — max-notes guard (MAX_NOTES=512) added to LoopEngine alongside SAFE-02's MAX_BARS guard, covers all 4 generation entry points (2026-07-06 quick task) |
 | SAFE-02 | Phase 2 | Complete |
 | SAFE-03 | Phase 5 | Pending |
 | SAFE-04 | Phase 9 | Pending |
@@ -183,3 +183,4 @@ Explicitly excluded. Documented to prevent scope creep.
 ---
 *Requirements defined: 2026-06-22*
 *Last updated: 2026-07-06 — interim milestone audit: INPUT-01/TRACE-01 marked Complete (Phase 2.5), SAFE-02/SAFE-07 checkboxes checked, SAFE-01 flagged as orphaned gap (see v1-MILESTONE-AUDIT.md)*
+*SAFE-01 remapped to Phase 2/LoopEngine and marked Complete (max-notes guard implemented + tested, quick task 260706-21y).*

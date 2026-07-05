@@ -7,7 +7,7 @@ from pathlib import Path
 from music21 import environment
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-# Позволяет запускать скрипт напрямую (python3 scripts/...), не устанавливая пакет.
+# Allows running the script directly (python3 scripts/...) without installing the package.
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 

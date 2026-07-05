@@ -26,6 +26,11 @@ from core.presets.registry import list_solo_presets
 # guard against unbounded loop generation).
 MAX_BARS = 64
 
+# Maximum notes a single generated variant may contain (SAFE-01: denial-of-service
+# guard against unbounded per-variant note density, independent of the bar-count
+# guard above).
+MAX_NOTES = 512
+
 # Per-preset set of pitch names known to violate validate_pitch's playable-range
 # check but which must survive byte-identically (D-07). The only known case is
 # simple_sexy_duet's "A1" (MIDI 33, below the C2 validator floor) -- pre-existing
@@ -38,6 +43,12 @@ _LEGACY_PITCH_EXCEPTIONS: dict[str, set[str]] = {
 
 def _is_legacy_exception(preset_name: str, pitch_name: str) -> bool:
     return pitch_name in _LEGACY_PITCH_EXCEPTIONS.get(preset_name, set())
+
+
+def _total_note_count(bars: list[list[str]] | tuple[tuple[str, ...], ...]) -> int:
+    """Sum the number of notes across all bars (SAFE-01: shared by all 4
+    generation entry points instead of duplicating the sum expression)."""
+    return sum(len(bar) for bar in bars)
 
 
 def _resolve_seed(seed: int | None) -> tuple[int, random.Random]:
@@ -57,6 +68,11 @@ def build_score(preset: MoodPreset, seed: int | None = None) -> stream.Score:
     # SAFE-02: reject oversized requests before any Score object is constructed.
     if len(preset.bars) > MAX_BARS:
         raise ValueError(f"Requested {len(preset.bars)} bars exceeds the maximum of {MAX_BARS}.")
+
+    # SAFE-01: reject oversized note counts before any Score object is constructed.
+    note_count = _total_note_count(preset.bars)
+    if note_count > MAX_NOTES:
+        raise ValueError(f"Requested variant has {note_count} notes, exceeding the maximum of {MAX_NOTES}.")
 
     # D-01/D-02: resolve seed up front. The preset-verbatim strategy doesn't
     # consume randomness yet, but threading the Random instance through now
@@ -114,6 +130,12 @@ def generate_variant(preset: MoodPreset, seed: int | None = None) -> LoopVariant
     # accumulation loop below never starts for an oversized request either.
     if len(preset.bars) > MAX_BARS:
         raise ValueError(f"Requested {len(preset.bars)} bars exceeds the maximum of {MAX_BARS}.")
+
+    # SAFE-01: guard here too, before build_score is even invoked (defense in
+    # depth, mirroring the MAX_BARS pairing above).
+    note_count = _total_note_count(preset.bars)
+    if note_count > MAX_NOTES:
+        raise ValueError(f"Requested variant has {note_count} notes, exceeding the maximum of {MAX_NOTES}.")
 
     resolved_seed, _rng = _resolve_seed(seed)
 
@@ -201,6 +223,15 @@ def build_duet_score(
         raise ValueError(
             f"Duet parts have mismatched bar counts: "
             f"cello={len(cello_bars)}, violin={len(violin_bars)}."
+        )
+
+    # SAFE-01: reject oversized combined note counts before any Score object is
+    # constructed, matching the solo path's guard in build_score/generate_variant.
+    total_notes = _total_note_count(cello_bars) + _total_note_count(violin_bars)
+    if total_notes > MAX_NOTES:
+        raise ValueError(
+            f"Duet variant has {total_notes} notes (cello + violin combined), "
+            f"exceeding the maximum of {MAX_NOTES}."
         )
 
     validate_bar_duration(cello_rhythm, preset.meter_signature)
@@ -433,6 +464,12 @@ def build_progression_score(
             f"choose one of: {', '.join(list_solo_presets())}."
         )
 
+    # SAFE-01: one bar per chord, notes_per_bar = len(preset.rhythm) (matching
+    # this function's own later notes_per_bar assignment below).
+    total_notes = len(chords) * len(preset.rhythm)
+    if total_notes > MAX_NOTES:
+        raise ValueError(f"Requested variant has {total_notes} notes, exceeding the maximum of {MAX_NOTES}.")
+
     _resolved_seed, rng = _resolve_seed(seed)
 
     validate_bar_duration(preset.rhythm, preset.meter_signature)
@@ -483,6 +520,14 @@ def generate_variant_from_progression(
         raise ValueError(f"Requested {len(chords)} bars exceeds the maximum of {MAX_BARS}.")
     if not chords:
         raise ValueError("Progression must contain at least one chord to generate a variant.")
+
+    # SAFE-01: guard here too (defense in depth, mirroring the MAX_BARS pairing
+    # above). A duet-only preset has empty rhythm; skip the check here so it
+    # reaches build_progression_score's own actionable "no solo rhythm" error
+    # instead of a spurious MAX_NOTES message.
+    if preset.rhythm and len(chords) * len(preset.rhythm) > MAX_NOTES:
+        total_notes = len(chords) * len(preset.rhythm)
+        raise ValueError(f"Requested variant has {total_notes} notes, exceeding the maximum of {MAX_NOTES}.")
 
     resolved_seed, _rng = _resolve_seed(seed)
 

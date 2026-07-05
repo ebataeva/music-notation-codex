@@ -6,7 +6,7 @@ from pathlib import Path
 from textwrap import dedent
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-# Позволяет запускать скрипт напрямую (python3 scripts/...), не устанавливая пакет.
+# Allows running the script directly (python3 scripts/...) without installing the package.
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -32,7 +32,7 @@ def main() -> None:
     args = parse_args()
 
     if args.list_genres:
-        print("Доступные жанры:")
+        print("Available genres:")
         for genre in sorted(list_presets()):
             print(f"- {genre}")
         return
@@ -40,11 +40,11 @@ def main() -> None:
     preset = get_preset(args.genre)
     print(dedent(f"""
     Harmony advisor: {args.genre}
-    Это не автокомпозитор, а карта вариантов: выбирай направление, затем меняй ноты/аккорды в генераторе.
+    This is not an auto-composer but a map of options: pick a direction, then change the notes/chords in the generator.
     """).strip())
-    print_section("Гармоническое развитие", preset.progressions)
-    print_section("Модуляции", preset.modulations)
-    print_section("Загадочность, драйв, секси-эффект", preset.mood_tips)
+    print_section("Harmonic development", preset.progressions)
+    print_section("Modulations", preset.modulations)
+    print_section("Mystery, drive, sexy effect", preset.mood_tips)
 
 
 if __name__ == "__main__":
