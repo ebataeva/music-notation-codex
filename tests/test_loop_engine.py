@@ -128,6 +128,112 @@ def test_generate_variant_raises_for_more_than_64_bars_before_score_built():
         generate_variant(too_many_bars_preset)
 
 
+def test_generate_variant_raises_for_more_than_512_notes():
+    # SAFE-01: 64 bars x 9 notes/bar = 576 notes, exceeding MAX_NOTES=512 while
+    # staying under the 64-bar MAX_BARS cap. Rhythm sums to 4.0 with 9 equal
+    # fractional durations.
+    from core.engine.loop_engine import generate_variant
+
+    rhythm = [4.0 / 9] * 9
+    too_many_notes_preset = MoodPreset(
+        name="synthetic_too_dense_preset",
+        tempo_bpm=100,
+        key_tonic="C",
+        key_mode="minor",
+        meter_signature="4/4",
+        velocity=80,
+        rhythm=rhythm,
+        bars=[["C2"] * 9 for _ in range(64)],
+        feel="synthetic test preset",
+        progressions=[],
+        modulations=[],
+        mood_tips=[],
+    )
+    with pytest.raises(ValueError):
+        generate_variant(too_many_notes_preset)
+
+
+def test_generate_variant_does_not_raise_for_preset_under_512_notes():
+    # dark_trip_hop is 8 bars x 8 notes = 64 notes, well under the cap --
+    # proves the guard doesn't false-positive on real presets.
+    from core.engine.loop_engine import generate_variant
+
+    preset = get_preset("dark_trip_hop")
+    assert sum(len(bar) for bar in preset.bars) < 512
+    variant = generate_variant(preset)
+    assert variant is not None
+
+
+def test_generate_variant_from_progression_raises_for_more_than_512_notes():
+    from core.engine.loop_engine import generate_variant_from_progression
+    from core.engine.progression import parse_progression
+
+    # 64 chords (1 bar per chord) x 9-note rhythm = 576 notes, exceeding
+    # MAX_NOTES=512 while staying under the 64-bar MAX_BARS cap.
+    chords = parse_progression(" ".join(["Am"] * 64))
+    dense_rhythm_preset = MoodPreset(
+        name="synthetic_dense_rhythm_preset",
+        tempo_bpm=100,
+        key_tonic="C",
+        key_mode="minor",
+        meter_signature="4/4",
+        velocity=80,
+        rhythm=[4.0 / 9] * 9,
+        bars=[["C2"] * 9],
+        feel="synthetic test preset",
+        progressions=[],
+        modulations=[],
+        mood_tips=[],
+    )
+    with pytest.raises(ValueError):
+        generate_variant_from_progression(chords, dense_rhythm_preset)
+
+
+def test_build_duet_score_raises_for_more_than_512_combined_notes():
+    from core.engine.loop_engine import build_duet_score
+
+    oversized_duet_preset = MoodPreset(
+        name="synthetic_oversized_duet_preset",
+        tempo_bpm=76,
+        key_tonic="D",
+        key_mode="minor",
+        meter_signature="4/4",
+        velocity=82,
+        rhythm=[],
+        bars=[],
+        feel="",
+        progressions=[],
+        modulations=[],
+        mood_tips=[],
+        duet_rhythm={
+            "cello": [4.0 / 9] * 9,
+            "violin": [4.0 / 9] * 9,
+        },
+        duet_bars={
+            "cello": [["D2"] * 9 for _ in range(32)],
+            "violin": [["A4"] * 9 for _ in range(32)],
+        },
+    )
+    with pytest.raises(ValueError):
+        build_duet_score(
+            oversized_duet_preset, tempo_bpm=76, cello_velocity=82, violin_velocity=70
+        )
+
+
+def test_build_duet_score_sexy_duet_combined_notes_well_under_512():
+    # Regression guard (no false positive): sexy_duet's combined cello+violin
+    # note count must stay well under MAX_NOTES.
+    from core.engine.loop_engine import build_duet_score
+
+    preset = get_preset("sexy_duet")
+    total_notes = sum(len(bar) for bar in preset.duet_bars["cello"]) + sum(
+        len(bar) for bar in preset.duet_bars["violin"]
+    )
+    assert total_notes < 512
+    score = build_duet_score(preset, tempo_bpm=76, cello_velocity=82, violin_velocity=70)
+    assert isinstance(score, stream.Score)
+
+
 def test_build_duet_score_returns_score_with_no_exception():
     from core.engine.loop_engine import build_duet_score
 
