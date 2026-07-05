@@ -299,6 +299,74 @@ def test_build_progression_score_avoids_leaps_larger_than_an_octave():
         assert interval <= 12
 
 
+def test_build_progression_score_does_not_monotonically_climb_to_ceiling():
+    # WR-01: register bias must survive voice-leading, so a long loop must not
+    # ratchet to the top of the range and park there. Assert the line spends
+    # real time in the low register (root/fifth bias) rather than pinning high.
+    from core.engine.loop_engine import CELLO_MAX_MIDI_DEFAULT, build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression(" ".join(["Am", "F", "C", "G"] * 8))  # 32 bars
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset, seed=42)
+
+    midis = [n.pitch.midi for m in score.parts[0].getElementsByClass(stream.Measure) for n in m.notes]
+    # The final bars must not all be pinned at the ceiling (the old climbing bug).
+    assert min(midis[-16:]) < CELLO_MAX_MIDI_DEFAULT - 5
+    # And the piece as a whole must visit the low register, not live up top.
+    assert min(midis) <= 43  # at/below G2
+
+
+def test_build_progression_score_flat_key_progression_end_to_end():
+    # IN-04: a flat-key progression must build and pass validators end-to-end.
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Bb Eb Ab F")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset, seed=3)
+
+    measures = list(score.parts[0].getElementsByClass(stream.Measure))
+    assert len(measures) == len(chords)
+    assert all(m.notes for m in measures)
+
+
+def test_build_progression_score_avoids_leaps_over_sixteen_bars():
+    # IN-04: leap constraint must hold across a long progression, not one seed/bar.
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression(" ".join(["Am", "F", "C", "G"] * 4))  # 16 bars
+    preset = get_preset("driving_cinematic")
+    for seed in (1, 7, 42, 99):
+        score = build_progression_score(chords, preset, seed=seed)
+        notes = [n for m in score.parts[0].getElementsByClass(stream.Measure) for n in m.notes]
+        for prev_note, next_note in zip(notes, notes[1:]):
+            assert abs(next_note.pitch.midi - prev_note.pitch.midi) <= 12
+
+
+def test_progression_path_duet_only_preset_raises_actionable_error():
+    # WR-02: duet-only presets have no solo rhythm; the progression path must
+    # raise an actionable message, not the internal "Rhythm is empty".
+    from core.engine.loop_engine import (
+        build_progression_score,
+        generate_variant_from_progression,
+    )
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Am F C G")
+    preset = get_preset("sexy_duet")
+
+    with pytest.raises(ValueError) as exc_info:
+        build_progression_score(chords, preset)
+    assert "duet-only preset" in str(exc_info.value)
+    assert "Rhythm is empty" not in str(exc_info.value)
+
+    with pytest.raises(ValueError) as exc_info:
+        generate_variant_from_progression(chords, preset)
+    assert "duet-only preset" in str(exc_info.value)
+
+
 def test_preset_only_path_unaffected_by_progression_addition():
     """Golden-regression guard at the unit level: the existing preset-only
     build_score() path must remain byte-identical after adding the

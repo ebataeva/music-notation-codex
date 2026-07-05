@@ -332,20 +332,22 @@ def _choose_register_for_chord_tone(
             f"the cello's default range (MIDI {CELLO_MIN_MIDI}-{CELLO_MAX_MIDI_DEFAULT})."
         )
 
+    # WR-01: the max-leap rule *constrains* the candidate set, it does not by
+    # itself pick the note. Short-circuiting on "closest to previous" made the
+    # line ratchet upward (root->third->fifth cycles up 3-5 semitones each
+    # time, always closer than the octave-down neighbour) until it parked at
+    # the top of the range, leaving the low-register bias dead after note 1.
+    # Instead: narrow to within-leap candidates, then apply the register bias
+    # inside that set so root/fifth tones still favour the low octaves.
     if previous_pitch is not None:
         within_leap = [c for c in candidates if abs(c.midi - previous_pitch.midi) <= 12]
         if within_leap:
-            # Closest-to-previous-note wins when voice-leading constrains us;
-            # ties broken toward the lower octave, matching the low-register
-            # preference for root/fifth tones.
-            return min(within_leap, key=lambda c: (abs(c.midi - previous_pitch.midi), c.midi))
+            candidates = within_leap
 
     if is_root_or_fifth:
-        low_register = [c for c in candidates if c.octave <= 3]
-        pool = low_register or candidates
+        pool = [c for c in candidates if c.octave <= 3] or candidates
     else:
-        mid_register = [c for c in candidates if c.octave in (3, 4)]
-        pool = mid_register or candidates
+        pool = [c for c in candidates if c.octave in (3, 4)] or candidates
 
     return rng.choice(pool)
 
@@ -396,6 +398,15 @@ def build_progression_score(
         raise ValueError(f"Requested {len(chords)} bars exceeds the maximum of {MAX_BARS}.")
     if not chords:
         raise ValueError("Progression must contain at least one chord to build a score.")
+
+    # WR-02: the progression path drives its bars from preset.rhythm; a
+    # duet-only preset has none, so guard here with an actionable message
+    # instead of leaking the internal "Rhythm is empty for meter 4/4."
+    if not preset.rhythm:
+        raise ValueError(
+            f"Preset {preset.name!r} has no solo rhythm (duet-only preset); "
+            f"choose one of: {', '.join(list_solo_presets())}."
+        )
 
     _resolved_seed, rng = _resolve_seed(seed)
 
