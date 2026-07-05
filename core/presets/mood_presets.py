@@ -1,8 +1,7 @@
 """MOOD_PRESETS registry: merged data from all 5 pre-existing CLI scripts.
 
 Source of truth for Phase 2's LoopEngine and Phase 3's TheoryExplainer
-(ARCHITECTURE.md Pattern 2). Data below is migrated verbatim (character-for-
-character, including Russian text) from:
+(ARCHITECTURE.md Pattern 2). Data below was originally migrated verbatim from:
 
 - scripts/generate_cello_dark_ostinato.py (GENRE_PRESETS: tempo/key/rhythm/bars/feel
   for 4 solo moods)
@@ -12,9 +11,12 @@ character, including Russian text) from:
   generate_dorian_sexy_duet_loop.py (3 standalone duet presets, each with
   per-instrument duet_rhythm/duet_bars)
 
-This is a data-only move: validators (Plan 02) are not wired into any
-generation path yet, so pre-existing out-of-range notes migrate verbatim,
-not silently fixed (see the "A1" note below).
+Musical data (pitches/rhythms) is unchanged from the source scripts; the
+originally-Russian prose (feel, progressions, modulations, mood_tips) was
+translated to English 2026-07-06 (PLAT-02: all UI-facing copy in English —
+Phase 3's TheoryExplainer feeds this prose into TheoryExplanation for
+rendering). Pre-existing out-of-range notes still migrate verbatim, not
+silently fixed (see the "A1" note below).
 """
 
 from __future__ import annotations
@@ -42,17 +44,17 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         ),
         feel="dark, sexy, loopy trip-hop groove",
         progressions=(
-            "i - VI - v - i: C minor -> Ab -> G minor -> C minor. Работает, потому что низкая тоника держит гипноз, VI дает темное тепло, v возвращает без слишком яркого классического разрешения.",
-            "i - bVII - VI - V: C minor -> Bb -> Ab -> G. Работает как спуск вниз: ощущение соблазна, опасности и неизбежного возврата.",
+            "i - VI - v - i: C minor -> Ab -> G minor -> C minor. Works because the low tonic holds the hypnotic pull, VI adds dark warmth, and v brings it back without an overly bright classical resolution.",
+            "i - bVII - VI - V: C minor -> Bb -> Ab -> G. Works as a downward descent: a feeling of seduction, danger, and inevitable return.",
         ),
         modulations=(
-            "Через общий аккорд: C minor -> Eb major. Eb major является относительным мажором, поэтому переход мягкий, но свет становится холоднее и кинематографичнее.",
-            "Через доминанту: C minor -> G minor. Повтори D или G в басу, затем закрепи G minor. Это дает ощущение темного поворота без разрушения грува.",
+            "Via a common chord: C minor -> Eb major. Eb major is the relative major, so the transition is soft, but the light turns colder and more cinematic.",
+            "Via the dominant: C minor -> G minor. Repeat D or G in the bass, then settle into G minor. This gives a sense of a dark turn without breaking the groove.",
         ),
         mood_tips=(
-            "Загадочность: добавь b2 или натуральную 7 ступень как проходящую ноту, например Db или B в C minor. Эти звуки слегка конфликтуют с ладом и создают тень.",
-            "Секси-эффект: оставь устойчивый низкий пульс, а верхние ноты двигай хроматически на полтона. Полутон звучит телесно и напряженно, потому что ухо ждет разрешения.",
-            "Драйв: укороти длительности до шестнадцатых и повторяй опорную ноту между движущимися нотами. Повтор дает мотор, движение нот дает направление.",
+            "Mystery: add the b2 or the natural 7th degree as a passing note, e.g. Db or B in C minor. These tones clash slightly with the mode and cast a shadow.",
+            "Sexy effect: keep a steady low pulse and move the upper notes chromatically by a semitone. The semitone sounds bodily and tense because the ear is waiting for resolution.",
+            "Drive: shorten the durations to sixteenths and repeat the anchor note between the moving notes. Repetition provides the motor, note movement provides direction.",
         ),
     ),
     "ritual_tribal": MoodPreset(
@@ -75,17 +77,17 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         ),
         feel="ritual pulse with accents, more body and movement",
         progressions=(
-            "i - bVII - i - bVI: D minor -> C -> D minor -> Bb. Работает как круговой обряд: тоника возвращается часто, а соседние ступени дают первобытное качание.",
-            "i - iv - bVII - i: D minor -> G minor -> C -> D minor. Хорошо для телесного, танцевального движения без попсовой сладости.",
+            "i - bVII - i - bVI: D minor -> C -> D minor -> Bb. Works like a circular rite: the tonic returns often, and the neighboring degrees give a primal sway.",
+            "i - iv - bVII - i: D minor -> G minor -> C -> D minor. Good for physical, danceable movement without pop sweetness.",
         ),
         modulations=(
-            "Смести центр на кварту: D minor -> G minor. Держи D как общий звук, затем сделай G новой опорой. Это звучит естественно для струнных и усиливает ритуальность.",
-            "Параллельная окраска: D minor -> D Phrygian. Замени E на Eb. Модуляция почти незаметная, но сразу появляется древний, опасный оттенок.",
+            "Shift the center up a fourth: D minor -> G minor. Hold D as the common tone, then make G the new anchor. This sounds natural on strings and heightens the ritual feel.",
+            "Parallel-mode coloring: D minor -> D Phrygian. Replace E with Eb. The modulation is almost imperceptible, but an ancient, dangerous shade appears at once.",
         ),
         mood_tips=(
-            "Загадочность: используй фригийскую b2 ступень. В D это Eb. Она работает, потому что полутон над тоникой звучит как запретная дверь рядом с домом.",
-            "Драйв: ставь акценты не только на 1 и 3, а на 1, последнюю восьмую 2-й доли и 4. Сдвинутый акцент создает племенной толчок.",
-            "Секси-эффект: чередуй сухой низкий пульс и мягкий ответ выше на кварту/квинту. Контраст тела и ответа создает разговорность.",
+            "Mystery: use the Phrygian b2 degree. In D that is Eb. It works because the semitone above the tonic sounds like a forbidden door right next to home.",
+            "Drive: place accents not only on 1 and 3, but on 1, the last eighth of beat 2, and 4. The shifted accent creates a tribal push.",
+            "Sexy effect: alternate a dry low pulse with a soft answer a fourth/fifth above. The contrast of body and answer creates a conversational feel.",
         ),
     ),
     "noir_slow_burn": MoodPreset(
@@ -108,17 +110,17 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         ),
         feel="slow noir, unspoken tension, held pause",
         progressions=(
-            "i - iv - bVI - V: A minor -> D minor -> F -> E. Работает как noir: минорная тягучесть, затем яркая доминанта E просит разрешения.",
-            "i - bVI - iiø - V: A minor -> F -> B half-diminished -> E. Это более джазовый путь, сразу появляется дымная неопределенность.",
+            "i - iv - bVI - V: A minor -> D minor -> F -> E. Works as noir: minor-key languor, then the bright dominant E begs for resolution.",
+            "i - bVI - iiø - V: A minor -> F -> B half-diminished -> E. This is a jazzier route; a smoky ambiguity appears immediately.",
         ),
         modulations=(
-            "A minor -> C major через общий аккорд Am/C. Это даст холодное просветление без потери меланхолии.",
-            "A minor -> C minor через хроматическое понижение E до Eb. Это резкий noir-поворот: знакомый материал внезапно темнеет.",
+            "A minor -> C major via the common chord Am/C. This gives a cold brightening without losing the melancholy.",
+            "A minor -> C minor via chromatically lowering E to Eb. This is a sharp noir turn: familiar material suddenly darkens.",
         ),
         mood_tips=(
-            "Загадочность: оставляй паузы после напряженных нот. Пауза работает, потому что слушатель сам достраивает угрозу.",
-            "Секси-эффект: используй медленные нисходящие полутона, например C -> B -> Bb -> A. Нисходящий хроматизм звучит как выдох и притяжение.",
-            "Драйв без ускорения: добавь ghost-notes на слабые доли. Темп остается медленным, но внутри появляется нерв.",
+            "Mystery: leave rests after tense notes. The pause works because the listener completes the threat themselves.",
+            "Sexy effect: use slow descending semitones, e.g. C -> B -> Bb -> A. Descending chromaticism sounds like an exhale and a pull.",
+            "Drive without speeding up: add ghost notes on weak beats. The tempo stays slow, but a nervous energy appears inside.",
         ),
     ),
     "driving_cinematic": MoodPreset(
@@ -141,17 +143,17 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         ),
         feel="fast cinematic motor, drive and build",
         progressions=(
-            "i - bVI - bVII - i: C minor -> Ab -> Bb -> C minor. Работает эпично: bVI дает масштаб, bVII поднимает энергию без слишком классического V-I.",
-            "i - iv - VI - V: C minor -> F minor -> Ab -> G. Более драматично, потому что V создает сильное ожидание возврата.",
+            "i - bVI - bVII - i: C minor -> Ab -> Bb -> C minor. Works epically: bVI provides scale, bVII lifts the energy without an overly classical V-I.",
+            "i - iv - VI - V: C minor -> F minor -> Ab -> G. More dramatic, because V creates a strong expectation of return.",
         ),
         modulations=(
-            "C minor -> Eb minor через общий тон Eb. Это темный кинематографичный скачок: общий звук связывает, новая тональность пугает.",
-            "C minor -> D minor секвенцией: подними весь остинатный рисунок на тон. Это простой способ усилить сцену без сложной теории.",
+            "C minor -> Eb minor via the common tone Eb. This is a dark cinematic leap: the shared tone binds them, the new key unsettles.",
+            "C minor -> D minor by sequence: raise the entire ostinato figure by a whole step. A simple way to intensify a scene without complex theory.",
         ),
         mood_tips=(
-            "Драйв: держи pedal tone, например C или G, между каждой движущейся нотой. Pedal tone фиксирует землю, а верхнее движение разгоняет мотор.",
-            "Загадочность: перед сменой гармонии вставь чужую ноту на слабую долю. Она мелькает и исчезает, поэтому интригует, но не ломает лад.",
-            "Секси-эффект: добавь синкопу перед сильной долей. Тело слышит ожидание удара, а задержка делает грув более липким.",
+            "Drive: hold a pedal tone, e.g. C or G, between each moving note. The pedal tone anchors the ground while the upper movement revs the motor.",
+            "Mystery: just before the harmony changes, slip a foreign note onto a weak beat. It flickers and vanishes, so it intrigues without breaking the mode.",
+            "Sexy effect: add a syncopation just before the strong beat. The body hears the anticipation of the hit, and the delay makes the groove stickier.",
         ),
     ),
     # Duet presets below have no GENRE_IDEAS-equivalent theory data source, so
