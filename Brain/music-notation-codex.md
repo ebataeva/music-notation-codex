@@ -98,6 +98,14 @@ Full review delivered in-session by Claude Fable 5; changes committed to ROADMAP
 - **Content-format strategy:** all three blog formats (OnlyFans content, dev-stream, reflective blog) reduce to two shared primitives — Loop Library (persistence) + GenerationTrace (transparency) — plus thin export features. Trace fields go into Phase 1 dataclasses (cheap now, expensive to retrofit); trace-grounded explanations also close research Pitfall 7 (ungrounded theory text).
 - Housekeeping: pytest scaffold added to Phase 1; requirements.txt pin (music21>=9.1,<10) contradicts approved stack (10.5.0) — fixed in Phase 1 scope; roadmap now acknowledges all 5 scripts (3 duet generators added after roadmap creation).
 
+## Review findings applied (2026-07-05, Phase 02.5)
+
+Code review of the progression-driven generation path found 8 issues (1 Critical, 3 Warnings, 4 Info); all 8 fixed and merged to main (branch `gsd-reviewfix/02.5-15234`, report in `.planning/phases/02.5-progression-driven-generation/02.5-REVIEW-FIX.md`):
+- **CR-01 (critical):** slash-chord input (`C/G`) permanently corrupted pychord's process-global quality cache, silently breaking every later chord in the Streamlit session — slash tokens now rejected up front in `parse_progression` (also resolves WR-03's confusing `Cmaj7/G` error).
+- **WR-01:** register mapping ratcheted every line to the top of the cello range within ~2 bars — max-leap now constrains instead of short-circuiting, low-register bias for root/fifth works again (32-bar loop now spans MIDI 36–60).
+- **WR-02:** duet-only presets through the progression path leaked internal "Rhythm is empty" — now an actionable duet-only message listing solo presets.
+- **Info:** trace field semantics documented per strategy; flat-key respelling (Gm renders Bb, not A#); fifth detected by interval (power chords); regression tests for flats/slash/leap/register added (88 tests green).
+
 ## Next step
 
 Phase 1 GSD planning artifacts (CONTEXT/RESEARCH/PATTERNS/PLAN) are being produced via /gsd-plan-phase 1. After that: `/gsd-execute-phase 1`.
