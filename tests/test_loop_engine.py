@@ -76,7 +76,7 @@ def test_generate_variant_chord_tones_used_matches_bars():
     assert variant.trace.chord_tones_used
     assert len(variant.trace.chord_tones_used) == len(preset.bars)
     for bar_tones, expected_bar in zip(variant.trace.chord_tones_used, preset.bars, strict=True):
-        assert bar_tones == expected_bar
+        assert bar_tones == list(expected_bar)
 
 
 def test_legacy_exception_scoped_to_simple_sexy_duet_a1_only():

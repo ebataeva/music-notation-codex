@@ -63,12 +63,12 @@ def test_mood_preset_defaults_and_frozen():
         key_mode="minor",
         meter_signature="4/4",
         velocity=76,
-        rhythm=[0.5] * 8,
-        bars=[["C2"] * 8],
+        rhythm=(0.5,) * 8,
+        bars=(("C2",) * 8,),
         feel="dark, sexy, loopy trip-hop groove",
-        progressions=["i - VI - v - i"],
-        modulations=["Through a common chord"],
-        mood_tips=["Keep the low pulse steady"],
+        progressions=("i - VI - v - i",),
+        modulations=("Through a common chord",),
+        mood_tips=("Keep the low pulse steady",),
     )
     assert preset.duet_rhythm is None
     assert preset.duet_bars is None

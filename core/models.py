@@ -59,6 +59,9 @@ class LoopVariant:
     trace: GenerationTrace | None = None
 
 
+# Collection fields are tuples, not lists (WR-05: frozen=True alone does not
+# protect mutable list/dict fields; get_preset() must not be able to leak a
+# mutation path into the shared MOOD_PRESETS registry).
 @dataclass(frozen=True)
 class MoodPreset:
     name: str
@@ -67,12 +70,12 @@ class MoodPreset:
     key_mode: str
     meter_signature: str
     velocity: int
-    rhythm: list[float]
-    bars: list[list[str]]
+    rhythm: tuple[float, ...]
+    bars: tuple[tuple[str, ...], ...]
     feel: str
-    progressions: list[str]
-    modulations: list[str]
-    mood_tips: list[str]
-    duet_rhythm: dict[str, list[float]] | None = None
-    duet_bars: dict[str, list[list[str]]] | None = None
+    progressions: tuple[str, ...]
+    modulations: tuple[str, ...]
+    mood_tips: tuple[str, ...]
+    duet_rhythm: dict[str, tuple[float, ...]] | None = None
+    duet_bars: dict[str, tuple[tuple[str, ...], ...]] | None = None
     duet_tempo_bpm: int | None = None
