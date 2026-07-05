@@ -75,7 +75,7 @@ enforcement → 111 agents, 1.2M tokens, zero output.
 - [ ] **SAFE-05**: Max explanation length — TheoryExplainer output is truncated at 500 words per explanation field; no wall-of-text loophole
 - [ ] **SAFE-06**: MusicXML size guard — export is rejected if the generated MusicXML exceeds 10 MB; user sees "loop too large to export, try fewer bars"
 - [ ] **SAFE-07**: Variant generation depth guard — variant generation is flat (one level): a variant does not recursively spawn sub-variants; enforced in LoopEngine, not in documentation
-- [ ] **SAFE-08**: Streamlit rerun loop guard — session_state tracks consecutive unproductive reruns; after 10 reruns within 5 seconds with no state change, app shows an error and stops
+- [ ] **SAFE-08**: UI event storm guard — repeated identical Generate events are debounced (button disabled while a generation is in flight); no more than 1 concurrent generation per client (NiceGUI has no rerun model, so the guard targets double-clicks and event floods instead of reruns)
 - [ ] **SAFE-09**: GSD plan step budget — any GSD execution plan for a single phase is capped at 15 steps; if more steps are needed, the phase must be split
 - [ ] **SAFE-10**: Hard numeric guards are enforced in code (assert / raise), not in comments or docs — comments can be ignored, code cannot
 

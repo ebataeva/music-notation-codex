@@ -15,7 +15,7 @@
 - [x] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population (completed 2026-07-04)
 - [x] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies) (completed 2026-07-04)
 - [ ] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance
-- [ ] **Phase 4: Streamlit Skeleton + Session State** - Interactive UI with chord/key/mood input; text output only; session_state architecture
+- [ ] **Phase 4: NiceGUI Skeleton + App State** - Interactive UI with chord/key/mood input; text output only; per-client state + stable element ids
 - [ ] **Phase 5: Notation + Playback** - In-browser score rendering (OSMD) and audio playback (FluidSynth pipeline)
 - [ ] **Phase 6: Export Panel** - MusicXML, MIDI, audio (WAV/MP3), and notation image (PNG/SVG) downloads wired to ExportEngine
 - [ ] **Phase 7: 3-Variant Generation** - Generate and display 3 distinct cello loop variants per request
@@ -109,29 +109,30 @@ Plans:
 
 **Plans:** TBD
 
-### Phase 4: Streamlit Skeleton + Session State
+### Phase 4: NiceGUI Skeleton + App State
 
-**Goal:** The Streamlit app launches with one command, shows chord/key/mood input widgets, generates a loop on submit, and displays the theory explanation as text — with all results stored in session_state so reruns do not lose data.
+**Goal:** The NiceGUI app launches with one command, shows chord/key/mood input widgets, generates a loop on submit, and displays the theory explanation as text — with results held in per-client app state that survives page refresh.
 **Mode:** mvp
 **Depends on:** Phase 2.5, Phase 3
 **Requirements:** INPUT-02, INPUT-03, PLAT-01, PLAT-02
 **Success Criteria** (what must be TRUE):
 
-  1. Running `streamlit run app/main.py` opens the app in the browser with no errors
+  1. Running `python app/main.py` opens the app in the browser with no errors
   2. User can type a chord progression (e.g. "Am F C G"), choose a key and mood from dropdowns, and click Generate
   3. After clicking Generate, the theory explanation text appears on the page without a traceback
-  4. Refreshing the browser or clicking Generate again does not erase the previous result (session_state preserved)
+  4. Refreshing the browser or clicking Generate again does not erase the previous result (state kept in `app.storage` / per-client objects)
   5. All visible UI labels and button text are in English
-  6. Generation completes in ≤3 s from click to visible result (stream-friendly speed budget)
+  6. Generation completes in ≤3 s from click to visible result (stream-friendly speed budget); long work runs off the event loop (`run.cpu_bound`)
   7. An "Example input" button fills the form with a working demo progression in one click (for on-camera demos)
-  8. LoopVariant storage in session_state follows an explicit serialization decision (bytes/paths vs live music21 Score) — no silent pickle failures on rerun
+  8. LoopVariant storage follows an explicit serialization decision (bytes/paths vs live music21 Score) — no silent failures on refresh
+  9. Every interactive element gets a stable id/class (via `.props('id=...')` or markers) — the selector contract for Phase 8 Playwright tests
 
 **Plans:** TBD
 **UI hint**: yes
 
 ### Phase 5: Notation + Playback
 
-**Goal:** After generation, the user can see the cello loop as readable notation rendered in the browser and hear it play back via an audio widget — without leaving the Streamlit app.
+**Goal:** After generation, the user can see the cello loop as readable notation rendered in the browser (OSMD in a real DOM element, no iframe) and hear it play back via `ui.audio` — without leaving the app.
 **Mode:** mvp
 **Depends on:** Phase 4
 **Requirements:** NOTATE-01, PLAY-01
@@ -179,13 +180,13 @@ Plans:
 
 ### Phase 8: UI Test Framework
 
-**Goal:** A Playwright-based test suite in tests-ui/ runs against the live Streamlit app, covers the loop coach happy path, and produces Allure HTML reports — without importing any app or core code.
+**Goal:** A Playwright-based test suite in tests-ui/ runs against the live NiceGUI app using the stable element ids from Phase 4, covers the loop coach happy path, and produces Allure HTML reports — without importing any app or core code.
 **Mode:** mvp
 **Depends on:** Phase 7
 **Requirements:** TEST-01, TEST-02, TEST-03
 **Success Criteria** (what must be TRUE):
 
-  1. Running `pytest tests-ui/` against a running Streamlit server executes at least one test end-to-end with no import errors
+  1. Running `pytest tests-ui/` against a running NiceGUI server executes at least one test end-to-end with no import errors
   2. The test for the loop coach happy path (enter chords → generate → see 3 variants) passes on Chrome/Chromium via ChromeDriver
   3. Running `allure generate` on the test output produces an HTML report showing pass/fail results
   4. tests-ui/ contains zero imports from core/ or app/ (import boundary enforced)
@@ -268,7 +269,7 @@ Plans:
 | 2. LoopEngine + ExportEngine | 3/3 | Complete    | 2026-07-04 |
 | 2.5. Progression-Driven Generation | 1/1 | Complete   | 2026-07-04 |
 | 3. TheoryExplainer | 0/0 | Not started | - |
-| 4. Streamlit Skeleton + Session State | 0/0 | Not started | - |
+| 4. NiceGUI Skeleton + App State | 0/0 | Not started | - |
 | 5. Notation + Playback | 0/0 | Not started | - |
 | 6. Export Panel | 0/0 | Not started | - |
 | 7. 3-Variant Generation | 0/0 | Not started | - |
@@ -281,4 +282,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-06-22*
-*Last updated: 2026-07-04 — review findings applied: Phase 2.5 (progression-driven generation) inserted; trace/seed/pytest/speed-budget criteria added to phases 1–4; EXPORT-03/04 added to Phase 6; Phase 9 pre-phase decisions recorded; v1.5 content phases 10–12 added*
+*Last updated: 2026-07-05 — UI framework changed Streamlit → NiceGUI 3.14.0 (untestable UI vs locked Playwright requirement); Phase 4 renamed to "NiceGUI Skeleton + App State" with stable-element-id criterion added; phases 5/8 goals updated (OSMD without iframe, Playwright against NiceGUI). Previous: 2026-07-04 — review findings applied: Phase 2.5 inserted; trace/seed/pytest/speed-budget criteria added to phases 1–4; EXPORT-03/04 added to Phase 6; Phase 9 pre-phase decisions recorded; v1.5 content phases 10–12 added*

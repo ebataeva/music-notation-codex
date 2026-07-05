@@ -22,7 +22,7 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 
 <!-- New scope being built toward. Hypotheses until shipped. -->
 
-- [ ] Local web UI (Streamlit) that drives the whole workflow interactively from one command
+- [ ] Local web UI (NiceGUI) that drives the whole workflow interactively from one command
 - [ ] Enter a chord progression as text (e.g. `Am F C G`) plus key/mood as the starting point
 - [ ] Generate several distinct loop variants for the same input
 - [ ] Explain each variant in plain language: the music theory of *why* it works
@@ -52,7 +52,7 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 
 ## Constraints
 
-- **Tech stack**: Streamlit UI + Python/`music21` engine — local Python-first project, keep it simple and runnable from one command.
+- **Tech stack**: NiceGUI UI + Python/`music21` engine — local Python-first project, keep it simple and runnable from one command. (Changed from Streamlit 2026-07-05: untestable UI — rerun model, sandboxed iframes, unstable DOM vs. the locked Playwright testing requirement.)
 - **Language**: All visible UI copy in English; code comments in English and only where they clarify non-obvious logic — locked project decision.
 - **Testing**: UI/browser tests live in a *separate* Playwright-based framework under `tests-ui/`, driving Chrome/Chromium via ChromeDriver — locked decision (keeps app code clean, enables real browser regression).
 - **Reporting**: UI test reports generated in Allure format — locked decision.
@@ -65,7 +65,8 @@ Turn a chord progression into several playable electric-cello loop ideas, each e
 |----------|-----------|---------|
 | Start from chord-text input; defer humming/voice input | Reliable and simple; covers the main workflow without pitch-detection complexity | — Pending |
 | Core value is the cello loop coach with theory; violin duet + drums layer on after | Keeps the heart tight so the project doesn't sprawl, even though v1 scope includes duet + drums | — Pending |
-| Streamlit for the first web interface | Local Python-first project; fastest path to an interactive workspace | — Pending |
+| ~~Streamlit for the first web interface~~ Superseded 2026-07-05 | Local Python-first project; fastest path to an interactive workspace | Reversed — untestable UI (rerun model, sandboxed iframes, no stable selectors) conflicts with the locked Playwright testing decision |
+| NiceGUI 3.14.0 for the web interface (2026-07-05) | Python-first, one-command launch, real persistent DOM with stable element ids for Playwright, async-native (simplifies MCP phase) | — Pending |
 | No audio analysis of third-party songs | High complexity, not required by the actual workflow | — Pending |
 | Use an external Audio Analysis MCP for performance feedback (record → analyze → improve) in v1 | The user wants to record her own playing and ask how to improve; an MCP provides analysis without building DSP from scratch | — Pending |
 | Separate Playwright + ChromeDriver test framework, Allure reports | Keep app code clean; real-browser regression with shareable reports | — Pending |

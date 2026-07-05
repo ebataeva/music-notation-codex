@@ -12,7 +12,7 @@ The project is moving from CLI scripts into a local web interface. The planned a
 
 - Application language: English for all visible UI copy.
 - Code comments: English only, and only where comments clarify non-obvious logic.
-- Frontend/app framework: Streamlit for the first local web interface.
+- Frontend/app framework: **NiceGUI 3.14.0** for the local web interface (changed from Streamlit 2026-07-05, before any UI code existed — Streamlit's rerun model, sandboxed component iframes, and unstable DOM made reliable Playwright UI tests impossible, conflicting with the locked Playwright+Allure testing decision; NiceGUI gives a real persistent DOM with stable element ids and is async-native, which also removes the sync↔async MCP bridge from Phase 9). Note: Streamlit-specific advice in the 2026-06-22 research findings below (st.audio_input, session_state, st.components, "Running..." indicator waits) is superseded.
 - Music engine: Python + music21 remains the core generation/export layer.
 - Instruments: violin + cello duet as first-class arrangement mode.
 - Performance workflow: looper-style slots/sections and drum-machine MIDI for Ableton.
