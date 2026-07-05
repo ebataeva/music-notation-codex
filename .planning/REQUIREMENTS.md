@@ -9,7 +9,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 ### Input
 
-- [ ] **INPUT-01**: User can enter a chord progression as text (e.g. `Am F C G`)
+- [x] **INPUT-01**: User can enter a chord progression as text (e.g. `Am F C G`)
 - [ ] **INPUT-02**: User can choose a key (tonic + mode) for generation
 - [ ] **INPUT-03**: User can pick a mood/vibe preset (e.g. noir, ritual, trip-hop, cinematic)
 
@@ -39,7 +39,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 ### Trace & Transparency
 
-- [ ] **TRACE-01**: Every generated variant carries a GenerationTrace (seed, pattern strategy, register choices, voice-leading steps, chord tones used)
+- [x] **TRACE-01**: Every generated variant carries a GenerationTrace (seed, pattern strategy, register choices, voice-leading steps, chord tones used)
 - [ ] **TRACE-02**: Theory explanations reference the actual notes/decisions from the variant's GenerationTrace (not generic preset text)
 
 ### Feedback (Practice Partner)
@@ -69,12 +69,12 @@ optimising for a metric while violating intent. Inspired by the 111-agent deep-r
 enforcement → 111 agents, 1.2M tokens, zero output.
 
 - [ ] **SAFE-01**: Max notes per loop — generation stops with an error if a single variant exceeds 512 notes (covers ~32 bars of 4/4 at 16th-note density; any real cello loop is well within this)
-- [ ] **SAFE-02**: Max bars per loop — generation rejects requests for loops longer than 64 bars
+- [x] **SAFE-02**: Max bars per loop — generation rejects requests for loops longer than 64 bars
 - [ ] **SAFE-03**: MIDI render timeout — FluidSynth render is killed if it exceeds 30 seconds; user sees a clear error, not a hung browser
 - [ ] **SAFE-04**: MCP call rate limit — no more than 5 MCP analysis calls per browser session; subsequent calls show "analysis quota reached" with a reset hint
 - [ ] **SAFE-05**: Max explanation length — TheoryExplainer output is truncated at 500 words per explanation field; no wall-of-text loophole
 - [ ] **SAFE-06**: MusicXML size guard — export is rejected if the generated MusicXML exceeds 10 MB; user sees "loop too large to export, try fewer bars"
-- [ ] **SAFE-07**: Variant generation depth guard — variant generation is flat (one level): a variant does not recursively spawn sub-variants; enforced in LoopEngine, not in documentation
+- [x] **SAFE-07**: Variant generation depth guard — variant generation is flat (one level): a variant does not recursively spawn sub-variants; enforced in LoopEngine, not in documentation
 - [ ] **SAFE-08**: UI event storm guard — repeated identical Generate events are debounced (button disabled while a generation is in flight); no more than 1 concurrent generation per client (NiceGUI has no rerun model, so the guard targets double-clicks and event floods instead of reruns)
 - [ ] **SAFE-09**: GSD plan step budget — any GSD execution plan for a single phase is capped at 15 steps; if more steps are needed, the phase must be split
 - [ ] **SAFE-10**: Hard numeric guards are enforced in code (assert / raise), not in comments or docs — comments can be ignored, code cannot
@@ -128,8 +128,8 @@ Explicitly excluded. Documented to prevent scope creep.
 | LOOP-04 | Phase 1 | Complete |
 | PLAT-03 | Phase 1 | Complete |
 | LOOP-01 | Phase 2 | Complete |
-| INPUT-01 | Phase 2.5 | Pending |
-| TRACE-01 | Phase 2.5 | Pending |
+| INPUT-01 | Phase 2.5 | Complete |
+| TRACE-01 | Phase 2.5 | Complete |
 | THEORY-01 | Phase 3 | Pending |
 | THEORY-02 | Phase 3 | Pending |
 | TRACE-02 | Phase 3 | Pending |
@@ -151,7 +151,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | FEEDBACK-02 | Phase 9 | Pending |
 | FEEDBACK-03 | Phase 9 | Pending |
 | FEEDBACK-04 | Phase 9 | Pending |
-| SAFE-01 | Phase 1 | Pending |
+| SAFE-01 | Phase 1 | Gap — Phase 1 closed without it; no max-notes guard in code (see v1-MILESTONE-AUDIT.md) |
 | SAFE-02 | Phase 2 | Complete |
 | SAFE-03 | Phase 5 | Pending |
 | SAFE-04 | Phase 9 | Pending |
@@ -182,4 +182,4 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ---
 *Requirements defined: 2026-06-22*
-*Last updated: 2026-07-05 — added 7 deferred v2 requirement IDs to the Traceability table; SAFE-02/SAFE-07 marked Complete with Phase 2*
+*Last updated: 2026-07-06 — interim milestone audit: INPUT-01/TRACE-01 marked Complete (Phase 2.5), SAFE-02/SAFE-07 checkboxes checked, SAFE-01 flagged as orphaned gap (see v1-MILESTONE-AUDIT.md)*
