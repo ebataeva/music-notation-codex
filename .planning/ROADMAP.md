@@ -15,9 +15,9 @@
 - [x] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population (completed 2026-07-04)
 - [x] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies) (completed 2026-07-04)
 - [x] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance (completed 2026-07-06)
-- [ ] **Phase 4: NiceGUI Skeleton + App State** - Interactive UI with chord/key/mood input; text output only; per-client state + stable element ids
-- [ ] **Phase 5: Notation + Playback** - In-browser score rendering (OSMD) and audio playback (FluidSynth pipeline)
-- [ ] **Phase 6: Export Panel** - MusicXML, MIDI, audio (WAV/MP3), and notation image (PNG/SVG) downloads wired to ExportEngine
+- [x] **Phase 4: NiceGUI Skeleton + App State** - Interactive UI with chord/key/mood input; text output only; per-client state + stable element ids (completed 2026-07-06)
+- [x] **Phase 5: Notation + Playback** - In-browser score rendering (OSMD) and audio playback (FluidSynth pipeline) (completed 2026-07-06)
+- [x] **Phase 6: Export Panel** - MusicXML, MIDI, audio (WAV/MP3), and notation image (PNG/SVG) downloads wired to ExportEngine (completed 2026-07-06)
 - [ ] **Phase 7: 3-Variant Generation** - Generate and display 3 distinct cello loop variants per request
 - [ ] **Phase 8: UI Test Framework** - Playwright + ChromeDriver + allure-pytest; loop coach happy-path coverage
 - [ ] **Phase 9: MCP Gateway + Recorder + Feedback** - Audio recording, MCP analysis, Q&A, graceful degradation
@@ -269,9 +269,9 @@ Plans:
 | 2. LoopEngine + ExportEngine | 3/3 | Complete    | 2026-07-04 |
 | 2.5. Progression-Driven Generation | 1/1 | Complete   | 2026-07-04 |
 | 3. TheoryExplainer | 1/1 | Complete    | 2026-07-06 |
-| 4. NiceGUI Skeleton + App State | 0/0 | Not started | - |
-| 5. Notation + Playback | 0/0 | Not started | - |
-| 6. Export Panel | 0/0 | Not started | - |
+| 4. NiceGUI Skeleton + App State | 1/1 | Complete    | 2026-07-06 |
+| 5. Notation + Playback | 1/1 | Complete    | 2026-07-06 |
+| 6. Export Panel | 1/1 | Complete    | 2026-07-06 |
 | 7. 3-Variant Generation | 0/0 | Not started | - |
 | 8. UI Test Framework | 0/0 | Not started | - |
 | 9. MCP Gateway + Recorder + Feedback | 0/0 | Not started | - |
