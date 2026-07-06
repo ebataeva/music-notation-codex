@@ -4,13 +4,13 @@ milestone: v1
 milestone_name: Loop Coach MVP
 status: phase_complete
 last_updated: "2026-07-06T14:30:00.000Z"
-last_activity: 2026-07-06 -- Phases 4/5/6 implemented (NiceGUI app + OSMD notation + FluidSynth audio + export panel)
+last_activity: 2026-07-06 -- Phase 9 Practice Partner implemented (record/upload, local analysis, MCP fallback, feedback)
 progress:
   total_phases: 10
-  completed_phases: 7
+  completed_phases: 9
   total_plans: 12
   completed_plans: 12
-  percent: 70
+  percent: 90
 ---
 
 # Project State
@@ -20,22 +20,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-22)
 
 **Core value:** Turn a chord progression into several playable electric-cello loop ideas, each explained by the music theory behind why it works.
-**Current focus:** Phase 3 — theoryexplainer (context gathered, ready to plan)
+**Current focus:** Phase 9 — recorder feedback complete; next up Phase 10 (Loop Library)
 
 ## Current Position
 
-Phase: 03 (theoryexplainer) — COMPLETE (UAT passed 2026-07-06)
+Phase: 09 (recorder-feedback) — COMPLETE (implemented and smoke-tested 2026-07-06)
 Plan: 1 of 1
-Status: Phase 03 verified; next up Phase 4 (NiceGUI Skeleton + App State)
-Last activity: 2026-07-06 -- Phase 3 TheoryExplainer implemented (explainer.py, cues.py, CLI refactored, 12 tests, UAT 4/4 passed)
+Status: Phase 09 implemented; next up Phase 10 (Loop Library)
+Last activity: 2026-07-06 -- Phase 9 Practice Partner implemented (analysis, MCP fallback, feedback, /practice route)
 
-Progress: [████░░░░░░] 40%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 7
+- Total plans completed: 12
 - Average duration: —
 - Total execution time: 0 hours
 
@@ -74,8 +74,7 @@ None yet.
 ### Blockers/Concerns
 
 - Phase 5: FluidSynth + soundfont availability on this macOS machine must be validated before Phase 5 starts (`brew install fluidsynth`)
-- Phase 9: Audio Analysis MCP server status (already built vs to-build?) must be confirmed before Phase 9 planning
-- Phase 9: FEEDBACK-03 (on-demand Q&A) requires an LLM that is not in the v1 stack — narrow the requirement or add LLM integration; decide before Phase 9 planning
+- Phase 10: decide storage shape for saved loops (browser storage vs local app persistence) before implementation
 
 ### Quick Tasks Completed
 
@@ -95,6 +94,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-05T14:16:17.807Z
-Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-theoryexplainer/03-CONTEXT.md
+Last session: 2026-07-06T18:46:00.000Z
+Stopped at: Phase 9 complete; audit of uncommitted phase 8/9 work done, ready to commit
+Resume file: .planning/phases/09-recorder-feedback/09-SUMMARY.md

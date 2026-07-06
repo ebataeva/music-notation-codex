@@ -18,9 +18,9 @@
 - [x] **Phase 4: NiceGUI Skeleton + App State** - Interactive UI with chord/key/mood input; text output only; per-client state + stable element ids (completed 2026-07-06)
 - [x] **Phase 5: Notation + Playback** - In-browser score rendering (OSMD) and audio playback (FluidSynth pipeline) (completed 2026-07-06)
 - [x] **Phase 6: Export Panel** - MusicXML, MIDI, audio (WAV/MP3), and notation image (PNG/SVG) downloads wired to ExportEngine (completed 2026-07-06)
-- [ ] **Phase 7: 3-Variant Generation** - Generate and display 3 distinct cello loop variants per request
-- [ ] **Phase 8: UI Test Framework** - Playwright + ChromeDriver + allure-pytest; loop coach happy-path coverage
-- [ ] **Phase 9: MCP Gateway + Recorder + Feedback** - Audio recording, MCP analysis, Q&A, graceful degradation
+- [x] **Phase 7: 3-Variant Generation** - Generate and display 3 distinct cello loop variants per request (completed 2026-07-06)
+- [x] **Phase 8: UI Test Framework** - Playwright + ChromeDriver + allure-pytest; loop coach happy-path coverage (completed 2026-07-06)
+- [x] **Phase 9: MCP Gateway + Recorder + Feedback** - Audio recording, MCP analysis, Q&A, graceful degradation (completed 2026-07-06)
 - [ ] **Phase 10 (v1.5): Loop Library** - Persist generated loops with metadata; loops survive browser sessions
 - [ ] **Phase 11 (v1.5): Content Pack Export** - One-click post bundle: audio + notation image + MIDI + caption text
 - [ ] **Phase 12 (v1.5): Transparency & Compare** - GenerationTrace view in UI, A/B variant comparison, markdown fragment export for blog posts
@@ -127,7 +127,7 @@ Plans:
   8. LoopVariant storage follows an explicit serialization decision (bytes/paths vs live music21 Score) — no silent failures on refresh
   9. Every interactive element gets a stable id/class (via `.props('id=...')` or markers) — the selector contract for Phase 8 Playwright tests
 
-**Plans:** TBD
+**Plans:** 1/1 plans complete
 **UI hint**: yes
 
 ### Phase 5: Notation + Playback
@@ -206,7 +206,7 @@ Plans:
 **Requirements:** FEEDBACK-01, FEEDBACK-02, FEEDBACK-03, FEEDBACK-04
 **Success Criteria** (what must be TRUE):
 
-  1. The recorder page allows the user to record audio via st.audio_input and save it as a WAV file
+  1. The recorder page allows the user to record audio via the browser mic recorder and save it as a WAV file
   2. When the Audio Analysis MCP is online, the app displays at least one concrete plain-language suggestion after analysis
   3. When the user types a question about the recording or loop, the app returns a music-relevant answer (MCP online)
   4. When the Audio Analysis MCP is offline, the recorder page shows a dismissable warning banner and the loop coach page functions normally with no error or traceback
@@ -272,9 +272,9 @@ Plans:
 | 4. NiceGUI Skeleton + App State | 1/1 | Complete    | 2026-07-06 |
 | 5. Notation + Playback | 1/1 | Complete    | 2026-07-06 |
 | 6. Export Panel | 1/1 | Complete    | 2026-07-06 |
-| 7. 3-Variant Generation | 0/0 | Not started | - |
-| 8. UI Test Framework | 0/0 | Not started | - |
-| 9. MCP Gateway + Recorder + Feedback | 0/0 | Not started | - |
+| 7. 3-Variant Generation | 1/1 | Complete    | 2026-07-06 |
+| 8. UI Test Framework | 1/1 | Complete | 2026-07-06 |
+| 9. MCP Gateway + Recorder + Feedback | 1/1 | Complete | 2026-07-06 |
 | 10. Loop Library (v1.5) | 0/0 | Not started | - |
 | 11. Content Pack Export (v1.5) | 0/0 | Not started | - |
 | 12. Transparency & Compare (v1.5) | 0/0 | Not started | - |
@@ -282,4 +282,4 @@ Plans:
 ---
 
 *Roadmap created: 2026-06-22*
-*Last updated: 2026-07-05 — UI framework changed Streamlit → NiceGUI 3.14.0 (untestable UI vs locked Playwright requirement); Phase 4 renamed to "NiceGUI Skeleton + App State" with stable-element-id criterion added; phases 5/8 goals updated (OSMD without iframe, Playwright against NiceGUI). Previous: 2026-07-04 — review findings applied: Phase 2.5 inserted; trace/seed/pytest/speed-budget criteria added to phases 1–4; EXPORT-03/04 added to Phase 6; Phase 9 pre-phase decisions recorded; v1.5 content phases 10–12 added*
+*Last updated: 2026-07-06 — Phase 9 Practice Partner completed with local WAV analysis, MCP fallback abstraction, feedback suggestions, Q&A fallback, and NiceGUI /practice route. Previous: 2026-07-05 — UI framework changed Streamlit → NiceGUI 3.14.0 (untestable UI vs locked Playwright requirement); Phase 4 renamed to "NiceGUI Skeleton + App State" with stable-element-id criterion added; phases 5/8 goals updated (OSMD without iframe, Playwright against NiceGUI).*
