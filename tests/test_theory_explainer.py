@@ -167,6 +167,53 @@ def test_explain_with_progression_driven_trace_surfaces_chord_tone() -> None:
     assert "mid register" in explanation.why_it_works
 
 
+def test_noir_progression_explains_notes_and_resolutions() -> None:
+    preset = get_preset("noir_slow_burn")
+    trace = GenerationTrace(
+        seed=7,
+        pattern_strategy="progression_driven_register_mapped",
+        register_choices=["low register"] * 4,
+        voice_leading_steps=None,
+        chord_tones_used=[
+            ["A", "C", "E"],
+            ["D", "F", "A"],
+            ["F", "A", "C"],
+            ["E", "G#", "B"],
+        ],
+        register_bias="low",
+    )
+    explanation = explain(make_variant(trace), preset)
+    text = all_text(explanation)
+
+    assert "A connects Am, Dm and F" in text
+    assert "C gives Am its minor color" in text
+    assert "G# wants to resolve up to A" in text
+    assert "E major creates the strongest pull back to Am" in text
+
+
+def test_noir_progression_still_names_harmonic_function_path() -> None:
+    preset = get_preset("noir_slow_burn")
+    trace = GenerationTrace(
+        seed=7,
+        pattern_strategy="progression_driven_register_mapped",
+        register_choices=["low register"] * 4,
+        voice_leading_steps=None,
+        chord_tones_used=[
+            ["A", "C", "E"],
+            ["D", "F", "A"],
+            ["F", "A", "C"],
+            ["E", "G#", "B"],
+        ],
+        register_bias="low",
+    )
+    explanation = explain(make_variant(trace), preset)
+
+    assert "i (tonic)" in explanation.why_it_works
+    assert "iv (subdominant pull)" in explanation.why_it_works
+    assert "bVI (dark warmth)" in explanation.why_it_works
+    assert "V (leading-tone tension)" in explanation.why_it_works
+
+
 def test_solo_preset_progression_text_appears_in_why_it_works() -> None:
     """FINDING-1: D-09 — preset.progressions text surfaces in why_it_works for solo presets."""
     preset = get_preset("dark_trip_hop")

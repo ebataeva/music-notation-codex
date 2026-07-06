@@ -73,12 +73,15 @@ def _render_variant_cards(results: list[dict], container) -> None:
 
 def _render_single_variant(i: int, result: dict) -> None:
     """Render one variant card with theory, notation, audio, and export."""
-    with ui.card().classes("flex-1 min-w-0").props(f'id=variant-card-{i}'):
+    with ui.card().classes("flex-1 min-w-0").props(f'data-testid=variant-card-{i}'):
         with ui.column().classes("w-full gap-2"):
-            ui.label(f"Variant {i + 1}").classes("text-lg font-bold").props(
-                f'id=variant-title-{i}'
+            label_text = result.get("variant_label", f"Variant {i + 1}")
+            ui.label(label_text).classes("text-lg font-bold").props(
+                f'data-testid=variant-title-{i}'
             )
-            ui.label(result.get("variant_label", "")).classes("text-sm text-gray-500")
+            bias = result.get("register_bias", "")
+            if bias:
+                ui.label(f"Register: {bias}").classes("text-xs text-gray-400 uppercase tracking-wide")
 
             if result.get("error"):
                 ui.label(result["error"]).classes("text-red-600 font-bold")
@@ -87,7 +90,7 @@ def _render_single_variant(i: int, result: dict) -> None:
             # Theory section
             for title, text in _theory_sections(result):
                 if text:
-                    ui.label(title).classes("text-sm font-bold mt-2")
+                    ui.label(title).classes("text-xs font-bold text-gray-500 uppercase tracking-wide mt-3")
                     ui.label(text).classes("text-sm text-gray-700")
 
             _render_variant_notation(i, result)
@@ -169,7 +172,8 @@ def _render_variant_audio(i: int, result: dict) -> None:
 
 def _render_variant_export(i: int, result: dict) -> None:
     """Render download buttons for MusicXML, MIDI, WAV, and SVG for variant i."""
-    with ui.row().classes("gap-2 mt-2 flex-wrap"):
+    ui.label("Export").classes("text-xs font-bold text-gray-400 uppercase tracking-wide mt-3")
+    with ui.row().classes("gap-2 flex-wrap"):
         musicxml_str = result.get("musicxml_string", "")
         if musicxml_str:
             ui.button("MusicXML", color="primary").on(
@@ -179,7 +183,7 @@ def _render_variant_export(i: int, result: dict) -> None:
                     filename=f"cello_loop_variant_{idx + 1}.musicxml",
                     media_type="application/vnd.recordare.musicxml+xml",
                 ),
-            ).props(f'id=download-musicxml-btn-{i}')
+            ).props(f'data-testid=download-musicxml-btn-{i}')
 
         midi_b64 = result.get("midi_bytes_b64", "")
         if midi_b64:
@@ -191,7 +195,7 @@ def _render_variant_export(i: int, result: dict) -> None:
                     filename=f"cello_loop_variant_{idx + 1}.mid",
                     media_type="audio/midi",
                 ),
-            ).props(f'id=download-midi-btn-{i}')
+            ).props(f'data-testid=download-midi-btn-{i}')
 
         wav_b64 = result.get("wav_bytes_b64", "")
         if wav_b64:
@@ -203,7 +207,7 @@ def _render_variant_export(i: int, result: dict) -> None:
                     filename=f"cello_loop_variant_{idx + 1}.wav",
                     media_type="audio/wav",
                 ),
-            ).props(f'id=download-audio-btn-{i}')
+            ).props(f'data-testid=download-audio-btn-{i}')
 
         # SVG is queried from this variant's OSMD container only.
         ui.button("SVG", color="secondary").on(
@@ -225,13 +229,14 @@ def _render_variant_export(i: int, result: dict) -> None:
                 }})();
                 """
             ),
-        ).props(f'id=download-svg-btn-{i}')
+        ).props(f'data-testid=download-svg-btn-{i}')
 
 
 def create_loop_coach_page():
     """Build the loop coach UI with stable element ids for Playwright (Phase 8)."""
 
     # Page header
+    ui.link("Practice Partner", "/practice").classes("text-sm text-blue-600")
     ui.label("Cello Loop Coach").classes("text-2xl font-bold")
     ui.label("Enter a chord progression, pick a mood, and get a cello loop idea with theory guidance.").classes(
         "text-sm text-gray-500"
@@ -241,7 +246,7 @@ def create_loop_coach_page():
     with ui.row().classes("w-full items-end gap-4"):
         chord_input = (
             ui.input(label="Chord progression", placeholder="Am F C G", value="")
-            .props('id=chord-input')
+            .props('data-testid=chord-input')
             .classes("flex-grow")
         )
 
@@ -251,7 +256,7 @@ def create_loop_coach_page():
                 options=KEY_TONICS,
                 value=EXAMPLE_KEY_TONIC,
             )
-            .props('id=key-tonic-select')
+            .props('data-testid=key-tonic-select')
         )
 
         key_mode_select = (
@@ -260,7 +265,7 @@ def create_loop_coach_page():
                 options=KEY_MODES,
                 value=EXAMPLE_KEY_MODE,
             )
-            .props('id=key-mode-select')
+            .props('data-testid=key-mode-select')
         )
 
         mood_select = (
@@ -269,26 +274,30 @@ def create_loop_coach_page():
                 options=available_presets(),
                 value=EXAMPLE_PRESET,
             )
-            .props('id=mood-select')
+            .props('data-testid=mood-select')
         )
 
     # Button row
     with ui.row().classes("gap-4 mt-4"):
         generate_btn = (
             ui.button("Generate", color="primary")
-            .props('id=generate-btn')
+            .props('data-testid=generate-btn')
         )
 
         example_btn = (
             ui.button("Example input", color="secondary")
-            .props('id=example-btn')
+            .props('data-testid=example-btn')
         )
 
     # Error/status area
     status_label = ui.label("").classes("text-sm text-gray-500 mt-2")
 
+    # Loading spinner (hidden by default)
+    spinner = ui.spinner("puff", size="lg").classes("mt-4")
+    spinner.set_visibility(False)
+
     # Single variants output container (replaces the 4 flat containers)
-    variants_container = ui.element("div").props('id=variants-output').classes("mt-6 w-full")
+    variants_container = ui.element("div").props('data-testid=variants-output').classes("mt-6 w-full")
 
     # Generation in-flight flag (SAFE-08: debounce double-clicks)
     generating = {"in_flight": False}
@@ -298,7 +307,9 @@ def create_loop_coach_page():
             return
         generating["in_flight"] = True
         generate_btn.disable()
-        status_label.text = "Generating 3 variants..."
+        example_btn.disable()
+        spinner.set_visibility(True)
+        status_label.text = ""
 
         results = generate_loop_variants(
             chord_progression=chord_input.value,
@@ -326,8 +337,10 @@ def create_loop_coach_page():
             status_label.text = "Generation failed."
         else:
             seeds = [str(r.get("seed", "?")) for r in results]
-            status_label.text = f"Generated 3 variants (seeds: {', '.join(seeds)})."
+            status_label.text = f"Ready — 3 variants (seeds: {', '.join(seeds)})"
 
+        spinner.set_visibility(False)
+        example_btn.enable()
         generating["in_flight"] = False
         generate_btn.enable()
 
@@ -340,6 +353,9 @@ def create_loop_coach_page():
     generate_btn.on("click", do_generate)
     example_btn.on("click", do_example)
 
+    # Visual separator between input and output
+    ui.separator().classes("my-6")
+
     # Restore state from app.storage on page load (SC-4).
     # Notation/audio are not stored, so we only re-render the theory text.
     last_results = app.storage.user.get("last_results")
@@ -349,4 +365,4 @@ def create_loop_coach_page():
         key_tonic_select.value = app.storage.user.get("last_key_tonic", EXAMPLE_KEY_TONIC)
         key_mode_select.value = app.storage.user.get("last_key_mode", EXAMPLE_KEY_MODE)
         _render_variant_cards(last_results, variants_container)
-        status_label.text = "Restored from previous session (click Generate to refresh notation and audio)."
+        status_label.text = "Restored from previous session — click Generate to refresh notation and audio"
