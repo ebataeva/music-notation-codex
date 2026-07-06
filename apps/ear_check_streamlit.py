@@ -56,20 +56,21 @@ def _render_notation(musicxml_string: str, uid: str) -> None:
     xml_b64 = base64.b64encode(musicxml_string.encode("utf-8")).decode("ascii")
     html = f"""
     <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.9.0/build/opensheetmusicdisplay.min.js"></script>
-    <div id="osmd-{uid}" style="width:100%;overflow-x:auto;min-height:100px;"></div>
+    <div id="osmd-{uid}" style="width:100%;overflow-x:auto;background:#fff;padding:8px 0;"></div>
     <script>
     (function() {{
         var xml = atob("{xml_b64}");
         var c = document.getElementById("osmd-{uid}");
-        var osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(c);
+        var osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(c, {{
+            autoResize: true,
+            backend: 'svg',
+            drawTitle: false,
+            drawSubtitle: false,
+            drawComposer: false,
+            drawCredits: false,
+            scaling: 1.4,
+        }});
         osmd.load(xml).then(function() {{
-            osmd.setOptions({{
-                autoResize: true,
-                backend: 'svg',
-                drawTitle: false,
-                drawSubtitle: false,
-                drawComposer: false,
-            }});
             osmd.render();
         }}).catch(function() {{
             c.innerHTML = '<p style="color:#999;font-size:0.8em">Notation preview unavailable.</p>';
@@ -77,7 +78,7 @@ def _render_notation(musicxml_string: str, uid: str) -> None:
     }})();
     </script>
     """
-    components.html(html, height=180)
+    components.html(html, height=280)
 
 
 @st.cache_data(show_spinner=False)
