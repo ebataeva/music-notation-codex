@@ -22,7 +22,7 @@ A **loop coach for an electric cellist**: enter chords (text) + mood, get severa
 
 ## Current status (2026-07-06)
 
-**Progress: 70% (7 of 10 v1 phases complete)**
+**Progress: 80% (8 of 10 v1 phases complete)**
 
 ### Completed phases
 
@@ -35,6 +35,7 @@ A **loop coach for an electric cellist**: enter chords (text) + mood, get severa
 | 4. NiceGUI Skeleton | app/main.py (NiceGUI, localhost:8080); app/pages/loop_coach.py (chord input, key/mood dropdowns, Generate button, theory text output, app.storage state persistence); app/services/generation.py (GenerationService orchestrator); stable element ids for Phase 8; SAFE-08 debounce, SAFE-05 truncation | `762d5cc` |
 | 5. Notation + Playback | OSMD 1.9.0 (CDN) renders MusicXML as SVG in real DOM div (no iframe); FluidSynth CLI renders MIDI→WAV (subprocess, 30s timeout SAFE-03); ui.audio data-URL playback | `762d5cc` |
 | 6. Export Panel | 4 download buttons: MusicXML, MIDI, WAV audio, SVG notation image; all from same generated variant | `762d5cc` |
+| 7. 3-Variant Generation | `register_bias` field on GenerationTrace ("low"/"default"/"high"); `generate_variants()` batch function; `generate_loop_variants()` service; `loop_coach.py` rewritten with 3 side-by-side `ui.card` variant cards; explainer varies `why_it_works`/`how_to_start` per register_bias; 11 new tests; 129 total | `1c09c2f` |
 
 ### Key architecture
 
@@ -48,11 +49,11 @@ app/                    # NiceGUI UI layer (no music21 imports)
 
 core/                   # Pure Python library (no NiceGUI imports)
 ├── engine/
-│   ├── loop_engine.py  # generate_variant(), generate_variant_from_progression()
+│   ├── loop_engine.py  # generate_variant(), generate_variant_from_progression(), generate_variants()
 │   ├── progression.py  # parse_progression("Am F C G") → list[ParsedChord]
 │   └── validators.py   # validate_pitch (C2–D5), validate_bar_duration
 ├── theory/
-│   ├── explainer.py    # explain(variant, preset) → TheoryExplanation
+│   ├── explainer.py    # explain(variant, preset) → TheoryExplanation; register_bias-aware
 │   └── cues.py         # Property-based cue helpers (tempo band, register)
 ├── export/
 │   └── exporter.py     # ExportEngine: MusicXML + MIDI file export
@@ -62,7 +63,7 @@ core/                   # Pure Python library (no NiceGUI imports)
 └── models.py           # LoopVariant, TheoryExplanation, GenerationTrace, MoodPreset
 
 scripts/                # Thin CLI wrappers (backwards compat)
-tests/                  # 118 pytest tests (golden regression, theory, validators, etc.)
+tests/                  # 129 pytest tests (golden regression, theory, validators, 3-variant)
 ```
 
 ### Tech stack (verified working)
@@ -72,21 +73,22 @@ tests/                  # 118 pytest tests (golden regression, theory, validator
 - FluidSynth 2.5.5 (brew) + VintageDreamsWaves-v2.sf2 soundfont
 - OSMD 1.9.0 (CDN) for notation rendering
 - midi2audio, soundfile, numpy
-- pytest 9.1.1 (118 tests passing)
+- pytest 9.1.1 (129 tests passing)
 
 ### GenerationService output (verified)
 
 ```
-generate_loop("Am F C G", "dark_trip_hop", seed=42, include_audio=True) →
-  - MusicXML string: ~10.9 KB
-  - MIDI bytes (b64): ~500 chars
-  - WAV bytes (b64): ~4.2 MB
-  - TheoryExplanation: 5 fields with preset progression/modulation/mood_tip text + trace anchor
+generate_loop_variants("Am F C G", "dark_trip_hop", seed=42, include_audio=False, count=3) →
+  3 variants, each with:
+  - register_bias: "low" / "default" / "high" (distinct octave pools)
+  - seed: 42 / 1042 / 2042 (base + i*1000)
+  - MusicXML string: ~10.9 KB each
+  - MIDI bytes (b64): ~500 chars each
+  - TheoryExplanation: 5 fields, varies per register_bias (warmth/depth vs brightness/tension)
 ```
 
 ### Remaining phases
 
-- **Phase 7**: 3-Variant Generation — generate 3 distinct cello loops per request, displayed side by side (LOOP-02)
 - **Phase 8**: UI Test Framework — Playwright + ChromeDriver + allure-pytest, tests-ui/ isolated (TEST-01/02/03)
 - **Phase 9**: MCP Gateway + Recorder + Feedback — record playing, MCP analysis, Q&A, graceful degradation (FEEDBACK-01/02/03/04)
 - **Phases 10-12 (v1.5)**: Loop Library, Content Pack Export, Transparency & Compare
@@ -102,6 +104,7 @@ generate_loop("Am F C G", "dark_trip_hop", seed=42, include_audio=True) →
 - `11b55af` — Phase 3 audit (PASS with 3 findings)
 - `50fa945` — Phase 3 audit fixes (D-09 preset theory data surfaced, integration test added, 118 tests)
 - `762d5cc` — Phases 4/5/6: NiceGUI app + OSMD notation + FluidSynth audio + export panel
+- `1c09c2f` — Phase 7: 3-Variant Generation (register_bias, generate_variants, 3 side-by-side cards, 129 tests)
 
 ## How to run
 
@@ -117,9 +120,9 @@ python app/main.py
 ```bash
 cd /Users/ebataeva/Brain/Projects/music-notation-codex
 .venv/bin/python -m pytest tests/ -q
-# 118 passed
+# 129 passed
 ```
 
 ---
 
-*Last updated: 2026-07-06 — Phases 4/5/6 complete, 70% project progress*
+*Last updated: 2026-07-06 — Phase 7 complete, 80% project progress*
