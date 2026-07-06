@@ -40,10 +40,10 @@ created: 2026-07-06
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | TBD | THEORY-01 | — | explain() returns TheoryExplanation with all 5 fields non-empty for all 7 presets (incl. 3 duet presets with empty theory tuples — fallback path) | unit | `.venv/bin/python -m pytest tests/test_theory_explainer.py -q` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | THEORY-02 | — | why_it_works / how_to_start / how_to_transition contain cello/looper cue vocabulary, no Cyrillic, no unexplained jargon terms from the banned list | unit | `.venv/bin/python -m pytest tests/test_theory_explainer.py -q` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | TRACE-02 | — | why_it_works contains ≥1 concrete anchor from GenerationTrace (actual pedal tone or chord tones + register); trace=None raises ValueError; same seed → identical text (deterministic); anchor selector branches on pattern_strategy per IN-01 | unit | `.venv/bin/python -m pytest tests/test_theory_explainer.py -q` | ❌ W0 | ⬜ pending |
-| TBD | TBD | TBD | Regression | — | golden MusicXML/MIDI hashes unchanged (explainer is text-only; must not touch notation output) | golden | `.venv/bin/python -m pytest tests/test_golden_regression.py -q` | ✅ | ⬜ pending |
+| 03-01-T1 | 03-01 | 1 | THEORY-01 | — | explain() returns TheoryExplanation with all 5 fields non-empty for all 7 presets (incl. 3 duet presets with empty theory tuples — fallback path) | unit | `.venv/bin/python -m pytest tests/test_theory_explainer.py -q` | ✅ | ✅ green |
+| 03-01-T2 | 03-01 | 1 | THEORY-02 | — | why_it_works / how_to_start / how_to_transition contain cello/looper cue vocabulary, no Cyrillic, no unexplained jargon terms from the banned list | unit | `.venv/bin/python -m pytest tests/test_theory_explainer.py -q` | ✅ | ✅ green |
+| 03-01-T1 | 03-01 | 1 | TRACE-02 | — | why_it_works contains ≥1 concrete anchor from GenerationTrace (actual pedal tone or chord tones + register); trace=None raises ValueError; same seed → identical text (deterministic); anchor selector branches on pattern_strategy per IN-01 | unit | `.venv/bin/python -m pytest tests/test_theory_explainer.py -q` | ✅ | ✅ green |
+| 03-01-T3 | 03-01 | 1 | Regression | — | golden MusicXML/MIDI hashes unchanged (explainer is text-only; must not touch notation output) | golden | `.venv/bin/python -m pytest tests/test_golden_regression.py -q` | ✅ | ✅ green |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -51,8 +51,8 @@ created: 2026-07-06
 
 ## Wave 0 Requirements
 
-- [ ] `tests/test_theory_explainer.py` — stubs for THEORY-01, THEORY-02, TRACE-02: all-fields-populated across all 7 presets, anchor-presence check, trace=None ValueError, determinism (same seed → same text), duet empty-tuple fallback, no-Cyrillic guard
-- [ ] Two literal `GenerationTrace` fixtures (one `preset_verbatim` shape, one `progression_driven_register_mapped` shape) so the anchor selector is testable as a pure function without calling `generate_variant()`
+- [x] `tests/test_theory_explainer.py` — stubs for THEORY-01, THEORY-02, TRACE-02: all-fields-populated across all 7 presets, anchor-presence check, trace=None ValueError, determinism (same seed → same text), duet empty-tuple fallback, no-Cyrillic guard
+- [x] Two literal `GenerationTrace` fixtures (one `preset_verbatim` shape, one `progression_driven_register_mapped` shape) so the anchor selector is testable as a pure function without calling `generate_variant()`
 
 ---
 

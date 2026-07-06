@@ -14,7 +14,7 @@
 - [x] **Phase 1: Core Library Skeleton + Validators** - Pure-Python data structures, dataclasses (incl. GenerationTrace fields), pytest scaffold, and guards (range + bar duration) (completed 2026-07-04)
 - [x] **Phase 2: LoopEngine + ExportEngine** - Refactor CLI scripts into testable core engine; single-variant generation + file export; seed policy + trace population (completed 2026-07-04)
 - [x] **Phase 2.5: Progression-Driven Generation** - Parse arbitrary chord text ("Am F C G") and generate validated cello bars from it (pychord → chord tones → cello register mapping → preset rhythm strategies) (completed 2026-07-04)
-- [ ] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance
+- [x] **Phase 3: TheoryExplainer** - Template-driven plain-language explanations grounded in the variant's GenerationTrace, plus loop lifecycle guidance (completed 2026-07-06)
 - [ ] **Phase 4: NiceGUI Skeleton + App State** - Interactive UI with chord/key/mood input; text output only; per-client state + stable element ids
 - [ ] **Phase 5: Notation + Playback** - In-browser score rendering (OSMD) and audio playback (FluidSynth pipeline)
 - [ ] **Phase 6: Export Panel** - MusicXML, MIDI, audio (WAV/MP3), and notation image (PNG/SVG) downloads wired to ExportEngine
@@ -96,7 +96,7 @@ Plans:
 
 ### Phase 3: TheoryExplainer
 
-**Goal:** The harmony text from harmony_advisor.py lives in core/theory/explainer.py as structured TheoryExplanation dataclasses; given a LoopVariant and MoodPreset, the explainer returns plain-language "why it works" + start/develop/end/transition guidance, grounded in the variant's GenerationTrace.
+**Goal:** As a cellist, I want to read theory cues for each loop, so that I can perform it with musical intent.
 **Mode:** mvp
 **Depends on:** Phase 1
 **Requirements:** THEORY-01, THEORY-02, TRACE-02
@@ -107,7 +107,7 @@ Plans:
   3. The how_to_start and how_to_transition fields include practical cello-specific cues (not generic piano/guitar language)
   4. The why_it_works text references at least one concrete note/decision from the variant's GenerationTrace (e.g. the actual pedal tone or chromatic step used), not only generic preset language
 
-**Plans:** TBD
+**Plans:** 03-01-PLAN.md
 
 ### Phase 4: NiceGUI Skeleton + App State
 
@@ -268,7 +268,7 @@ Plans:
 | 1. Core Library Skeleton + Validators | 4/4 | Complete    | 2026-07-04 |
 | 2. LoopEngine + ExportEngine | 3/3 | Complete    | 2026-07-04 |
 | 2.5. Progression-Driven Generation | 1/1 | Complete   | 2026-07-04 |
-| 3. TheoryExplainer | 0/0 | Not started | - |
+| 3. TheoryExplainer | 1/1 | Complete    | 2026-07-06 |
 | 4. NiceGUI Skeleton + App State | 0/0 | Not started | - |
 | 5. Notation + Playback | 0/0 | Not started | - |
 | 6. Export Panel | 0/0 | Not started | - |
