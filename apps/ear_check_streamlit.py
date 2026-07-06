@@ -40,13 +40,15 @@ _DEFAULT_PROGRESSION = "Am F C G"
 _DEFAULT_PRESET = "dark_trip_hop"
 
 
+def _preset_index(preset_name: str, presets: list[str] = None) -> int:
+    """Index of preset_name in the solo presets list (safe default)."""
+    if presets is None:
+        presets = list_solo_presets()
+    return presets.index(preset_name) if preset_name in presets else 0
+
+
 def _mood_label(name: str) -> str:
     return _FRIENDLY_MOOD.get(name, name.replace("_", " ").title())
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _render_notation(musicxml_string: str, uid: str) -> None:
@@ -117,23 +119,24 @@ st.markdown(
 # ---- Controls row --------------------------------------------------------
 solo_presets = list_solo_presets()
 preset_labels = [_mood_label(p) for p in solo_presets]
-default_idx = solo_presets.index(_DEFAULT_PRESET) if _DEFAULT_PRESET in solo_presets else 0
 
 c_prog, c_mood, c_ex, c_gen = st.columns([5, 3, 1, 1])
 
 with c_prog:
+    _override_prog = st.session_state.pop("_prog_override", None)
     progression = st.text_input(
         "Chord progression",
-        value=st.session_state.get("prog_key", _DEFAULT_PROGRESSION),
+        value=_override_prog or _DEFAULT_PROGRESSION,
         placeholder="e.g. Am F C G",
-        key="prog_key",
     )
 
 with c_mood:
+    _override_mood = st.session_state.pop("_mood_override", None)
+    _initial_mood = _override_mood or _DEFAULT_PRESET
     chosen_label = st.selectbox(
         "Mood",
         options=preset_labels,
-        index=default_idx,
+        index=_preset_index(_initial_mood),
     )
     preset_name = solo_presets[preset_labels.index(chosen_label)]
 
@@ -141,18 +144,14 @@ with c_ex:
     st.write("")  # vertical alignment
     st.write("")
     if st.button("✨ Example", use_container_width=True):
-        st.session_state["prog_key"] = _DEFAULT_PROGRESSION
-        st.session_state["example_preset"] = _DEFAULT_PRESET
+        st.session_state["_prog_override"] = _DEFAULT_PROGRESSION
+        st.session_state["_mood_override"] = _DEFAULT_PRESET
         st.rerun()
 
 with c_gen:
     st.write("")
     st.write("")
     generate_clicked = st.button("Generate", type="primary", use_container_width=True)
-
-# Apply example-preset override from the Example button.
-if "example_preset" in st.session_state:
-    preset_name = st.session_state["example_preset"]
 
 st.divider()
 
