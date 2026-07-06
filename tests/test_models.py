@@ -38,6 +38,7 @@ def test_generation_trace_fields():
         "register_choices",
         "voice_leading_steps",
         "chord_tones_used",
+        "register_bias",
     }
 
 

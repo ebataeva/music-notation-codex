@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./venv/bin/ruff check *)",
+      "Bash(.venv/bin/ruff check *)",
+      "Bash(./venv/bin/mypy *)",
+      "Bash(.venv/bin/mypy *)",
+      "Bash(gsd-sdk query config-get *)",
+      "Bash(gsd-sdk query agent-skills *)",
+      "Bash(gsd-sdk query phase.mvp-mode *)",
+      "Bash(gsd-sdk query init.*)",
+      "mcp__jcodemunch__plan_turn",
+      "mcp__jcodemunch__get_file_content",
+      "mcp__jcodemunch__get_symbol_source",
+      "mcp__jcodemunch__get_file_outline",
+      "mcp__jcodemunch__search_text",
+      "mcp__jcodemunch__index_folder",
+      "mcp__jcodemunch__get_file_tree",
+      "mcp__jcodemunch__list_repos",
+      "mcp__jcodemunch__search_symbols",
+      "mcp__jdocmunch__get_section",
+      "mcp__caa555fe-d09a-4526-87d0-6c45f495de57__get_thread",
+      "mcp__caa555fe-d09a-4526-87d0-6c45f495de57__search_threads",
+      "mcp__caa555fe-d09a-4526-87d0-6c45f495de57__list_drafts",
+      "mcp__2c991bf8-cdd2-4603-b651-ab69b0622df5__list_projects"
+    ]
+  }
+}

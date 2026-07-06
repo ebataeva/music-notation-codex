@@ -42,6 +42,9 @@ class GenerationTrace:
     register_choices: list[str] | None
     voice_leading_steps: list[str] | None
     chord_tones_used: list[list[str]] | None
+    # Phase 7: which register bias was used for this variant ("low", "default", "high").
+    # None for preset-verbatim variants (Phase 1 path, no register mapping).
+    register_bias: str | None = None
 
 
 @dataclass

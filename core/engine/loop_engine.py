@@ -340,6 +340,7 @@ def _choose_register_for_chord_tone(
     is_root_or_fifth: bool,
     previous_pitch: pitch.Pitch | None,
     rng: random.Random,
+    register_bias: str = "default",
 ) -> pitch.Pitch:
     """Pick one concrete octave for a chord-tone pitch class.
 
@@ -375,10 +376,23 @@ def _choose_register_for_chord_tone(
         if within_leap:
             candidates = within_leap
 
-    if is_root_or_fifth:
-        pool = [c for c in candidates if c.octave <= 3] or candidates
-    else:
-        pool = [c for c in candidates if c.octave in (3, 4)] or candidates
+    # Phase 7: register_bias shifts the octave pool per variant so 3 variants
+    # get clearly different tonal characters ("low", "default/mid", "high").
+    if register_bias == "low":
+        if is_root_or_fifth:
+            pool = [c for c in candidates if c.octave <= 2] or [c for c in candidates if c.octave <= 3] or candidates
+        else:
+            pool = [c for c in candidates if c.octave <= 3] or candidates
+    elif register_bias == "high":
+        if is_root_or_fifth:
+            pool = [c for c in candidates if c.octave in (3, 4)] or candidates
+        else:
+            pool = [c for c in candidates if c.octave >= 4] or candidates
+    else:  # "default" — original behavior
+        if is_root_or_fifth:
+            pool = [c for c in candidates if c.octave <= 3] or candidates
+        else:
+            pool = [c for c in candidates if c.octave in (3, 4)] or candidates
 
     return rng.choice(pool)
 
@@ -388,6 +402,7 @@ def _register_map_chord(
     count: int,
     previous_pitch: pitch.Pitch | None,
     rng: random.Random,
+    register_bias: str = "default",
 ) -> tuple[list[pitch.Pitch], pitch.Pitch]:
     """Map a single chord's tones onto `count` concrete pitches (one per
     rhythm slot in a bar), monophonic, favoring root/fifth in the low
@@ -412,7 +427,7 @@ def _register_map_chord(
         pitch_class = chord.components[i % len(chord.components)]
         is_root_or_fifth = pitch_class in (root, fifth)
         chosen = _choose_register_for_chord_tone(
-            pitch_class, is_root_or_fifth, current_previous, rng
+            pitch_class, is_root_or_fifth, current_previous, rng, register_bias=register_bias
         )
         bar_pitches.append(chosen)
         current_previous = chosen
@@ -440,6 +455,7 @@ def build_progression_score(
     chords: list[ParsedChord],
     preset: MoodPreset,
     seed: int | None = None,
+    register_bias: str = "default",
 ) -> stream.Score:
     """Build a music21 Score from an arbitrary parsed chord progression, using
     `preset` only for its rhythm/tempo/meter/velocity strategy (the *when* --
@@ -489,7 +505,7 @@ def build_progression_score(
     previous_pitch: pitch.Pitch | None = None
     for measure_number, chord in enumerate(chords, start=1):
         bar_pitches, previous_pitch = _register_map_chord(
-            chord, notes_per_bar, previous_pitch, rng
+            chord, notes_per_bar, previous_pitch, rng, register_bias=register_bias
         )
 
         measure = stream.Measure(number=measure_number)
@@ -510,6 +526,7 @@ def generate_variant_from_progression(
     chords: list[ParsedChord],
     preset: MoodPreset,
     seed: int | None = None,
+    register_bias: str = "default",
 ) -> LoopVariant:
     """High-level API mirroring generate_variant(), but for an arbitrary
     parsed chord progression instead of a preset's own baked-in bars.
@@ -531,7 +548,7 @@ def generate_variant_from_progression(
 
     resolved_seed, _rng = _resolve_seed(seed)
 
-    score = build_progression_score(chords, preset, seed=resolved_seed)
+    score = build_progression_score(chords, preset, seed=resolved_seed, register_bias=register_bias)
 
     register_choices: list[str] = []
     chord_tones_used: list[list[str]] = []
@@ -549,6 +566,7 @@ def generate_variant_from_progression(
         register_choices=register_choices,
         voice_leading_steps=None,  # Explicit step-interval trace is a future refinement.
         chord_tones_used=chord_tones_used,
+        register_bias=register_bias,
     )
 
     progression_label = " ".join(chord.name for chord in chords)
@@ -563,3 +581,43 @@ def generate_variant_from_progression(
         theory_explanation=None,  # Phase 3 (TheoryExplainer) concern.
         trace=generation_trace,
     )
+
+
+# ---------------------------------------------------------------------------
+# Phase 7: multi-variant generation
+# ---------------------------------------------------------------------------
+
+# Register biases cycled across variants to ensure audible distinctness.
+VARIANT_REGISTER_BIASES = ["low", "default", "high"]
+
+
+def generate_variants(
+    chords: list[ParsedChord],
+    preset: MoodPreset,
+    seed: int | None = None,
+    count: int = 3,
+) -> list[LoopVariant]:
+    """Generate N distinct cello loop variants from the same chord progression.
+
+    Each variant gets a different register_bias (low → default → high) and a
+    unique derived seed, guaranteeing audible distinctness per Phase 7 LOOP-02.
+    """
+    if count < 1:
+        raise ValueError("count must be at least 1.")
+    if len(chords) > MAX_BARS:
+        raise ValueError(f"Requested {len(chords)} bars exceeds the maximum of {MAX_BARS}.")
+
+    base_seed, _ = _resolve_seed(seed)
+
+    biases = list(VARIANT_REGISTER_BIASES)
+    while len(biases) < count:
+        biases.append("default")
+
+    variants: list[LoopVariant] = []
+    for i in range(count):
+        variant_seed = base_seed + i * 1000
+        variant = generate_variant_from_progression(
+            chords, preset, seed=variant_seed, register_bias=biases[i]
+        )
+        variants.append(variant)
+    return variants

@@ -34,6 +34,29 @@ def _select_anchor(trace: GenerationTrace) -> str:
     raise ValueError(f"Unknown pattern_strategy {trace.pattern_strategy!r}.")
 
 
+def _register_quality_clause(trace: GenerationTrace) -> str:
+    """Return a plain-language clause describing the variant's register character.
+
+    ``register_bias`` is set by the Phase 7 variant generator. When it is
+    ``None`` (preset-verbatim path) we return an empty string so the
+    explanation stays verbatim-stable for Phase 1 variants.
+    """
+    bias = trace.register_bias
+    if bias == "low":
+        return (
+            "Low-register mapping gives the loop warmth and depth, grounding the "
+            "line in the cello's lowest voice so the harmony feels settled and dark."
+        )
+    if bias == "high":
+        return (
+            "High-register mapping lifts the loop into the cello's upper voice, "
+            "adding brightness and a touch of tension so the melody wants to soar "
+            "above the harmony."
+        )
+    # "default" or None: keep the explanation stable for the verbatim path.
+    return ""
+
+
 def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     if variant.trace is None:
         raise ValueError("Theory explanation requires variant.trace.")
@@ -55,10 +78,26 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     else:
         harmony_focus = f"{harmony_focus} with a clear repeated anchor"
 
+    # Phase 7: vary the explanation per register_bias so sibling variants read
+    # as clearly different tonal characters, not as identical copy.
+    register_clause = _register_quality_clause(trace)
+
     why_it_works = (
         f"This works because {anchor} gives the listener a concrete point of return in "
         f"{harmony_focus} while the {tempo} BPM {feel} keeps the loop identity clear."
     )
+    if register_clause:
+        why_it_works = f"{why_it_works} {register_clause}"
+
+    # Slightly vary the opening cue per register_bias so each variant's
+    # how_to_start is distinguishable while staying grounded in the trace.
+    bias = trace.register_bias
+    if bias == "low":
+        how_to_start = f"{start_cue} Lean into the weight of the lowest register so the loop feels rooted."
+    elif bias == "high":
+        how_to_start = f"{start_cue} Let the bow float lightly so the upper register sings and carries upward."
+    else:
+        how_to_start = start_cue
 
     if mood_tip:
         how_to_develop = f"Develop it by keeping the pulse steady and changing one detail at a time: {mood_tip}"
@@ -82,7 +121,7 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
 
     return TheoryExplanation(
         why_it_works=why_it_works,
-        how_to_start=start_cue,
+        how_to_start=how_to_start,
         how_to_develop=how_to_develop,
         how_to_end=how_to_end,
         how_to_transition=how_to_transition,
