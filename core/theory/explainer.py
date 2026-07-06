@@ -44,26 +44,46 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     tempo = preset.duet_tempo_bpm or preset.tempo_bpm
     feel = preset.feel.strip() or f"{preset.key_tonic} {preset.key_mode} cello loop"
     harmony_focus = f"{preset.key_tonic} {preset.key_mode}"
-    if _first_or_fallback(preset.progressions, ""):
+
+    # D-09: Surface preset theory data into the explanation fields.
+    progression = _first_or_fallback(preset.progressions, "")
+    modulation = _first_or_fallback(preset.modulations, "")
+    mood_tip = _first_or_fallback(preset.mood_tips, "")
+
+    if progression:
+        harmony_focus = f"{harmony_focus} — {progression}"
+    else:
         harmony_focus = f"{harmony_focus} with a clear repeated anchor"
-    mood_tip = "Keep the bow close to the string and let small dynamic changes create motion."
-    modulation = "Move by repeating the anchor once, then shift the next loop entry to a nearby pitch."
 
     why_it_works = (
-        f"This works because {anchor} gives the listener a concrete point of return in {harmony_focus} while "
-        f"the {tempo} BPM {feel} keeps the loop identity clear."
+        f"This works because {anchor} gives the listener a concrete point of return in "
+        f"{harmony_focus} while the {tempo} BPM {feel} keeps the loop identity clear."
     )
-    how_to_develop = (
-        f"Develop it by keeping the pulse steady and changing one detail at a time: {mood_tip}"
-    )
+
+    if mood_tip:
+        how_to_develop = f"Develop it by keeping the pulse steady and changing one detail at a time: {mood_tip}"
+    else:
+        how_to_develop = (
+            "Develop it by keeping the pulse steady and changing one detail at a time: "
+            "keep the bow close to the string and let small dynamic changes create motion."
+        )
+
     how_to_end = (
         f"End by returning to {anchor}, softening the dynamics, and letting the final bow stroke decay."
     )
+
+    if modulation:
+        how_to_transition = f"{transition_cue} {modulation}"
+    else:
+        how_to_transition = (
+            f"{transition_cue} "
+            "Move by repeating the anchor once, then shift the next loop entry to a nearby pitch."
+        )
 
     return TheoryExplanation(
         why_it_works=why_it_works,
         how_to_start=start_cue,
         how_to_develop=how_to_develop,
         how_to_end=how_to_end,
-        how_to_transition=f"{transition_cue} {modulation}",
+        how_to_transition=how_to_transition,
     )

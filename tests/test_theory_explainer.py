@@ -149,3 +149,54 @@ def test_cue_selection_is_not_keyed_by_preset_name() -> None:
     source = Path("core/theory/cues.py").read_text(encoding="utf-8")
     assert "preset.name ==" not in source
     assert "preset.name in" not in source
+
+
+def test_explain_with_progression_driven_trace_surfaces_chord_tone() -> None:
+    """FINDING-2: Integration test for explain() with progression_driven_register_mapped trace."""
+    preset = get_preset("dark_trip_hop")
+    trace = GenerationTrace(
+        seed=7,
+        pattern_strategy="progression_driven_register_mapped",
+        register_choices=["mid register"],
+        voice_leading_steps=None,
+        chord_tones_used=[["A", "C", "E"]],
+    )
+    variant = make_variant(trace)
+    explanation = explain(variant, preset)
+    assert "A" in explanation.why_it_works
+    assert "mid register" in explanation.why_it_works
+
+
+def test_solo_preset_progression_text_appears_in_why_it_works() -> None:
+    """FINDING-1: D-09 — preset.progressions text surfaces in why_it_works for solo presets."""
+    preset = get_preset("dark_trip_hop")
+    explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
+    # The first progression starts with "i - VI - v - i: C minor -> Ab -> G minor -> C minor"
+    assert "C minor" in explanation.why_it_works
+
+
+def test_solo_preset_mood_tip_text_appears_in_how_to_develop() -> None:
+    """FINDING-1: D-09 — preset.mood_tips text surfaces in how_to_develop for solo presets."""
+    preset = get_preset("ritual_tribal")
+    explanation = explain(make_variant(trace_for_preset("ritual_tribal")), preset)
+    # ritual_tribal mood_tips[0] mentions "Phrygian b2 degree"
+    assert "phrygian" in explanation.how_to_develop.lower()
+
+
+def test_solo_preset_modulation_text_appears_in_how_to_transition() -> None:
+    """FINDING-1: D-09 — preset.modulations text surfaces in how_to_transition for solo presets."""
+    preset = get_preset("noir_slow_burn")
+    explanation = explain(make_variant(trace_for_preset("noir_slow_burn")), preset)
+    # noir_slow_burn modulations[0] mentions "common chord"
+    assert "common chord" in explanation.how_to_transition.lower()
+
+
+def test_duet_presets_use_fallback_when_theory_data_empty() -> None:
+    """FINDING-1: D-09 — duet presets with empty tuples use fallback text, no IndexError."""
+    preset = get_preset("sexy_duet")
+    explanation = explain(make_variant(trace_for_preset("sexy_duet")), preset)
+    assert explanation.why_it_works
+    assert explanation.how_to_develop
+    assert explanation.how_to_transition
+    # Fallback text should contain "anchor" since no progression text
+    assert "anchor" in explanation.why_it_works.lower()
