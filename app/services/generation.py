@@ -58,6 +58,27 @@ def _score_to_midi_bytes(score) -> bytes:
     return result
 
 
+def _midi_to_wav_pretty_midi(midi_bytes: bytes) -> bytes:
+    """Render MIDI bytes to WAV via pretty_midi sine synthesis (no FluidSynth).
+
+    This is a cloud-compatible fallback — the audio is basic sine waves
+    but works anywhere (Streamlit Cloud, CI, etc.).
+    """
+    import io as _io
+
+    import pretty_midi
+    import soundfile as sf
+
+    pm = pretty_midi.PrettyMIDI(_io.BytesIO(midi_bytes))
+    audio = pm.synthesize(fs=44100)
+    # soundfile wants float32; pretty_midi returns float64
+    audio = audio.astype("float32")
+    buf = _io.BytesIO()
+    sf.write(buf, audio, 44100, format="WAV")
+    buf.seek(0)
+    return buf.read()
+
+
 def _midi_to_wav_bytes(midi_bytes: bytes) -> bytes:
     """Render MIDI bytes to WAV via FluidSynth CLI (SAFE-03: 30s timeout)."""
     import subprocess
@@ -80,6 +101,17 @@ def _midi_to_wav_bytes(midi_bytes: bytes) -> bytes:
     finally:
         Path(midi_path).unlink(missing_ok=True)
         Path(wav_path).unlink(missing_ok=True)
+
+
+def _render_wav(midi_bytes: bytes) -> tuple[bytes, str]:
+    """Try FluidSynth first, then fall back to pretty_midi.
+
+    Returns (wav_bytes, source) where source is 'fluidsynth' or 'pretty_midi'.
+    """
+    try:
+        return _midi_to_wav_bytes(midi_bytes), "fluidsynth"
+    except (FileNotFoundError, OSError):
+        return _midi_to_wav_pretty_midi(midi_bytes), "pretty_midi"
 
 
 def _soundfont_exists() -> bool:
@@ -150,8 +182,9 @@ def generate_loop(
 
     if include_audio:
         try:
-            wav_bytes = _midi_to_wav_bytes(midi_bytes)
+            wav_bytes, source = _render_wav(midi_bytes)
             result["wav_bytes_b64"] = base64.b64encode(wav_bytes).decode("ascii")
+            result["audio_source"] = source
         except Exception as exc:
             result["audio_error"] = f"Audio render failed: {exc}"
 
@@ -225,8 +258,9 @@ def generate_loop_variants(
 
         if include_audio:
             try:
-                wav_bytes = _midi_to_wav_bytes(midi_bytes)
+                wav_bytes, source = _render_wav(midi_bytes)
                 result["wav_bytes_b64"] = base64.b64encode(wav_bytes).decode("ascii")
+                result["audio_source"] = source
             except Exception as exc:
                 result["audio_error"] = f"Audio render failed: {exc}"
 

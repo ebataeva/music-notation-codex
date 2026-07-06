@@ -192,8 +192,11 @@ else:
                 wav = _b64_to_bytes(r.get("wav_bytes_b64", ""))
                 if wav:
                     st.audio(wav, format="audio/wav")
+                    src = r.get("audio_source", "")
+                    if src == "pretty_midi":
+                        st.caption("🔊 basic synth (no soundfont)")
                 else:
-                    st.caption("🔊 audio unavailable (install FluidSynth for local playback)")
+                    st.caption("🔊 audio unavailable")
 
                 # Theory — main blurb inline, details in expander
                 st.markdown(f"_{r['why_it_works']}_")
