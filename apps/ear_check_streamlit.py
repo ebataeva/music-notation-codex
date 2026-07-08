@@ -193,8 +193,8 @@ else:
                 if wav:
                     st.audio(wav, format="audio/wav")
                     src = r.get("audio_source", "")
-                    if src == "pretty_midi":
-                        st.caption("🔊 basic synth (no soundfont)")
+                    if src == "cello_synth_reverb":
+                        st.caption("🔊 cello synth + reverb")
                 else:
                     st.caption("🔊 audio unavailable")
 

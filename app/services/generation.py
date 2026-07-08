@@ -59,22 +59,95 @@ def _score_to_midi_bytes(score) -> bytes:
 
 
 def _midi_to_wav_pretty_midi(midi_bytes: bytes) -> bytes:
-    """Render MIDI bytes to WAV via pretty_midi sine synthesis (no FluidSynth).
+    """Render MIDI bytes to WAV via a small cello-like synth with reverb.
 
-    This is a cloud-compatible fallback — the audio is basic sine waves
-    but works anywhere (Streamlit Cloud, CI, etc.).
+    This is a cloud-compatible fallback for Streamlit Cloud when FluidSynth or
+    the local soundfont is unavailable.
     """
     import io as _io
 
+    import numpy as np
     import pretty_midi
     import soundfile as sf
 
+    sample_rate = 44100
     pm = pretty_midi.PrettyMIDI(_io.BytesIO(midi_bytes))
-    audio = pm.synthesize(fs=44100)
-    # soundfile wants float32; pretty_midi returns float64
+
+    end_time = max((instrument.get_end_time() for instrument in pm.instruments), default=0.0)
+    total_samples = max(int((end_time + 1.8) * sample_rate), sample_rate)
+    audio = np.zeros(total_samples, dtype=np.float64)
+
+    for instrument in pm.instruments:
+        if instrument.is_drum:
+            continue
+        for midi_note in instrument.notes:
+            start = max(int(midi_note.start * sample_rate), 0)
+            end = min(int((midi_note.end + 0.35) * sample_rate), total_samples)
+            if end <= start:
+                continue
+
+            note_samples = end - start
+            t = np.arange(note_samples, dtype=np.float64) / sample_rate
+            duration = max(midi_note.end - midi_note.start, 0.05)
+            release_start = min(int(duration * sample_rate), note_samples)
+
+            frequency = pretty_midi.note_number_to_hz(midi_note.pitch)
+            vibrato = 1.0 + 0.0035 * np.sin(2.0 * np.pi * 5.2 * t)
+            phase_base = 2.0 * np.pi * frequency * vibrato * t
+
+            tone = (
+                0.82 * np.sin(phase_base)
+                + 0.34 * np.sin(2.0 * phase_base + 0.4)
+                + 0.18 * np.sin(3.0 * phase_base + 0.9)
+                + 0.08 * np.sin(4.0 * phase_base + 1.2)
+            )
+
+            # Gentle bow noise gives the fallback less of a pure-organ/sine quality.
+            bow_noise = np.random.default_rng(midi_note.pitch + start).normal(0.0, 0.006, note_samples)
+            tone = tone + bow_noise
+
+            attack = max(int(0.055 * sample_rate), 1)
+            release = max(int(0.22 * sample_rate), 1)
+            envelope = np.ones(note_samples, dtype=np.float64)
+            envelope[: min(attack, note_samples)] = np.linspace(0.0, 1.0, min(attack, note_samples))
+            if release_start < note_samples:
+                release_len = note_samples - release_start
+                envelope[release_start:] *= np.linspace(1.0, 0.0, release_len)
+            elif note_samples > release:
+                envelope[-release:] *= np.linspace(1.0, 0.0, release)
+
+            amplitude = 0.22 * (midi_note.velocity / 127.0)
+            audio[start:end] += tone * envelope * amplitude
+
+    # Roll off harsh upper partials so the harmonic stack behaves more like a bowed string.
+    if np.any(audio):
+        kernel_size = 9
+        audio = np.convolve(audio, np.ones(kernel_size) / kernel_size, mode="same")
+
+        delay_times = (0.029, 0.037, 0.053, 0.071)
+        reverb = np.zeros_like(audio)
+        for i, delay_time in enumerate(delay_times):
+            delay = int(delay_time * sample_rate)
+            gain = 0.22 / (i + 1)
+            reverb[delay:] += audio[:-delay] * gain
+
+        tail = np.zeros_like(audio)
+        feedback = 0.62
+        block = max(int(0.011 * sample_rate), 1)
+        for start in range(0, len(reverb), block):
+            end = min(start + block, len(reverb))
+            previous = tail[start - block:end - block] if start >= block else 0.0
+            tail[start:end] = reverb[start:end] + feedback * previous
+        tail *= 0.18
+        audio = audio + tail
+
+        peak = float(np.max(np.abs(audio)))
+        if peak > 0:
+            audio = audio / peak * 0.88
+
     audio = audio.astype("float32")
     buf = _io.BytesIO()
-    sf.write(buf, audio, 44100, format="WAV")
+    sf.write(buf, audio, sample_rate, format="WAV")
     buf.seek(0)
     return buf.read()
 
@@ -106,12 +179,12 @@ def _midi_to_wav_bytes(midi_bytes: bytes) -> bytes:
 def _render_wav(midi_bytes: bytes) -> tuple[bytes, str]:
     """Try FluidSynth first, then fall back to pretty_midi.
 
-    Returns (wav_bytes, source) where source is 'fluidsynth' or 'pretty_midi'.
+    Returns (wav_bytes, source) where source is 'fluidsynth' or 'cello_synth_reverb'.
     """
     try:
         return _midi_to_wav_bytes(midi_bytes), "fluidsynth"
     except (FileNotFoundError, OSError):
-        return _midi_to_wav_pretty_midi(midi_bytes), "pretty_midi"
+        return _midi_to_wav_pretty_midi(midi_bytes), "cello_synth_reverb"
 
 
 def _soundfont_exists() -> bool:
