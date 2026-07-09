@@ -18,3 +18,5 @@
 ## Проектный контекст
 - Подробный проектный контекст хранится в `CLAUDE.md`; не копировать его целиком в ответы или новые документы без явной просьбы.
 - Этот проект не связан с AutoDefog; не переносить сюда решения, файлы или ограничения из AutoDefog.
+- **CONTEXT.md** — единый structured resume file для быстрого восстановления контекста в новых сессиях. Содержит: active task, key decisions, open questions, next steps, relevant files, git state. Новая сессия должна читать CONTEXT.md первым делом.
+- Перед завершением сессии обновлять CONTEXT.md: `bash scripts/update-context.sh` (обновляет timestamp, branch, last commit, test count).
