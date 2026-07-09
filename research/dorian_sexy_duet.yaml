@@ -1,0 +1,28 @@
+preset: dorian_sexy_duet
+genre_references: [Daft Punk - Get Lucky, Miles Davis - So What, Pink Floyd - Breathe, Bill Withers - Lovely Day]
+modal_center: Dorian (with natural 6th — replaces b6 of Aeolian)
+core_degrees:
+  - i9: tonic minor 9th, warm and groovy, NOT dark like Aeolian i
+  - IV9: subdominant major 9th, characteristic Dorian lift — natural 6th is what makes it warm
+  - b7: flat 7th in violin melody and cello, characteristic Dorian tone
+  - 6: natural 6th is PRIMARY color tone, replaces b6 of Aeolian, removes funeral darkness
+bass_movement:
+  Two-chord vamp: cello arpeggiates i9 then IV9. Pattern repeats hypnotically. Bass outlines Dm9 and G9 chords with 8th-note motion.
+chromatic_approaches:
+  - 6: natural 6th is primary color tone, not chromatic but diatonic to Dorian. Replaces b6 of Aeolian, removing funeral darkness and adding warmth
+  - b7: flat 7th appears in violin melody and cello, but NO raised 7th — pure Dorian, not harmonic minor
+cadences:
+  - i9 - IV9 vamp: no traditional cadence — two-chord loop creates modal suspension. IV9 with natural 6th feels like a lift, but no dominant tension demanding resolution
+  - Dorian ornament: violin uses 5-6-b7-6-5 pattern emphasizing natural 6th and flat 7th. Characteristic Dorian melody
+texture_idiom:
+  8th-note arpeggiated patterns create relaxed but flowing groove. Dorian mode makes it feel warm and groovy rather than dark and tense. Duet texture: cello provides harmonic foundation with i9-IV9 vamp, violin sings Dorian melodies emphasizing natural 6th.
+progressions:
+  - "i9 - IV9: classic Dorian vamp. Natural 6th in IV9 is what makes it Dorian instead of Aeolian. No dominant tension — just grooves. Warmth comes from natural 6th replacing dark b6."
+  - "i9 - IV7 - i9: slight variation. IV7 without 9th creates bluesier feel, but natural 6th still keeps it Dorian warm."
+modulations:
+  - "Parallel mode shift: replace natural 6th with b6. Change is subtle but dramatic — warmth turns to darkness. Works because rest of scale stays same."
+  - "Relative major: treat relative major tonic as new center. Dorian i9 becomes ii9, creating jazzy lift. Smooth because Dorian and relative major share same notes."
+mood_tips:
+  - "Warmth through natural 6th: emphasize natural 6th in both instruments. It makes Dorian sound warm and groovy instead of dark and funeral. Let it ring prominently."
+  - "Modal suspension: don't create dominant tension. Avoid raised 7th that would pull to tonic. Let i9-IV9 loop create hypnotic groove that doesn't demand resolution."
+  - "Dorian melody: use 5-6-b7-6-5 ornament in violin. Emphasizes natural 6th and flat 7th, characteristic Dorian tones. Stepwise motion sounds vocal and natural."

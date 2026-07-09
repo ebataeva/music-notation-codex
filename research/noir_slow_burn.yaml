@@ -1,0 +1,18 @@
+preset: noir_slow_burn
+genre_references: [Angelo Badalamenti - Twin Peaks, Bernard Herrmann - Vertigo, Miles Davis - Ascenseur pour l'échafaud]
+modal_center: HarmonicMinor
+core_degrees:
+  - i: tonic anchor, establishes minor darkness and fatalistic mood
+  - bVI: dark warmth through shared common tones (1, b3) with i; melancholic contrast without losing tonal center
+  - iv: deepens melancholy, connects to bVI via shared tones (b3, 5); creates downward pull toward dominant
+  - V: harmonic minor dominant with raised 7th (leading tone); the noir payoff — semitone tension to tonic creates inevitable resolution
+bass_movement:
+  Pedal-point foundation with root motion by descending fifths (i→iv) and ascending fifths (bVI→V); bass often sustains root across bar lines creating suspended, timeless quality
+chromatic_approaches:
+  - 7: leading tone in V chord, creates semitone pull to 1; the essential noir tension — let it sustain before resolution
+  - b6: can approach 5 from above in inner voices, adding yearning quality to iv and bVI chords
+cadences:
+  - V→i with sustained 7→1: signature noir cadence; harmonic minor leading tone creates unbearable tension that resolves with fatalistic inevitability
+  - bVI→iv→V: descending root motion by fifths builds tension gradually; common tones (1, b3, 5) create smooth voice leading
+texture_idiom:
+  Sparse, spread voicings across wide registral gaps; long sustained notes with minimal rhythmic activity; harmonic rhythm slows to one chord per bar or longer; emphasis on vertical sonority rather than horizontal motion — time feels suspended, each chord hangs in space like smoke

@@ -1,0 +1,41 @@
+# Classical Harmony Formulas — Part 2 (Advanced)
+
+SII6:
+  full_name: "Subdominant triad, first inversion (most common subdominant)"
+  structure: "Triad on II degree, third in bass. Major: minor triad. Minor: diminished"
+  function: "Subdominant (S). Pre-dominant. Creates motion toward dominant"
+  resolution: "→ D or D7 (most common). Can go to K64 or directly to T"
+  usage: "Most common subdominant form. Smooth bass motion. Standard: T → SII6 → K64 → D7 → T"
+  example: "C-dur: F-A-D → G-B-D (D). A-moll: D-F-B → E-G#-B (D7)"
+
+SII7:
+  full_name: "Subdominant seventh chord"
+  structure: "Seventh chord on II degree. Major: minor seventh. Minor: half-diminished"
+  function: "Subdominant (S). Stronger pre-dominant than SII6"
+  resolution: "→ D or D7. Seventh resolves down. Can go to K64"
+  usage: "Stronger subdominant color. More tension. Common in jazz and pop"
+  example: "C-dur: D-F-A-C → G-B-D-F (D7). A-moll: B-D-F-A → E-G#-B-D (D7)"
+
+K64:
+  full_name: "Cadential six-four (special case)"
+  structure: "Same as T64 but cadential function. Built on V degree in bass with I degree tones"
+  function: "Cadential preparation for dominant. Always resolves to D or D7"
+  resolution: "→ D7 (mandatory). Fifth remains; third/root resolve down"
+  usage: "Strong beat before dominant in authentic cadence. Creates momentary suspension"
+  example: "C-dur: G-C-E → G-B-D-F (D7) → C-E-G (T). A-moll: E-A-C → E-G#-B-D (D7) → A-C-E (T)"
+
+VII7:
+  full_name: "Leading-tone seventh chord"
+  structure: "Built on VII degree. Major: half-diminished. Minor: fully diminished"
+  function: "Dominant group (D). Incomplete D9 without root. All tones gravitate to tonic"
+  resolution: "→ T35 or T6. Leading tone → I (up semitone). Others resolve down"
+  usage: "Darker substitute for D7. Often in minor. Used in sequences"
+  example: "C-dur: B-D-F-A♭ (diminished) → C-E-G. A-moll: G#-B-D-F (diminished) → A-C-E"
+
+II7:
+  full_name: "Secondary dominant seventh (V7/V)"
+  structure: "Dominant seventh on II degree as V7 to V. Major triad + minor seventh. II degree raised"
+  function: "Dominant relative to V (V7/V). Chromatic. Strengthens pull to dominant"
+  resolution: "→ V or V7. Raised leading tone to V → V (up semitone). Seventh → III (down)"
+  usage: "Strengthens dominant. Chromatic motion. Common in classical, romantic, pop"
+  example: "C-dur: D-F#-A-C → G-B-D (V) → C-E-G (I). A-moll: B-D#-F#-A → E-G#-B (V) → A-C-E (I)"

@@ -1,0 +1,26 @@
+preset: simple_sexy_duet
+genre_references: [Lana Del Rey - Video Games, Billie Eilish - When the Party's Over, The xx - Intro]
+modal_center: Aeolian (pure natural minor with harmonic minor V7)
+core_degrees:
+  - i: tonic arpeggio with upper neighbor, creates gentle rocking motion
+  - V7: dominant 7th with raised leading tone, provides classical tension
+  - bVI: brief appearance, adds dark warmth before return to i
+bass_movement:
+  Simple alternation: cello outlines i then V7. Very sparse, intimate texture.
+chromatic_approaches:
+  - 7: leading tone in V7 chords and violin melody, creates semitone pull to 1
+cadences:
+  - V7 → i: classical authentic cadence. Leading tone pulls strongly, but loop restarts so resolution is implied rather than final.
+  - i → V7: tonic to dominant creates tension. Simplicity makes it intimate and direct.
+texture_idiom:
+  Slow tempo with whole-note cello patterns. Violin plays simple stepwise melody with leading tone. Very sparse, intimate. Simplicity creates vulnerability and directness.
+progressions:
+  - "i - V7: simplest possible progression. Leading tone creates tension that pulls to tonic, but loop restarts. Intimate and direct."
+  - "i - V7 - bVI - i: adds brief dark warmth before return to tonic."
+modulations:
+  - "Via the dominant: hold common tone. Stays dark but changes center."
+  - "Relative major: use bVI as pivot. Momentary warmth, but return feels inevitable."
+mood_tips:
+  - "Intimacy through simplicity: keep harmony sparse. Leading tone in V7 is the only chromatic color — let it speak clearly."
+  - "Vulnerability: slow tempo and simple patterns create directness. Don't overcomplicate — beauty is in restraint."
+  - "Tension without complexity: V7 with leading tone creates tension, but simplicity makes it feel vulnerable rather than dramatic."

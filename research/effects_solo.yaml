@@ -1,0 +1,73 @@
+# Audio effects for solo presets
+
+dark_trip_hop:
+  - effect_type: reverb
+    preset_name: "Valhalla VintageVerb '1970s Plate'"
+    purpose: "Dark atmospheric space; Bristol sound depth"
+    parameters: "decay 3.5-4.5s, pre-delay 40-60ms, mix 25-35%, low-cut 200Hz"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Studio Tape'"
+    purpose: "Rhythmic depth; dub-influenced space"
+    parameters: "tempo-synced 1/4, feedback 35-45%, mix 20-30%, tape saturation"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'A-Mode'"
+    purpose: "Warmth and analog character; vintage feel"
+    parameters: "drive 15-25%, mix 40-50%, tone dark"
+  - effect_type: filter
+    preset_name: "FabFilter Pro-Q 3 'Low-pass sweep'"
+    purpose: "Muffled underwater quality"
+    parameters: "low-pass 2.5-4kHz, resonance 2-4, LFO 0.1Hz"
+
+ritual_tribal:
+  - effect_type: reverb
+    preset_name: "Valhalla Shimmer 'Dark Cathedral'"
+    purpose: "Vast cavernous space; ancient ritual environments"
+    parameters: "decay 6-8s, pre-delay 80-120ms, mix 40-50%, shimmer -12dB"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Ambient'"
+    purpose: "Echoing hypnotic patterns; rhythmic complexity"
+    parameters: "tempo-synced 1/2, feedback 50-65%, mix 30-40%, filtered 2kHz"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'E-Mode'"
+    purpose: "Grit and aggression; raw primal energy"
+    parameters: "drive 30-45%, mix 50-60%, tone neutral"
+  - effect_type: bitcrusher
+    preset_name: "iZotope Trash 2 'Bit Reduction'"
+    purpose: "Lo-fi degraded texture; ancient weathered sound"
+    parameters: "bit depth 12-14, sample rate 50-70%, mix 25-35%"
+
+noir_slow_burn:
+  - effect_type: reverb
+    preset_name: "Valhalla Room 'Small Room'"
+    purpose: "Intimate noir space; strings forward with subtle depth"
+    parameters: "decay 1.8-2.4s, pre-delay 30-50ms, mix 25-35%, warm"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Studio Tape'"
+    purpose: "Subtle depth; maintains noir intimacy"
+    parameters: "tempo-synced 1/4, feedback 20-30%, mix 15-25%, tape light"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'P-Mode'"
+    purpose: "Warmth and analog character; intimate and inviting"
+    parameters: "drive 10-20%, mix 35-45%, tone neutral"
+  - effect_type: compression
+    preset_name: "Teletronix LA-2A"
+    purpose: "Smooths dynamics; consistent intimate level"
+    parameters: "ratio 2.5:1, attack slow, release slow, GR 2-3dB"
+
+driving_cinematic:
+  - effect_type: reverb
+    preset_name: "Valhalla VintageVerb 'Large Hall'"
+    purpose: "Epic cinematic space; grandeur and depth"
+    parameters: "decay 4-6s, pre-delay 50-80ms, mix 30-40%, bright"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Studio Tape'"
+    purpose: "Rhythmic depth; enhances motoric ostinato"
+    parameters: "tempo-synced 1/4, feedback 30-40%, mix 20-30%, tape"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'A-Mode'"
+    purpose: "Warmth and weight; adds presence"
+    parameters: "drive 20-30%, mix 40-50%, tone warm"
+  - effect_type: compression
+    preset_name: "SSL G-Master Buss"
+    purpose: "Glues mix; cinematic punch"
+    parameters: "ratio 4:1, attack 20ms, release 0.2s, parallel 35-45%"

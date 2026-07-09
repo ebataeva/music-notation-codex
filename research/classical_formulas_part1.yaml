@@ -1,0 +1,57 @@
+# Classical Harmony Formulas — Part 1 (Basic)
+
+T35:
+  full_name: "Tonic triad, root position"
+  structure: "Root + third + fifth. Intervals from bass: 1, 3, 5"
+  function: "Tonic (T). Main stable function. Center of gravity"
+  resolution: "Goal for dominant (D, D7) and subdominant (S)"
+  usage: "Beginning/end of phrase. Cadences. First chord: T → S → D → T"
+  example: "C-dur: C-E-G. A-moll: A-C-E"
+
+T6:
+  full_name: "Tonic triad, first inversion"
+  structure: "Third in bass. Intervals: 3, 6"
+  function: "Tonic (T), unstable form"
+  resolution: "→ T35, D, D7, S, SII6"
+  usage: "Melodic mobility. Often on weak beat"
+  example: "C-dur: E-G-C. A-moll: C-E-A"
+
+T64:
+  full_name: "Tonic triad, second inversion"
+  structure: "Fifth in bass. Intervals: 4, 6"
+  function: "Unstable tonic. Always subordinate to dominant in classical harmony"
+  resolution: "→ D or D7 (mandatory). Fifth remains, third/root resolve down"
+  usage: "Cadential figure on strong beat before dominant"
+  example: "C-dur: G-C-E → G-B-D-F (D7). A-moll: E-A-C → E-G#-B-D (D7)"
+
+D7:
+  full_name: "Dominant seventh, root position"
+  structure: "Major triad + minor seventh. Intervals: 3, 5, 7. Contains tritone"
+  function: "Dominant (D). Main unstable function. Strongest pull to tonic"
+  resolution: "→ T35: leading tone → I (up); seventh → VI (down)"
+  usage: "Creates tension demanding resolution. Most common cadential chord"
+  example: "C-dur: G-B-D-F → C-E-G. A-moll: E-G#-B-D → A-C-E"
+
+D65:
+  full_name: "Dominant seventh, first inversion"
+  structure: "Third in bass. Intervals: 3, 5, 6"
+  function: "Dominant (D), unstable"
+  resolution: "→ T35 or T6"
+  usage: "Smooth bass motion. Often in sequences"
+  example: "C-dur: B-D-F-G → C-E-G. A-moll: G#-B-D-E → A-C-E"
+
+D43:
+  full_name: "Dominant seventh, second inversion"
+  structure: "Fifth in bass. Intervals: 3, 4, 6"
+  function: "Dominant (D), unstable"
+  resolution: "→ T35 or T6"
+  usage: "Less common. Specific bass motion"
+  example: "C-dur: D-F-G-B → C-E-G. A-moll: B-D-E-G# → A-C-E"
+
+D2:
+  full_name: "Dominant seventh, third inversion"
+  structure: "Seventh in bass. Intervals: 2, 4, 6"
+  function: "Dominant (D), most unstable. Seventh creates strong downward pull"
+  resolution: "→ T6 or T35. Seventh resolves down by step"
+  usage: "Strong downward bass motion. Passing chord. Creates urgency"
+  example: "C-dur: F-G-B-D → E-G-C (T6). A-moll: D-E-G#-B → C-E-A (T6)"

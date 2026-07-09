@@ -1,0 +1,23 @@
+preset: ritual_tribal
+genre_references: [Atrium Carceri, Trepaneringsritualen, Wardruna, Heilung, Dead Can Dance, Lustmord]
+modal_center: Phrygian
+core_degrees:
+  - i: tonic drone center, anchors the ritual circle
+  - bII: Phrygian shadow degree, creates hypnotic tension against tonic — defining "dark ritual" color
+  - bIII: minor mediant, brief light contrast while maintaining darkness
+  - iv: subdominant drone, deepens minor atmosphere
+  - v: minor dominant, soft pull back to tonic without resolution
+  - bVI: ritual circling degree, part of ostinato loop i–bVII–bVI–bVII–i
+  - bVII: flat seventh, creates circling motion, avoids bright dominant resolution
+bass_movement:
+  Tonic pedal drone on i with circling ostinato pattern i–bVII–bVI–bVII–i; occasional shift to bIII or iv as secondary drone; stepwise descent bVII–bVI–v–i as lament variant; irregular rhythmic accenting breaks metric predictability
+chromatic_approaches:
+  - bII: primary chromatic color, slides against tonic creating Phrygian "hypnotic shadow" — let it sit on long beats
+  - V: raised leading tone from harmonic minor, ignites ritual intensity when used as major dominant before i cadence
+cadences:
+  - bII → i: Phrygian cadence, darkness pulls down against tonic with semitone gravity
+  - bVII → i: soft ritual return, avoids bright resolution
+  - v → i: minor plagal feel, maintains dark atmosphere
+  - V → i: ritual ignition, harmonic minor raised seventh creates dramatic moment
+texture_idiom:
+  Irregular asymmetric ostinato rhythm (0.5-0.5-1.0-0.5-0.5-0.5-0.5) over low drone bass; dark ritual groove with accented off-beats; repetitive circling patterns create hypnotic trance state; minimal harmonic change emphasizes rhythmic complexity and timbral evolution

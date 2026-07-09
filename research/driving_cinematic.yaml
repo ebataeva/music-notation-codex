@@ -1,0 +1,21 @@
+preset: driving_cinematic
+genre_references: [Hans Zimmer - Time, Two Steps From Hell - Heart of Courage, Audiomachine - Wars of Faith, Ramin Djawadi - Light of the Seven]
+modal_center: Aeolian
+core_degrees:
+  - i: tonic anchor, dark stability against motoric ostinato; pedal point creates urgency
+  - bVI: warm lift from tonic darkness, epic sweep upward; provides emotional expansion
+  - bIII: mediant brightness, heroic lift; gives cinematic grandeur between darker degrees
+  - bVII: pivot tension, dominant substitute without leading tone; creates forward momentum back to i
+  - v: minor dominant, avoids resolution; maintains tension in ostinato cycles
+bass_movement:
+  Pedal-point tonic (i) anchors motoric 16th-note ostinato while harmonies shift above; when bass moves, uses ascending fourths (i→bIII→bVI→bVII) creating rising cinematic sweep; descends by step (bVII→bVI→v→i) for phrase closure
+chromatic_approaches:
+  - b2: chromatic neighbor to tonic in descending lines, creates urgency and forward drive
+  - #4: leading tone to v in bass ostinato, adds tension before minor dominant
+  - b6: chromatic approach to v from below, smooth voice-leading in inner voices
+cadences:
+  - bVII → i: Aeolian cadence, subtonic to tonic; avoids V-i brightness, maintains dark cinematic quality
+  - bVI → bVII → i: rising sweep cadence, epic trailer gesture; bVI warmth builds to bVII tension before tonic return
+  - i pedal with harmonic rhythm: tonic pedal under shifting harmonies creates ostinato-driven cadential feel without traditional resolution
+texture_idiom:
+  Relentless 16th-note motoric ostinato in cello/arpeggiated patterns; chord tones arpeggiate rapidly while bass holds pedal or moves in fourths; harmonic tension comes from speed and repetition rather than complex progressions; ear perceives motion even when harmony is static; layered ostinatos create polyrhythmic density

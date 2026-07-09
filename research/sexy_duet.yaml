@@ -1,0 +1,29 @@
+preset: sexy_duet
+genre_references: [Portishead - Roads, Massive Attack - Teardrop, Fiona Apple - Criminal]
+modal_center: Aeolian (with harmonic minor leading tone)
+core_degrees:
+  - i: tonic arpeggio with passing tones, anchors sensual darkness
+  - bVI: dark warmth chord, provides emotional lift without brightness
+  - iv: subdominant minor, creates stepwise bass motion
+  - V7: dominant 7th with raised leading tone, creates tension pulling to i
+bass_movement:
+  Cello outlines i with passing tones, then moves to bVI, iv, and V7. Tonic pedal with descent, then bVI→V7 creates dark-to-tense motion.
+chromatic_approaches:
+  - 7: leading tone in V7 chords and violin melody, creates semitone pull to 1
+  - b7: flat 7th as passing tone in i chords, adds bluesy color
+cadences:
+  - iv → V7: classical subdominant-dominant motion, building tension
+  - V7 → i (implied): V7 with leading tone implies resolution, but loop restarts before arrival
+  - bVI → iv: descending bass motion, dark warmth to subdominant
+texture_idiom:
+  8th-note arpeggiated patterns establishing harmony with passing tones. Violin sings sustained melody with chromatic neighbor tones. Duet texture: bass foundation + lyrical soprano line with harmonic minor touches.
+progressions:
+  - "i - bVI - iv - V7: bVI adds dark warmth, iv creates stepwise bass motion, V7 with leading tone creates tension that loops back to i."
+  - "i pedal - V7: cello holds tonic while harmony shifts to dominant. Leading tone pulls toward tonic, but loop restarts before full resolution."
+modulations:
+  - "Via the dominant: hold common tone between V and new i. Stays dark but changes center of gravity."
+  - "Relative major escape: use bVI as pivot. Momentary warmth, but return feels inevitable."
+mood_tips:
+  - "Mystery: let violin use chromatic neighbor tones. Semitone motion sounds like a sigh because ear anticipates resolution but melody delays it."
+  - "Sexy effect: keep cello on tonic arpeggios while harmony shifts above. Steady bass creates physical grounding, changing chords create emotional movement."
+  - "Tension without release: use V7 with leading tone but let loop restart before resolving. Persistent tension creates sensual ache."

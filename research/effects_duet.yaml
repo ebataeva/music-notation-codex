@@ -1,0 +1,55 @@
+# Audio effects for duet presets
+
+sexy_duet:
+  - effect_type: reverb
+    preset_name: "Valhalla Room 'Medium Room'"
+    purpose: "Intimate romantic space; warm and present"
+    parameters: "decay 2.0-2.6s, pre-delay 30-45ms, mix 25-35%, warm"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Studio Tape'"
+    purpose: "Subtle depth; maintains intimacy"
+    parameters: "tempo-synced 1/4, feedback 20-30%, mix 15-25%, tape"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'P-Mode'"
+    purpose: "Warmth; enhances sensual quality"
+    parameters: "drive 15-25%, mix 40-50%, tone warm"
+  - effect_type: EQ
+    preset_name: "Pultec EQP-1A"
+    purpose: "Warmth and presence; low-mid body"
+    parameters: "boost 2dB 200Hz, cut -2dB 400Hz, boost 3dB 10kHz"
+
+simple_sexy_duet:
+  - effect_type: reverb
+    preset_name: "Valhalla Room 'Small Room'"
+    purpose: "Close intimate space; forward and personal"
+    parameters: "decay 1.4-1.8s, pre-delay 25-35ms, mix 20-30%, warm"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Studio Tape'"
+    purpose: "Subtle depth; maintains simplicity"
+    parameters: "tempo-synced 1/4, feedback 15-25%, mix 10-20%, tape light"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'P-Mode'"
+    purpose: "Warmth; intimate and inviting"
+    parameters: "drive 10-20%, mix 35-45%, tone neutral"
+  - effect_type: stereo_imaging
+    preset_name: "Waves S1 Imager"
+    purpose: "Gentle width; natural separation"
+    parameters: "width +80%, bass mono <150Hz, subtle side"
+
+dorian_sexy_duet:
+  - effect_type: reverb
+    preset_name: "Valhalla VintageVerb '1970s Hall'"
+    purpose: "Warm nostalgic space; Dorian bittersweet quality"
+    parameters: "decay 2.2-2.8s, pre-delay 35-50ms, mix 30-40%, warm"
+  - effect_type: delay
+    preset_name: "Soundtoys EchoBoy 'Studio Tape'"
+    purpose: "Flowing hypnotic movement; warm sensual groove"
+    parameters: "tempo-synced 1/4 dotted, feedback 25-35%, mix 20-30%, tape heavy"
+  - effect_type: saturation
+    preset_name: "Soundtoys Decapitator 'A-Mode'"
+    purpose: "Warmth and vintage character; Dorian nostalgic feel"
+    parameters: "drive 20-30%, mix 45-55%, tone warm"
+  - effect_type: modulation
+    preset_name: "Soundtoys Tremolator 'Warm Tremolo'"
+    purpose: "Subtle movement; hypnotic sensual quality"
+    parameters: "rate 2-3Hz, depth 15-20%, mix 15-25%, sine"

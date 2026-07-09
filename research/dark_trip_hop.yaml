@@ -1,0 +1,22 @@
+preset: dark_trip_hop
+genre_references: [Portishead - Glory Box, Massive Attack - Teardrop, Tricky - Hell Is Round the Corner]
+modal_center: Aeolian
+core_degrees:
+  - i: tonic drone, hypnotic pull through sustained pedal points
+  - bVI: dark warmth, emotional weight, contrast without brightening
+  - v: minor dominant, avoids classical resolution, maintains tension
+  - bVII: passing motion, modal color, descends stepwise toward bVI
+  - bIII: occasional color chord, melancholic lift without major brightness
+  - iv: darker subdominant alternative, deepens minor atmosphere
+bass_movement:
+  Tonic pedal dominates with sustained root in bass, occasional movement to bVI and v creates slow harmonic rhythm. Stepwise descent (v to i) provides minimal motion. Bass doubles root or fifth, reinforcing drone quality.
+chromatic_approaches:
+  - bII: semitone approach to tonic from below, creates bodily tension and danger
+  - 7: natural leading tone as passing note between b7 and 1, adds momentary brightness
+  - #4: chromatic passing tone between 4 and 5, creates unease in melodic lines
+cadences:
+  - i - bVI - v - i: avoids authentic resolution, circular motion maintains hypnotic loop
+  - i - bVII - bVI - V: downward stepwise descent creates seductive inevitability
+  - v - i: weak resolution, minor dominant to tonic feels incomplete and haunting
+texture_idiom:
+  Steady eighth-note pulse at 72 BPM creates loopy, trance-like groove. Sparse instrumentation with space between hits. Bass and drums lock into repetitive patterns while harmonic elements drift above.
