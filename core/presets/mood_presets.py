@@ -156,10 +156,9 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
             "Sexy effect: add a syncopation just before the strong beat. The body hears the anticipation of the hit, and the delay makes the groove stickier.",
         ),
     ),
-    # Duet presets below have no GENRE_IDEAS-equivalent theory data source, so
-    # progressions/modulations/mood_tips stay empty (no fabricated theory text).
-    # rhythm/bars/tempo_bpm mirror the duet_* fields for schema consistency
-    # since duet scripts have no separate solo-cello-only data.
+    # Duet presets: theory tuples generated from harmonic analysis of duet bar
+    # data and genre research (2026). Originally migrated from standalone duet
+    # scripts with no GENRE_IDEAS source; tuples filled in after research.
     "sexy_duet": MoodPreset(
         name="sexy_duet",
         tempo_bpm=76,
@@ -169,10 +168,20 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         velocity=82,
         rhythm=(),
         bars=(),
-        feel="",
-        progressions=(),
-        modulations=(),
-        mood_tips=(),
+        feel="sensual duet with chromatic tension",
+        progressions=(
+            "i - bVI - iv - V7: D minor → Bb → G minor → A7. Works because bVI adds dark warmth, iv creates stepwise bass motion (D→Bb→G→A), and V7 with C# leading tone creates tension that loops back to i.",
+            "i pedal - V7: D minor (pedal) → A7. The cello holds tonic while harmony shifts to dominant. The C# leading tone pulls toward D, but the loop restarts before full resolution.",
+        ),
+        modulations=(
+            "Via the dominant: D minor → A minor. Hold A as common tone between V (A7) and new i (Am). The shift stays dark but changes the center of gravity.",
+            "Relative major escape: D minor → F major. Use bVI (Bb) as pivot to F. This gives momentary warmth, but the return to D minor feels inevitable.",
+        ),
+        mood_tips=(
+            "Mystery: let the violin use chromatic neighbor tones — C# approaching D, E falling to D. The semitone motion sounds like a sigh because the ear anticipates resolution but the melody delays it.",
+            "Sexy effect: keep the cello on tonic arpeggios while the harmony shifts above. The steady bass creates physical grounding, while the changing chords create emotional movement.",
+            "Tension without release: use V7 with C# leading tone but let the loop restart before resolving to i. The persistent tension creates a sensual ache.",
+        ),
         duet_rhythm={
             "cello": (0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 0.5),
             "violin": (1.0, 0.5, 0.5, 1.0, 1.0),
@@ -210,10 +219,20 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         velocity=68,
         rhythm=(),
         bars=(),
-        feel="",
-        progressions=(),
-        modulations=(),
-        mood_tips=(),
+        feel="intimate duet, slow and sparse",
+        progressions=(
+            "i - V7: D minor → A7. The simplest sensual progression: tonic darkness alternates with dominant tension. The C# leading tone in V7 creates a semitone pull to D that never fully resolves because the loop restarts.",
+            "i - V7 - i - V7 - i (with bVI hint) - V7: Bars 1-6 alternate i-V7, then bar 5 introduces bVI color (D-A-F-E) before returning to the pattern. This brief departure adds variety without breaking the hypnotic loop.",
+        ),
+        modulations=(
+            "Stay in D minor: the simplicity is the point. Modulation would break the intimate spell. If modulation is needed, shift to A minor (v) by treating the V7 (A7) as a new tonic.",
+            "Relative major moment: briefly emphasize F major (bVI) by holding F in the bass and letting the violin play A-C-F. This creates a warm breath before returning to D minor's darker intimacy.",
+        ),
+        mood_tips=(
+            "Intimacy through simplicity: use quarter notes and let the harmony breathe. The slow tempo (64 BPM) and sparse texture create physical closeness — like a whispered conversation.",
+            "Leading tone as seduction: the C# in every V7 chord pulls toward D like gravity. Don't resolve it fully — let the loop restart so the tension persists and the listener leans in.",
+            "Stepwise melody: keep the violin moving by steps (F→E→D, A→G→F→E). Stepwise motion sounds natural and vocal, like someone singing close to your ear.",
+        ),
         duet_rhythm={
             "cello": (1.0, 1.0, 1.0, 1.0),
             "violin": (1.0, 1.0, 1.0, 1.0),
@@ -255,9 +274,19 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
         rhythm=(),
         bars=(),
         feel="D Dorian vamp: Dm9 -> G9. The B natural keeps it warm instead of funeral-dark.",
-        progressions=(),
-        modulations=(),
-        mood_tips=(),
+        progressions=(
+            "i9 - IV9: Dm9 → G9. The classic Dorian vamp. The B natural in G9 (G-B-D-F-A) is what makes it Dorian instead of Aeolian. This progression has no dominant tension — it just grooves. The warmth comes from the natural 6th (B) replacing the dark b6 (Bb).",
+            "i9 - IV7 - i9: Dm9 → G7 → Dm9. Slight variation: G7 (G-B-D-F) without the 9th creates a bluesier feel, but the B natural still keeps it Dorian warm.",
+        ),
+        modulations=(
+            "Parallel mode shift: D Dorian → D Aeolian. Replace B natural with Bb. The change is subtle but dramatic — warmth turns to darkness. This works because the rest of the scale stays the same, so the shift feels like a color change rather than a key change.",
+            "Relative major: D Dorian → C major. Treat C as the new tonic. The Dorian Dm9 becomes ii9 in C, creating a jazzy lift. This modulation is smooth because D Dorian and C major share the same notes.",
+        ),
+        mood_tips=(
+            "Warmth through the natural 6th: emphasize B natural in both cello and violin. The B natural is what makes Dorian sound warm and groovy instead of dark and funeral. Let it ring prominently in the melody.",
+            "Modal suspension: don't create dominant tension. Avoid the raised 7th (C#) that would pull to D. Instead, let the i9-IV9 loop create a hypnotic groove that doesn't demand resolution — it just feels good.",
+            "Dorian melody: use the A-B-C-B-A ornament (5-6-b7-6-5) in the violin. This pattern emphasizes the natural 6th (B) and flat 7th (C), which are the characteristic Dorian tones. The stepwise motion sounds vocal and natural.",
+        ),
         duet_rhythm={
             "cello": (0.5, 0.5, 0.5, 0.5, 1.0, 0.5, 0.5),
             "violin": (0.5, 0.5, 1.0, 0.5, 0.5, 1.0),

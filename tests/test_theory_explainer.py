@@ -64,12 +64,13 @@ def test_explain_populates_all_fields_for_every_preset() -> None:
         assert explanation.how_to_transition
 
 
-def test_duet_presets_with_empty_theory_tuples_use_fallback_text() -> None:
+def test_duet_presets_with_theory_tuples_generate_explanations() -> None:
+    """Duet presets now have theory data (progressions/modulations/mood_tips filled)."""
     for preset_name in ["sexy_duet", "simple_sexy_duet", "dorian_sexy_duet"]:
         preset = get_preset(preset_name)
-        assert preset.progressions == ()
-        assert preset.modulations == ()
-        assert preset.mood_tips == ()
+        assert preset.progressions  # No longer empty
+        assert preset.modulations   # No longer empty
+        assert preset.mood_tips     # No longer empty
         explanation = explain(make_variant(trace_for_preset(preset_name)), preset)
         assert "IndexError" not in all_text(explanation)
         assert preset.key_tonic in all_text(explanation)
@@ -238,12 +239,12 @@ def test_solo_preset_modulation_text_appears_in_how_to_transition() -> None:
     assert "common chord" in explanation.how_to_transition.lower()
 
 
-def test_duet_presets_use_fallback_when_theory_data_empty() -> None:
-    """FINDING-1: D-09 — duet presets with empty tuples use fallback text, no IndexError."""
+def test_duet_presets_use_theory_data_when_available() -> None:
+    """FINDING-1: D-09 — duet presets now have theory tuples, so progression/mood_tip text should appear."""
     preset = get_preset("sexy_duet")
     explanation = explain(make_variant(trace_for_preset("sexy_duet")), preset)
     assert explanation.why_it_works
     assert explanation.how_to_develop
     assert explanation.how_to_transition
-    # Fallback text should contain "anchor" since no progression text
-    assert "anchor" in explanation.why_it_works.lower()
+    # Theory text should now appear instead of fallback
+    assert "D minor" in explanation.why_it_works or "A7" in explanation.why_it_works
