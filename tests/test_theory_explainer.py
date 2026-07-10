@@ -124,7 +124,8 @@ def test_unknown_pattern_strategy_raises_value_error() -> None:
 def test_explanation_contains_trace_anchor() -> None:
     preset = get_preset("dark_trip_hop")
     explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
-    assert "C2" in explanation.why_it_works
+    # Stage 4: anchor moves to how_to_end (cadence-driven resolution)
+    assert "C2" in explanation.how_to_end
 
 
 def test_cello_and_looper_cues_are_present() -> None:
@@ -153,7 +154,7 @@ def test_cue_selection_is_not_keyed_by_preset_name() -> None:
 
 
 def test_explain_with_progression_driven_trace_surfaces_chord_tone() -> None:
-    """FINDING-2: Integration test for explain() with progression_driven_register_mapped trace."""
+    """Stage 4: chord tone appears in how_to_end (via anchor), not necessarily in why_it_works for single-chord traces."""
     preset = get_preset("dark_trip_hop")
     trace = GenerationTrace(
         seed=7,
@@ -164,8 +165,9 @@ def test_explain_with_progression_driven_trace_surfaces_chord_tone() -> None:
     )
     variant = make_variant(trace)
     explanation = explain(variant, preset)
-    assert "A" in explanation.why_it_works
-    assert "mid register" in explanation.why_it_works
+    # Chord tone surfaces via anchor in how_to_end
+    assert "A" in explanation.how_to_end
+    assert "mid register" in explanation.how_to_start
 
 
 def test_noir_progression_explains_notes_and_resolutions() -> None:
@@ -215,12 +217,12 @@ def test_noir_progression_still_names_harmonic_function_path() -> None:
     assert "V (leading-tone tension)" in explanation.why_it_works
 
 
-def test_solo_preset_progression_text_appears_in_why_it_works() -> None:
-    """FINDING-1: D-09 — preset.progressions text surfaces in why_it_works for solo presets."""
+def test_solo_preset_why_it_works_includes_style_policy_modal_center() -> None:
+    """Stage 4: why_it_works now uses style_policy modal_center (not preset.progressions)."""
     preset = get_preset("dark_trip_hop")
     explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
-    # The first progression starts with "i - VI - v - i: C minor -> Ab -> G minor -> C minor"
-    assert "C minor" in explanation.why_it_works
+    # dark_trip_hop policy has modal_center: Aeolian
+    assert "Aeolian" in explanation.why_it_works
 
 
 def test_solo_preset_mood_tip_text_appears_in_how_to_develop() -> None:
@@ -239,12 +241,132 @@ def test_solo_preset_modulation_text_appears_in_how_to_transition() -> None:
     assert "common chord" in explanation.how_to_transition.lower()
 
 
-def test_duet_presets_use_theory_data_when_available() -> None:
-    """FINDING-1: D-09 — duet presets now have theory tuples, so progression/mood_tip text should appear."""
+def test_duet_presets_use_style_policy_data() -> None:
+    """Stage 4: duet presets use style_policy for explanations (not preset.progressions directly)."""
     preset = get_preset("sexy_duet")
     explanation = explain(make_variant(trace_for_preset("sexy_duet")), preset)
     assert explanation.why_it_works
     assert explanation.how_to_develop
     assert explanation.how_to_transition
-    # Theory text should now appear instead of fallback
-    assert "D minor" in explanation.why_it_works or "A7" in explanation.why_it_works
+    # sexy_duet policy has modal_center: Aeolian (with harmonic minor)
+    assert "Aeolian" in explanation.why_it_works.lower()
+    # mood_tip text should appear in how_to_develop
+    assert "chromatic" in explanation.how_to_develop.lower() or "mystery" in explanation.how_to_develop.lower()
+
+
+# ── Stage 4: Style-policy-driven snapshot tests ──
+
+def test_generic_phrase_keeps_loop_identity_clear_is_removed() -> None:
+    """Stage 4: why_it_works no longer contains the generic 'keeps the loop identity clear'."""
+    for preset_name in list_presets():
+        preset = get_preset(preset_name)
+        explanation = explain(make_variant(trace_for_preset(preset_name)), preset)
+        assert "keeps the loop identity clear" not in explanation.why_it_works
+
+
+def test_generic_phrase_changing_one_harmonic_parameter_is_removed() -> None:
+    """Stage 4: how_to_develop no longer says 'changing one harmonic parameter at a time'."""
+    for preset_name in list_presets():
+        preset = get_preset(preset_name)
+        explanation = explain(make_variant(trace_for_preset(preset_name)), preset)
+        assert "changing one harmonic parameter" not in explanation.how_to_develop
+
+
+def test_why_it_works_includes_modal_center_for_all_solo_presets() -> None:
+    """Stage 4: every solo preset's why_it_works mentions its style_policy modal center."""
+    expected_modal = {
+        "dark_trip_hop": "Aeolian",
+        "ritual_tribal": "Phrygian",
+        "noir_slow_burn": "Harmonic",
+        "driving_cinematic": "Aeolian",
+    }
+    for preset_name, modal in expected_modal.items():
+        preset = get_preset(preset_name)
+        explanation = explain(make_variant(trace_for_preset(preset_name)), preset)
+        assert modal.lower() in explanation.why_it_works.lower(), (
+            f"{preset_name}: expected '{modal}' in why_it_works"
+        )
+
+
+def test_how_to_end_includes_cadence_from_policy() -> None:
+    """Stage 4: how_to_end references the first cadence from style_policy for presets with cadences."""
+    # dark_trip_hop has cadences like i - bVI - v - i
+    preset = get_preset("dark_trip_hop")
+    explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
+    # dark_trip_hop's first cadence is "i - bVI - v - i"
+    assert "i - bVI - v - i" in explanation.how_to_end
+
+
+def test_how_to_develop_includes_chromatic_approaches() -> None:
+    """Stage 4: presets with chromatic_approaches in policy get concrete suggestions in how_to_develop."""
+    # ritual_tribal has bII as primary chromatic approach
+    preset = get_preset("ritual_tribal")
+    explanation = explain(make_variant(trace_for_preset("ritual_tribal")), preset)
+    # The chromatic_approach clause says "try bII"
+    assert "bII" in explanation.how_to_develop
+
+
+def test_different_presets_produce_different_explanations() -> None:
+    """Stage 4: explanations are preset-specific, not generic copy-paste."""
+    explanations = {}
+    for preset_name in ["dark_trip_hop", "ritual_tribal", "noir_slow_burn", "driving_cinematic"]:
+        preset = get_preset(preset_name)
+        explanations[preset_name] = explain(
+            make_variant(trace_for_preset(preset_name)), preset
+        )
+
+    # All why_it_works texts should be different
+    why_texts = {name: expl.why_it_works for name, expl in explanations.items()}
+    assert len(set(why_texts.values())) == 4, (
+        "All 4 presets should produce distinct why_it_works text"
+    )
+
+    # All how_to_develop texts should be different
+    develop_texts = {name: expl.how_to_develop for name, expl in explanations.items()}
+    assert len(set(develop_texts.values())) == 4, (
+        "All 4 presets should produce distinct how_to_develop text"
+    )
+
+
+def test_dark_trip_hop_explanation_is_note_specific() -> None:
+    """Stage 4: dark_trip_hop explanation contains note-specific policy content."""
+    preset = get_preset("dark_trip_hop")
+    explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
+
+    # Modal center
+    assert "Aeolian" in explanation.why_it_works
+    # First cadence: "i - bVI - v - i"
+    assert "i - bVI - v - i" in explanation.why_it_works or "i - bVI - v - i" in explanation.how_to_end
+    # Chromatic approaches: bII
+    assert "bII" in explanation.how_to_develop
+    # Genre references: Massive Attack / Portishead
+    assert "Portishead" in explanation.why_it_works or "Massive Attack" in explanation.why_it_works
+
+
+def test_ritual_tribal_explanation_is_note_specific() -> None:
+    """Stage 4: ritual_tribal explanation contains Phrygian-specific content."""
+    preset = get_preset("ritual_tribal")
+    explanation = explain(make_variant(trace_for_preset("ritual_tribal")), preset)
+
+    assert "Phrygian" in explanation.why_it_works
+    # First cadence: bII → i
+    assert "bII" in explanation.why_it_works or "bII" in explanation.how_to_end
+    # Mood tip: "Phrygian b2 degree"
+    assert "phrygian" in explanation.how_to_develop.lower()
+
+
+def test_noir_slow_burn_explanation_is_note_specific() -> None:
+    """Stage 4: noir_slow_burn explanation contains Harmonic Minor-specific content."""
+    preset = get_preset("noir_slow_burn")
+    explanation = explain(make_variant(trace_for_preset("noir_slow_burn")), preset)
+
+    assert "HarmonicMinor" in explanation.why_it_works or "harmonic" in explanation.why_it_works.lower()
+
+
+def test_driving_cinematic_explanation_is_note_specific() -> None:
+    """Stage 4: driving_cinematic explanation contains Aeolian/cinematic content."""
+    preset = get_preset("driving_cinematic")
+    explanation = explain(make_variant(trace_for_preset("driving_cinematic")), preset)
+
+    assert "Aeolian" in explanation.why_it_works
+

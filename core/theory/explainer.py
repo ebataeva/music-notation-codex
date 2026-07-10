@@ -4,6 +4,7 @@ import re
 from collections.abc import Sequence
 
 from core.models import GenerationTrace, LoopVariant, MoodPreset, TheoryExplanation
+from core.presets.style_policy import StylePolicy, get_style_policy
 from core.theory.cues import cue_pair_for, primary_register
 
 
@@ -380,6 +381,118 @@ def _register_quality_clause(trace: GenerationTrace) -> str:
     return ""
 
 
+def _cadence_clause(policy: StylePolicy) -> str:
+    """Generate a note-specific cadence clause from the style policy.
+
+    Picks the first cadence entry that has a meaningful 'why it works' comment
+    and formats it as a prose clause describing the loop's harmonic closure.
+    """
+    cadences = policy.cadences
+    if not cadences:
+        return ""
+
+    # Pick the first cadence — it's the most characteristic one
+    for gesture, comment in cadences.items():
+        if gesture and comment:
+            return f"The loop's harmonic pull comes from the {gesture} gesture — {comment.lower().rstrip('.')}."
+    return ""
+
+
+def _style_context_clause(policy: StylePolicy) -> str:
+    """Generate a genre-aware context clause describing the modal/textural identity."""
+    parts = []
+    if policy.modal_center:
+        parts.append(f"Rooted in {policy.modal_center} modality")
+    if policy.texture_idiom:
+        # Take first sentence of texture idiom for a concise clause
+        first_sentence = policy.texture_idiom.split(".")[0].strip()
+        if first_sentence:
+            parts.append(first_sentence.lower())
+    if policy.genre_references:
+        refs = policy.genre_references[:2]
+        parts.append(
+            f"drawing from {refs[0]} and {refs[1]}" if len(refs) > 1 else f"drawing from {refs[0]}"
+        )
+    if not parts:
+        return ""
+    return ". ".join(parts) + "."
+
+
+def _chromatic_approach_clause(policy: StylePolicy) -> str:
+    """Generate concrete chromatic approach suggestions from the style policy.
+
+    Uses chromatic_approaches to suggest specific semitone moves the player
+    can use to develop the loop — replacing the generic 'change one harmonic
+    parameter at a time'.
+    """
+    approaches = policy.chromatic_approaches
+    if not approaches:
+        return ""
+
+    clues = []
+    for degree, description in approaches.items():
+        desc_lower = description.lower()
+        clues.append(f"try {degree} — {desc_lower.rstrip('.')}")
+
+    if not clues:
+        return ""
+
+    return "Color-wise: " + "; ".join(clues[:3]) + "."
+
+
+
+def _mood_tip_clause(preset: MoodPreset) -> str:
+    """Pick the most relevant mood tip — the first one is most characteristic."""
+    tips = preset.mood_tips
+    if not tips:
+        return ""
+    return tips[0]
+
+
+
+def _why_it_works_core(trace: GenerationTrace, preset: MoodPreset, policy: StylePolicy, anchor: str) -> str:
+    """Build a note-specific 'why it works' explanation.
+
+    Prioritizes: 1) chord-tone analysis from the trace, 2) policy cadence,
+    3) style context, 4) register quality. Removes generic phrases like
+    'keeps the loop identity clear'.
+    """
+    clauses = []
+
+    # Chord-tone analysis (existing note-specific functions)
+    headline = _headline_harmony_clause(trace, preset)
+    if headline:
+        clauses.append(headline)
+
+    function_path = _function_path(trace, preset)
+    if function_path:
+        clauses.append(function_path)
+
+    # Style policy: cadence gesture
+    cadence = _cadence_clause(policy)
+    if cadence:
+        clauses.append(cadence)
+
+    # Style context: modal center + texture idiom + genre references
+    context = _style_context_clause(policy)
+    if context:
+        clauses.append(context)
+
+    # Register quality
+    register = _register_quality_clause(trace)
+    if register:
+        clauses.append(register)
+
+    # Fallback: if nothing specific, use the anchor-based fallback
+    if not clauses:
+        return (
+            f"{anchor} gives the listener a concrete point of return "
+            f"in {preset.key_tonic} {preset.key_mode}."
+        )
+
+    return " ".join(clauses)
+
+
 def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     if variant.trace is None:
         raise ValueError("Theory explanation requires variant.trace.")
@@ -388,44 +501,19 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     anchor = _select_anchor(trace)
     start_cue, transition_cue = cue_pair_for(preset, trace)
     tempo = preset.duet_tempo_bpm or preset.tempo_bpm
+
+    # Load style-aware harmony policy
+    policy = get_style_policy(preset.name)
+
+    # --- why_it_works: note-specific, policy-driven ---
+    core_clauses = _why_it_works_core(trace, preset, policy, anchor)
     feel = preset.feel.strip() or f"{preset.key_tonic} {preset.key_mode} cello loop"
-    harmony_focus = f"{preset.key_tonic} {preset.key_mode}"
-
-    # D-09: Surface preset theory data into the explanation fields.
-    progression = _first_or_fallback(preset.progressions, "")
-    modulation = _first_or_fallback(preset.modulations, "")
-    mood_tip = _first_or_fallback(preset.mood_tips, "")
-
-    if progression:
-        harmony_focus = f"{harmony_focus} — {progression}"
-    else:
-        harmony_focus = f"{harmony_focus} with a clear repeated anchor"
-
-    # Phase 7: vary the explanation per register_bias so sibling variants read
-    # as clearly different tonal characters, not as identical copy.
-    register_clause = _register_quality_clause(trace)
-
-    headline_clause = _headline_harmony_clause(trace, preset)
-    if headline_clause:
-        core_reason = headline_clause
-    else:
-        core_reason = (
-            f"{anchor} gives the listener a concrete point of return in "
-            f"{_strip_sentence_end(harmony_focus)}"
-        )
-
-    analysis_clauses = []
-    for clause in (_function_path(trace, preset), register_clause):
-        if clause:
-            analysis_clauses.append(clause)
-
     why_it_works = (
-        f"This works because {_strip_sentence_end(core_reason)}. {' '.join(analysis_clauses)} "
-        f"The {tempo} BPM {feel} keeps the loop identity clear."
+        f"This works because {_strip_sentence_end(core_clauses)}. "
+        f"At {tempo} BPM, the {feel} stays grounded in its {policy.modal_center} character."
     )
 
-    # Slightly vary the opening cue per register_bias so each variant's
-    # how_to_start is distinguishable while staying grounded in the trace.
+    # --- how_to_start: register-aware cue ---
     bias = trace.register_bias
     if bias == "low":
         how_to_start = f"{start_cue} Lean into the weight of the lowest register so the loop feels rooted."
@@ -434,40 +522,61 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     else:
         how_to_start = start_cue
 
-    if mood_tip:
-        note_clauses = [
-            clause
-            for clause in (
-                _minor_color_clause(trace),
-                _anchor_role(trace, preset),
-                _voice_leading_clause(trace),
-            )
-            if clause
-        ]
-        note_intro = ""
-        if note_clauses:
-            note_intro = " ".join(note_clauses) + " "
-        how_to_develop = (
-            f"{note_intro}Develop it by changing one harmonic parameter at a time: "
-            f"keep the same rhythm, then vary color, tension, or register. {mood_tip}"
+    # --- how_to_develop: chromatic approaches + mood tips ---
+    mood_tip = _mood_tip_clause(preset)
+    chromatic = _chromatic_approach_clause(policy)
+
+    # Build note-specific intro clauses
+    note_clauses = [
+        clause
+        for clause in (
+            _minor_color_clause(trace),
+            _anchor_role(trace, preset),
+            _voice_leading_clause(trace),
         )
+        if clause
+    ]
+    note_intro = " ".join(note_clauses) + " " if note_clauses else ""
+
+    develop_parts = []
+    if chromatic:
+        develop_parts.append(chromatic)
+    if mood_tip:
+        develop_parts.append(mood_tip)
+
+    if develop_parts:
+        how_to_develop = f"{note_intro}{' '.join(develop_parts)}"
     else:
         how_to_develop = (
-            "Develop it by keeping the pulse steady and changing one harmonic detail at a time: "
-            "keep the bow close to the string and let small dynamic changes create motion."
+            f"{note_intro}Develop it by keeping the pulse steady and exploring the "
+            f"{policy.modal_center} color palette — let small dynamic changes create motion "
+            f"within the {policy.texture_idiom.split('.')[0].lower()} texture."
         )
 
-    how_to_end = (
-        f"End by returning to {anchor}, then remove harmonic tension by softening the dynamics "
-        "and letting the final bow stroke decay."
-    )
+    # --- how_to_end: cadence-driven ---
+    cadences = policy.cadences
+    if cadences:
+        # Use the first cadence as the closing gesture
+        closing_gesture = next(iter(cadences.keys()))
+        how_to_end = (
+            f"End by resolving through the {closing_gesture} gesture, "
+            f"returning to {anchor}, then soften the dynamics and let the final bow stroke decay."
+        )
+    else:
+        how_to_end = (
+            f"End by returning to {anchor}, then remove harmonic tension by softening the dynamics "
+            "and letting the final bow stroke decay."
+        )
 
+    # --- how_to_transition: modulation-driven ---
+    modulation = _first_or_fallback(preset.modulations, "")
     if modulation:
         how_to_transition = f"{transition_cue} {modulation}"
     else:
         how_to_transition = (
             f"{transition_cue} "
-            "Move by repeating the anchor once, then shift the next loop entry to a nearby pitch."
+            f"Move by repeating the {policy.modal_center} anchor once, "
+            f"then shift the next loop entry to a nearby pitch within the mode."
         )
 
     return TheoryExplanation(

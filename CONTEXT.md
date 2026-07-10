@@ -1,9 +1,9 @@
 # Project Context — music-notation-codex
 
-**Last updated:** 2026-07-09 14:50
+**Last updated:** 2026-07-10
 **Branch:** `style-harmony-policy`
-**Last commit:** `54d03c2` — docs(daily): update 2026-07-09 with full research report
-**Progress:** 90% (9/10 phases v1 complete)
+**Last commit:** `913d6b0 — docs: add CONTEXT.md — unified structured resume file for new sessions`
+**Progress:** 95% (Stage 4 done — explainer rewritten)
 
 ---
 
@@ -17,13 +17,15 @@
 - Research: 7 parallel agents researched harmonic language for all presets (in transposable scale degrees, not fixed notes)
 - Policy modules: `core/presets/style_policy.py`, `effects_policy.py`, `classical_formulas.py`
 - Duet presets: filled empty progressions/modulations/mood_tips tuples
-- Tests: 164 tests passing (22 new tests for policy modules)
+- Tests: 174 tests (10 new snapshot tests for style-policy-driven explainer)
+- **Stage 4: `core/theory/explainer.py` rewritten** — note-specific, policy-driven explanations
+  - Removed: "keeps the loop identity clear", "changing one harmonic parameter"
+  - Added: `_cadence_clause`, `_style_context_clause`, `_chromatic_approach_clause`, `_mood_tip_clause`, `_why_it_works_core`
+  - why_it_works: cadence + style context (modal center, texture, genre refs)
+  - how_to_develop: chromatic approaches + mood tips
+  - how_to_end: cadence-driven resolution
 
-⏳ **Next: Stage 4 — Rewrite `core/theory/explainer.py`**
-- Remove generic phrases ("keeps the loop identity clear", "changing one harmonic parameter")
-- Read policy from `style_policy.py` — generate note-specific text based on core_degrees, cadences, chromatic_approaches
-- Optionally use `classical_formulas` for explanations
-- Add snapshot tests for specific presets
+⏳ **Next: Run tests, verify all 7 presets produce distinct note-specific explanations**
 
 ---
 
@@ -68,22 +70,16 @@
 
 ## Next Steps
 
-1. **Rewrite `core/theory/explainer.py`** (Stage 4)
-   - Remove generic phrases
-   - Read from `style_policy.py`
-   - Generate note-specific explanations
-   - Add snapshot tests
-
-2. **Test the rewritten explainer**
+1. **Run tests** — verify Stage 4 changes work
    - Run `pytest tests/test_theory_explainer.py -v`
    - Verify output is note-specific, not generic
    - Check all 7 presets produce distinct explanations
 
-3. **Optional: Integrate effects policy**
+2. **Optional: Integrate effects policy**
    - Surface characteristic effects in UI or export
    - Decision needed: where/how
 
-4. **Optional: Use classical formulas in explanations**
+3. **Optional: Use classical formulas in explanations**
    - Cite T35, D7, etc. when relevant
    - Decision needed: when to use classical vs modern language
 
@@ -95,7 +91,7 @@
 - `core/presets/mood_presets.py` — preset registry (7 presets: 4 solo + 3 duet)
 - `core/presets/style_policy.py` — **NEW** harmonic language policy per preset
 - `core/presets/effects_policy.py` — **NEW** audio effects policy per preset
-- `core/theory/explainer.py` — **TO REWRITE** theory explanation generator
+- `core/theory/explainer.py` — **REWRITTEN** theory explanation generator (policy-driven)
 - `core/theory/classical_formulas.py` — **NEW** classical harmony formulas reference
 - `core/engine/loop_engine.py` — loop generation engine
 
@@ -104,7 +100,7 @@
 - `pravila_po_garmonii.pdf` — classical harmony reference (Russian)
 
 ### Tests
-- `tests/test_theory_explainer.py` — explainer tests (19 tests)
+- `tests/test_theory_explainer.py` — explainer tests (29 tests, incl. 10 Stage 4 snapshot tests)
 - `tests/test_style_policy.py` — **NEW** style policy tests (9 tests)
 - `tests/test_effects_policy.py` — **NEW** effects policy tests (5 tests)
 - `tests/test_classical_formulas.py` — **NEW** classical formulas tests (8 tests)
@@ -144,11 +140,12 @@ Dirty:
 2. Read `daily/2026-07-09.md` for detailed session history
 3. Check current branch: `git branch --show-current`
 4. Run tests: `.venv/bin/python -m pytest tests/ -q`
-5. Continue with Stage 4: rewrite `core/theory/explainer.py`
+5. Continue with next steps: run tests, verify outputs
 
 **Key context:**
 - All research is done (7 presets, effects, classical formulas)
 - Policy modules are ready (`style_policy.py`, `effects_policy.py`, `classical_formulas.py`)
 - Duet presets have filled theory tuples
-- 164 tests passing
-- Next: rewrite explainer to use new policy modules
+- 174 tests (29 explainer + 9 style_policy + 5 effects_policy + 8 classical_formulas + rest)
+- Explainer is now policy-driven, no generic phrases
+- Next: run tests, verify outputs
