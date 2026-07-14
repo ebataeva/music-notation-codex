@@ -43,6 +43,23 @@ def _load_yaml(filename: str) -> dict[str, Any]:
         return yaml.safe_load(f) or {}
 
 
+def _normalize_texture_idiom(raw: Any) -> str:
+    """Normalize texture_idiom to a plain str.
+
+    PyYAML parses an indented plain scalar containing a mid-sentence colon
+    (e.g. "...Duet texture: bass foundation...") as a single-key mapping
+    instead of a string. Reconstruct the original prose in that case so the
+    StylePolicy.texture_idiom: str contract holds for every preset.
+    """
+    if isinstance(raw, str):
+        return raw
+    if isinstance(raw, dict):
+        return ". ".join(f"{key}: {value}" for key, value in raw.items())
+    if not raw:
+        return ""
+    return str(raw)
+
+
 def _parse_style_policy(data: dict[str, Any]) -> StylePolicy:
     """Parse YAML data into StylePolicy."""
     # Convert lists to dicts where needed
@@ -73,7 +90,7 @@ def _parse_style_policy(data: dict[str, Any]) -> StylePolicy:
         bass_movement=data.get("bass_movement", ""),
         chromatic_approaches=chromatic_approaches,
         cadences=cadences,
-        texture_idiom=data.get("texture_idiom", ""),
+        texture_idiom=_normalize_texture_idiom(data.get("texture_idiom", "")),
         progressions=tuple(data.get("progressions", [])),
         modulations=tuple(data.get("modulations", [])),
         mood_tips=tuple(data.get("mood_tips", [])),

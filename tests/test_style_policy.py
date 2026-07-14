@@ -27,6 +27,7 @@ def test_get_style_policy_returns_policy_for_each_preset() -> None:
         assert policy.core_degrees
         assert policy.bass_movement
         assert policy.texture_idiom
+        assert isinstance(policy.texture_idiom, str)
 
 
 def test_dark_trip_hop_policy_has_aeolian_modal_center() -> None:
@@ -72,3 +73,29 @@ def test_policy_is_cached() -> None:
     policy1 = get_style_policy("dark_trip_hop")
     policy2 = get_style_policy("dark_trip_hop")
     assert policy1 is policy2
+
+
+def test_texture_idiom_is_always_a_string_even_when_yaml_has_colon() -> None:
+    sexy_duet = get_style_policy("sexy_duet")
+    assert isinstance(sexy_duet.texture_idiom, str)
+    assert sexy_duet.texture_idiom == (
+        "8th-note arpeggiated patterns establishing harmony with passing "
+        "tones. Violin sings sustained melody with chromatic neighbor "
+        "tones. Duet texture: bass foundation + lyrical soprano line with "
+        "harmonic minor touches."
+    )
+
+    dorian_sexy_duet = get_style_policy("dorian_sexy_duet")
+    assert isinstance(dorian_sexy_duet.texture_idiom, str)
+    assert "Duet texture: cello provides harmonic foundation" in (
+        dorian_sexy_duet.texture_idiom
+    )
+
+    simple_sexy_duet = get_style_policy("simple_sexy_duet")
+    dark_trip_hop = get_style_policy("dark_trip_hop")
+    assert isinstance(simple_sexy_duet.texture_idiom, str)
+    assert isinstance(dark_trip_hop.texture_idiom, str)
+
+    for preset_name in list_presets_with_policy():
+        policy = get_style_policy(preset_name)
+        assert isinstance(policy.texture_idiom, str)
