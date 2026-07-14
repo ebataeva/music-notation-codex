@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 Phase: 09 (recorder-feedback) — COMPLETE (implemented and smoke-tested 2026-07-06)
 Plan: 1 of 1
 Status: Phase 09 implemented; next up Phase 10 (Loop Library)
-Last activity: 2026-07-06 -- Phase 9 Practice Partner implemented (analysis, MCP fallback, feedback, /practice route)
+Last activity: 2026-07-14 - Completed quick task 260714-v3b: Fix explainer crash: duet presets have dict texture_idiom, explainer expects string
 
 Progress: [█████████░] 90%
 
@@ -81,6 +81,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260706-21y | Fix v1 audit tech-debt tails: SAFE-01 max-notes guard, English preset/CLI copy (PLAT-02), MoodPreset deep-immutability (WR-05) | 2026-07-06 | 77594d2 | [260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max](./quick/260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max/) |
+| 260714-v3b | Fix explainer crash: duet presets have dict texture_idiom, explainer expects string | 2026-07-14 | 9b29371 | [260714-v3b-fix-explainer-crash-duet-presets-have-di](./quick/260714-v3b-fix-explainer-crash-duet-presets-have-di/) |
 
 ## Deferred Items
 
