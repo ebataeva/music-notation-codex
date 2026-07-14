@@ -249,7 +249,7 @@ def test_duet_presets_use_style_policy_data() -> None:
     assert explanation.how_to_develop
     assert explanation.how_to_transition
     # sexy_duet policy has modal_center: Aeolian (with harmonic minor)
-    assert "Aeolian" in explanation.why_it_works.lower()
+    assert "aeolian" in explanation.why_it_works.lower()
     # mood_tip text should appear in how_to_develop
     assert "chromatic" in explanation.how_to_develop.lower() or "mystery" in explanation.how_to_develop.lower()
 
