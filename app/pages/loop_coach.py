@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import base64
 
-from nicegui import app, ui
+from nicegui import app, run, ui
 
 from app.services.generation import available_presets, generate_loop_variants
 
@@ -58,6 +58,17 @@ def _theory_sections(result: dict) -> list[tuple[str, str]]:
     ]
 
 
+def _load_osmd_script() -> None:
+    """Load the OSMD CDN script into the page body exactly once.
+
+    Must be called during initial page build (create_loop_coach_page), not
+    from a later click handler — ui.add_body_html only takes effect while the
+    page is still being delivered; calling it afterwards is a silent no-op.
+    """
+    ui.add_body_html(f'<script src="{OSMD_JS_URL}"></script>')
+    ui.add_body_html(f"<script>{OSMD_INIT_SCRIPT}</script>")
+
+
 def _render_variant_cards(results: list[dict], container) -> None:
     """Render up to 3 variant cards side by side inside `container`.
 
@@ -66,10 +77,6 @@ def _render_variant_cards(results: list[dict], container) -> None:
     download-musicxml-btn-2) for Phase 8 Playwright targeting.
     """
     container.clear()
-
-    # Make sure OSMD is available on the page exactly once.
-    ui.add_body_html(f'<script src="{OSMD_JS_URL}"></script>')
-    ui.add_body_html(f"<script>{OSMD_INIT_SCRIPT}</script>")
 
     with container:
         with ui.row().classes("w-full gap-4 items-start"):
@@ -196,7 +203,7 @@ def _render_variant_export(i: int, result: dict) -> None:
             ui.button("MusicXML", color="primary").on(
                 "click",
                 lambda c=musicxml_str, idx=i: ui.download(
-                    content=c.encode("utf-8"),
+                    c.encode("utf-8"),
                     filename=f"cello_loop_variant_{idx + 1}.musicxml",
                     media_type="application/vnd.recordare.musicxml+xml",
                 ),
@@ -208,7 +215,7 @@ def _render_variant_export(i: int, result: dict) -> None:
             ui.button("MIDI", color="primary").on(
                 "click",
                 lambda c=midi_bytes, idx=i: ui.download(
-                    content=c,
+                    c,
                     filename=f"cello_loop_variant_{idx + 1}.mid",
                     media_type="audio/midi",
                 ),
@@ -220,7 +227,7 @@ def _render_variant_export(i: int, result: dict) -> None:
             ui.button("WAV", color="primary").on(
                 "click",
                 lambda c=wav_bytes, idx=i: ui.download(
-                    content=c,
+                    c,
                     filename=f"cello_loop_variant_{idx + 1}.wav",
                     media_type="audio/wav",
                 ),
@@ -258,6 +265,9 @@ def create_loop_coach_page():
     ui.label("Enter a chord progression, pick a mood, and get a cello loop idea with theory guidance.").classes(
         "text-sm text-gray-500"
     )
+
+    # OSMD must load during initial page build, not after a later click handler.
+    _load_osmd_script()
 
     # Input row
     with ui.row().classes("w-full items-end gap-4"):
@@ -319,7 +329,7 @@ def create_loop_coach_page():
     # Generation in-flight flag (SAFE-08: debounce double-clicks)
     generating = {"in_flight": False}
 
-    def do_generate():
+    async def do_generate():
         if generating["in_flight"]:
             return
         generating["in_flight"] = True
@@ -328,7 +338,8 @@ def create_loop_coach_page():
         spinner.set_visibility(True)
         status_label.text = ""
 
-        results = generate_loop_variants(
+        results = await run.io_bound(
+            generate_loop_variants,
             chord_progression=chord_input.value,
             preset_name=mood_select.value,
             include_audio=True,
