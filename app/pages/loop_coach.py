@@ -38,7 +38,13 @@ function loadOsmd(callback) {
 """
 
 # Keys stripped from each variant before persisting to app.storage (too large).
-_BLOB_KEYS = ("musicxml_string", "midi_bytes_b64", "wav_bytes_b64")
+_BLOB_KEYS = (
+    "musicxml_string",
+    "midi_bytes_b64",
+    "wav_bytes_b64",
+    "violin_wav_bytes_b64",
+    "cello_wav_bytes_b64",
+)
 
 
 def _theory_sections(result: dict) -> list[tuple[str, str]]:
@@ -155,19 +161,30 @@ def _render_variant_notation(i: int, result: dict) -> None:
 
 
 def _render_variant_audio(i: int, result: dict) -> None:
-    """Render audio playback widget for variant i from WAV bytes."""
+    """Render looping full-mix and per-instrument audio players."""
     wav_b64 = result.get("wav_bytes_b64", "")
     if not wav_b64:
         ui.label("Audio not available.").classes("text-sm text-gray-400")
         return
 
-    audio_html = f"""
-    <audio id="loop-audio-{i}" controls style="width:100%">
-        <source src="data:audio/wav;base64,{wav_b64}" type="audio/wav">
-        Your browser does not support audio playback.
-    </audio>
-    """
-    ui.html(audio_html)
+    tracks = [("Full duet" if result.get("is_duet") else "Cello loop", "full", wav_b64)]
+    if result.get("is_duet"):
+        tracks.extend([
+            ("Violin", "violin", result.get("violin_wav_bytes_b64", "")),
+            ("Cello", "cello", result.get("cello_wav_bytes_b64", "")),
+        ])
+
+    ui.label("Rehearsal loops").classes("text-xs font-bold text-gray-500 uppercase tracking-wide mt-3")
+    for label, track_id, track_wav_b64 in tracks:
+        if not track_wav_b64:
+            continue
+        ui.label(label).classes("text-sm font-medium text-gray-700")
+        ui.html(f"""
+        <audio id="loop-audio-{i}-{track_id}" controls loop style="width:100%">
+            <source src="data:audio/wav;base64,{track_wav_b64}" type="audio/wav">
+            Your browser does not support audio playback.
+        </audio>
+        """)
 
 
 def _render_variant_export(i: int, result: dict) -> None:

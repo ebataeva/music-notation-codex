@@ -8,6 +8,7 @@ leak into the app layer (D-02).
 from __future__ import annotations
 
 import base64
+import copy
 import io
 import sys
 from pathlib import Path
@@ -16,7 +17,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from core.engine.loop_engine import build_progression_score, generate_variant_from_progression, generate_variants
+from core.engine.loop_engine import (
+    build_duet_score,
+    build_progression_score,
+    generate_variant_from_progression,
+    generate_variants,
+)
 from core.engine.progression import parse_progression
 from core.models import LoopVariant
 from core.presets.registry import get_preset, list_presets
@@ -24,6 +30,16 @@ from core.theory.explainer import explain
 
 MAX_EXPLANATION_WORDS = 500
 SOUNDFONT_PATH = "/opt/homebrew/Cellar/fluid-synth/2.5.5/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2"
+DUET_VELOCITIES = {
+    "sexy_duet": (82, 70),
+    "simple_sexy_duet": (68, 58),
+    "dorian_sexy_duet": (74, 62),
+}
+DUET_SHOWCASE_TRANSPOSE = {
+    "sexy_duet": "P8",
+    "simple_sexy_duet": "P8",
+    "dorian_sexy_duet": "P8",
+}
 
 
 def _truncate(text: str, max_words: int = MAX_EXPLANATION_WORDS) -> str:
@@ -32,6 +48,63 @@ def _truncate(text: str, max_words: int = MAX_EXPLANATION_WORDS) -> str:
     if len(words) <= max_words:
         return text
     return " ".join(words[:max_words]) + "..."
+
+
+def _prepare_duet_showcase_score(score, preset_name: str):
+    """Make authored duet material clearer for a live demo without changing source presets."""
+    from music21 import key
+
+    transpose_interval = DUET_SHOWCASE_TRANSPOSE.get(preset_name)
+    if transpose_interval:
+        score = score.transpose(transpose_interval)
+
+    if preset_name == "dorian_sexy_duet":
+        for part in score.parts:
+            for key_obj in list(part.getElementsByClass(key.Key)):
+                part.replace(key_obj, key.KeySignature(0))
+
+    return score
+
+
+def _duet_showcase_copy(preset_name: str, preset) -> dict:
+    if preset_name == "dorian_sexy_duet":
+        return {
+            "why_it_works": (
+                "Dorian color, not generic minor: the loop is Dm9 <-> G9. "
+                "Listen for B natural: it is the warm 6th that keeps the phrase from sounding funeral-dark."
+            ),
+            "how_to_start": (
+                "Think in two-bar blocks. Bars 1-2 state the cell: cello pulses D/G, "
+                "violin sings A-B-C-B-A, then answers downward."
+            ),
+            "how_to_develop": (
+                "Bars 3-4 repeat the idea with a small lift. Bars 5-6 vary the contour. "
+                "Bars 7-8 return home, so the loop is easy to hear and rehearse."
+            ),
+            "how_to_end": (
+                "End by letting the violin release first, then let the cello land quietly on D."
+            ),
+            "how_to_transition": (
+                "For another pass, keep the last cello pulse soft and let the violin re-enter on A."
+            ),
+            "phrase_map": [
+                "Bars 1-2: statement",
+                "Bars 3-4: answer",
+                "Bars 5-6: variation",
+                "Bars 7-8: return",
+            ],
+            "notation_note": "No key signature is shown for the Dorian showcase, so the B natural reads as part of the mode rather than a page full of natural signs.",
+        }
+
+    return {
+        "why_it_works": f"{preset.feel}. {preset.progressions[0] if preset.progressions else ''}".strip(),
+        "how_to_start": "Cello sets the pulse first; violin enters as a close answer above it.",
+        "how_to_develop": "Hear it in short call-and-response chunks instead of one long melody.",
+        "how_to_end": "Let the violin soften first, then let the cello close the loop.",
+        "how_to_transition": "Repeat the last cello pulse quietly and bring the violin back by step.",
+        "phrase_map": ["Bars 1-2: statement", "Bars 3-4: answer", "Bars 5-6: variation"],
+        "notation_note": "The duet is transposed up an octave in the showcase so the parts speak more clearly.",
+    }
 
 
 def _score_to_musicxml_string(score) -> str:
@@ -56,6 +129,22 @@ def _score_to_midi_bytes(score) -> bytes:
         result = f.read()
     Path(path).unlink(missing_ok=True)
     return result
+
+
+def _part_to_midi_bytes(score, part_name: str) -> bytes:
+    """Export one named duet part as a standalone MIDI loop."""
+    from music21 import stream
+
+    matching_parts = [
+        part for part in score.parts
+        if part_name.lower() in (part.partName or part.id or "").lower()
+    ]
+    if not matching_parts:
+        raise ValueError(f"Duet part not found: {part_name}")
+
+    isolated_score = stream.Score(id=f"{part_name.lower()}_loop")
+    isolated_score.insert(0, copy.deepcopy(matching_parts[0]))
+    return _score_to_midi_bytes(isolated_score)
 
 
 def _midi_to_wav_pretty_midi(midi_bytes: bytes) -> bytes:
@@ -276,11 +365,12 @@ def generate_loop_variants(
     include_audio: bool = False,
     count: int = 3,
 ) -> list[dict]:
-    """Generate N distinct cello loop variants from the same chord progression.
+    """Generate N distinct loop variants from the same chord progression.
 
     Returns a list of JSON-serializable dicts (same structure as generate_loop),
-    one per variant. Each variant has a different register_bias for audible
-    distinctness (Phase 7 LOOP-02).
+    one per variant. Solo presets return three cello takes. Duet presets return
+    one two-part violin+cello showcase because their authored material already
+    contains fixed interlocking parts.
     """
     try:
         chords = parse_progression(chord_progression)
@@ -294,6 +384,63 @@ def generate_loop_variants(
         preset = get_preset(preset_name)
     except KeyError:
         return [{"error": f"Unknown mood preset: {preset_name!r}"}]
+
+    if preset.duet_bars is not None:
+        try:
+            cello_velocity, violin_velocity = DUET_VELOCITIES.get(
+                preset.name, (preset.velocity, max(preset.velocity - 12, 48))
+            )
+            score = build_duet_score(
+                preset,
+                tempo_bpm=preset.duet_tempo_bpm or preset.tempo_bpm,
+                cello_velocity=cello_velocity,
+                violin_velocity=violin_velocity,
+            )
+            score = _prepare_duet_showcase_score(score, preset.name)
+        except ValueError as exc:
+            return [{"error": f"Generation failed: {exc}"}]
+
+        musicxml_str = _score_to_musicxml_string(score)
+        midi_bytes = _score_to_midi_bytes(score)
+
+        copy = _duet_showcase_copy(preset.name, preset)
+        result = {
+            "variant_index": 0,
+            "variant_label": "Violin + cello duet",
+            "register_bias": "duet",
+            "ensemble": "violin_cello",
+            "is_duet": True,
+            "instruments": ["violin", "cello"],
+            "why_it_works": _truncate(copy["why_it_works"]),
+            "how_to_start": _truncate(copy["how_to_start"]),
+            "how_to_develop": _truncate(copy["how_to_develop"]),
+            "how_to_end": _truncate(copy["how_to_end"]),
+            "how_to_transition": _truncate(copy["how_to_transition"]),
+            "phrase_map": copy["phrase_map"],
+            "notation_note": copy["notation_note"],
+            "musicxml_string": musicxml_str,
+            "midi_bytes_b64": base64.b64encode(midi_bytes).decode("ascii"),
+            "wav_bytes_b64": "",
+            "seed": seed,
+            "preset_name": preset_name,
+            "chord_progression": chord_progression,
+            "error": None,
+        }
+
+        if include_audio:
+            try:
+                wav_bytes, source = _render_wav(midi_bytes)
+                result["wav_bytes_b64"] = base64.b64encode(wav_bytes).decode("ascii")
+                result["audio_source"] = source
+                for part_name in ("violin", "cello"):
+                    part_midi = _part_to_midi_bytes(score, part_name)
+                    part_wav, part_source = _render_wav(part_midi)
+                    result[f"{part_name}_wav_bytes_b64"] = base64.b64encode(part_wav).decode("ascii")
+                    result[f"{part_name}_audio_source"] = part_source
+            except Exception as exc:
+                result["audio_error"] = f"Audio render failed: {exc}"
+
+        return [result]
 
     try:
         variants = generate_variants(chords, preset, seed=seed, count=count)

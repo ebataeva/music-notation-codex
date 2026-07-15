@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import io
+import base64
 
 import numpy as np
 import soundfile as sf
 from music21 import clef, instrument, key, meter, note, stream, tempo
 
 from app.services import generation
+from core.presets.mood_presets import MOOD_PRESETS
 
 
 def _minimal_midi_bytes() -> bytes:
@@ -66,3 +68,89 @@ def test_generate_loop_audio_source_uses_cello_synth_reverb_on_fallback(monkeypa
     assert result["error"] is None
     assert result["audio_source"] == "cello_synth_reverb"
     assert result["wav_bytes_b64"]
+
+
+def test_available_presets_returns_all_showcase_presets() -> None:
+    assert generation.available_presets() == sorted(MOOD_PRESETS)
+
+
+def test_streamlit_mood_label_keeps_raw_preset_id_visible() -> None:
+    from apps.ear_check_streamlit import _mood_label
+
+    label = _mood_label("dorian_sexy_duet")
+
+    assert label.startswith("dorian_sexy_duet ·")
+    assert "Violin + cello Dorian duet" in label
+
+
+def test_duet_preset_generates_violin_cello_musicxml_and_midi() -> None:
+    results = generation.generate_loop_variants(
+        "Dm9 G9 Dm9 G9 Bbmaj7 A7 Dm9 A7",
+        "dorian_sexy_duet",
+        seed=0,
+        include_audio=False,
+    )
+
+    assert len(results) == 1
+    result = results[0]
+    assert result["error"] is None
+    assert result["is_duet"] is True
+    assert result["ensemble"] == "violin_cello"
+    assert result["instruments"] == ["violin", "cello"]
+    assert "Violin" in result["musicxml_string"]
+    assert "Violoncello" in result["musicxml_string"]
+    assert result["phrase_map"] == [
+        "Bars 1-2: statement",
+        "Bars 3-4: answer",
+        "Bars 5-6: variation",
+        "Bars 7-8: return",
+    ]
+    assert "<alter>0</alter>" not in result["musicxml_string"]
+    assert base64.b64decode(result["midi_bytes_b64"])
+
+
+def test_duet_audio_contains_full_violin_and_cello_rehearsal_loops(monkeypatch) -> None:
+    rendered_midis: list[bytes] = []
+
+    def render_stub(midi_bytes: bytes) -> tuple[bytes, str]:
+        rendered_midis.append(midi_bytes)
+        return b"test-wav", "test-renderer"
+
+    monkeypatch.setattr(generation, "_render_wav", render_stub)
+
+    result = generation.generate_loop_variants(
+        "Dm9 G9 Dm9 G9 Bbmaj7 A7 Dm9 A7",
+        "dorian_sexy_duet",
+        seed=0,
+        include_audio=True,
+    )[0]
+
+    assert result["error"] is None
+    assert len(rendered_midis) == 3
+    assert len(set(rendered_midis)) == 3
+    assert base64.b64decode(result["wav_bytes_b64"]) == b"test-wav"
+    assert base64.b64decode(result["violin_wav_bytes_b64"]) == b"test-wav"
+    assert base64.b64decode(result["cello_wav_bytes_b64"]) == b"test-wav"
+    assert result["audio_source"] == "test-renderer"
+    assert result["violin_audio_source"] == "test-renderer"
+    assert result["cello_audio_source"] == "test-renderer"
+
+
+def test_solo_preset_still_generates_three_variants() -> None:
+    results = generation.generate_loop_variants(
+        "Am F C G",
+        "dark_trip_hop",
+        seed=0,
+        include_audio=False,
+        count=3,
+    )
+
+    assert len(results) == 3
+    assert all(result["error"] is None for result in results)
+    assert [result["register_bias"] for result in results] == ["low", "default", "high"]
+
+
+def test_unknown_preset_error_remains_readable() -> None:
+    results = generation.generate_loop_variants("Am F C G", "missing_preset", seed=0)
+
+    assert results == [{"error": "Unknown mood preset: 'missing_preset'"}]
