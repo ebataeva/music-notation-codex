@@ -1,8 +1,8 @@
 # Project Context — music-notation-codex
 
-**Last updated:** 2026-07-10
-**Branch:** `style-harmony-policy`
-**Last commit:** `913d6b0 — docs: add CONTEXT.md — unified structured resume file for new sessions`
+**Last updated:** 2026-07-13 14:39
+**Branch:** `codex/violin-cello-showcase`
+**Last commit:** `419d21c — chore: add gstack skill routing rules to CLAUDE.md`
 **Progress:** 95% (Stage 4 done — explainer rewritten)
 
 ---
