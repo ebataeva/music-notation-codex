@@ -20,6 +20,20 @@ A **loop coach for an electric cellist**: enter chords (text) + mood, get severa
 - Out of scope: extracting chords from third-party audio tracks; mobile app; hosting/deployment.
 - Testing: UI/browser tests in separate Playwright-based framework under `tests-ui/`, ChromeDriver, Allure reports.
 
+## Branch & approval workflow (recorded 2026-07-17)
+
+The main product per roadmap stays the **local NiceGUI app** (Streamlit rejected for the main UI 2026-07-05, locked). Streamlit's only role now is **per-branch cloud showcases for testing/approval**:
+
+1. Feature work happens in feature branches, never directly in `main`:
+   - `style-harmony-policy` — style-aware harmony policy + explainer rewrite (pushed, 10 commits ahead of main)
+   - `codex/violin-cello-showcase` — builds on style-harmony-policy, explainer fixes (local only, not pushed yet)
+   - `blog-theory-explainer`, `cloud-audio-fallback` — parallel branches
+2. Each feature branch gets a lightweight **Streamlit entrypoint** (`apps/*_streamlit.py`, commits "Add ... Streamlit entrypoint") pushed to GitHub; Streamlit Cloud picks it up so the user can hear/test the result in the browser.
+3. User tests the Streamlit demo and gives approval.
+4. **Approval is the trigger to merge the branch into `main`** — it does not mean work already continues in main. As of 2026-07-17 nothing from these branches is merged yet; `main` is far behind (phases 8–9 work also lives only in branches).
+
+Helper scripts: `deploy.sh` / `git-push.mk` commit and push `apps/ear_check_streamlit.py` to `origin/style-harmony-policy`.
+
 ## Current status (2026-07-06)
 
 **Progress: 80% (8 of 10 v1 phases complete)**
@@ -125,4 +139,4 @@ cd /Users/ebataeva/Brain/Projects/music-notation-codex
 
 ---
 
-*Last updated: 2026-07-06 — Phase 7 complete, 80% project progress*
+*Last updated: 2026-07-17 — recorded branch & Streamlit-showcase approval workflow*
