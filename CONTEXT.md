@@ -1,8 +1,8 @@
 # Project Context — music-notation-codex
 
-**Last updated:** 2026-07-20 01:11
+**Last updated:** 2026-07-20 01:36
 **Branch:** `codex/streamlit-suite`
-**Last commit:** `1bc3b98 — feat(streamlit): add unified multipage studio`
+**Last commit:** `10a5085 — fix(streamlit): correct theory and duet notation`
 **Progress:** 95% (Stage 4 done — explainer rewritten)
 
 ---
