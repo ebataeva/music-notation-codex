@@ -1,8 +1,8 @@
 # Project Context — music-notation-codex
 
-**Last updated:** 2026-07-13 14:39
-**Branch:** `codex/violin-cello-showcase`
-**Last commit:** `419d21c — chore: add gstack skill routing rules to CLAUDE.md`
+**Last updated:** 2026-07-20 01:11
+**Branch:** `codex/streamlit-suite`
+**Last commit:** `1bc3b98 — feat(streamlit): add unified multipage studio`
 **Progress:** 95% (Stage 4 done — explainer rewritten)
 
 ---
