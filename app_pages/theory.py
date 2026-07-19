@@ -6,8 +6,8 @@ import streamlit as st
 
 from apps.streamlit_shared import (
     DEFAULT_PROGRESSION,
+    analyze_cached,
     default_preset_index,
-    generate_cached,
     preset_from_label,
     preset_label,
     preset_names,
@@ -48,10 +48,9 @@ with action_col:
 
 if analyze_clicked:
     with st.spinner("Building note-specific explanations..."):
-        st.session_state["theory_results"] = generate_cached(
+        st.session_state["theory_results"] = analyze_cached(
             progression,
             preset_from_label(selected_label, names),
-            include_audio=False,
         )
 
 results = st.session_state.get("theory_results")
@@ -63,6 +62,8 @@ else:
     for result in results:
         with st.container(border=True):
             st.subheader(result.get("variant_label") or "Harmony explanation")
+            if result.get("harmony_context"):
+                st.info(result["harmony_context"], icon=":material/info:")
             st.markdown(f"**Why it works**  \n{result['why_it_works']}")
             theory_columns = st.columns(2)
             with theory_columns[0]:

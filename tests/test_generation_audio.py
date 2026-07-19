@@ -8,7 +8,9 @@ import soundfile as sf
 from music21 import clef, instrument, key, meter, note, stream, tempo
 
 from app.services import generation
+from core.engine.loop_engine import build_duet_score
 from core.presets.mood_presets import MOOD_PRESETS
+from core.presets.registry import get_preset
 
 
 def _minimal_midi_bytes() -> bytes:
@@ -107,6 +109,33 @@ def test_duet_preset_generates_violin_cello_musicxml_and_midi() -> None:
     ]
     assert "<alter>0</alter>" not in result["musicxml_string"]
     assert base64.b64decode(result["midi_bytes_b64"])
+
+
+def test_theory_analyzes_entered_duet_progression_instead_of_static_vamp() -> None:
+    result = generation.analyze_progression("Dm9 Eb", "dorian_sexy_duet")[0]
+
+    assert result["error"] is None
+    assert result["variant_label"] == "Harmony analysis: Dm9 Eb"
+    assert "Dm9 (D, F, A, C, E)" in result["why_it_works"]
+    assert "Eb (Eb, G, Bb)" in result["why_it_works"]
+    assert "flat-II" in result["why_it_works"]
+    assert "loop is Dm9 <-> G9" not in result["why_it_works"]
+
+
+def test_dorian_showcase_keeps_violin_in_readable_written_register() -> None:
+    preset = get_preset("dorian_sexy_duet")
+    score = build_duet_score(
+        preset,
+        tempo_bpm=preset.duet_tempo_bpm,
+        cello_velocity=74,
+        violin_velocity=62,
+    )
+
+    prepared = generation._prepare_duet_showcase_score(score, preset.name)
+    violin = next(part for part in prepared.parts if part.id == "violin")
+    written_midis = [item.pitch.midi for item in violin.recurse().notes]
+
+    assert max(written_midis) <= note.Note("C5").pitch.midi
 
 
 def test_duet_audio_contains_full_violin_and_cello_rehearsal_loops(monkeypatch) -> None:

@@ -13,6 +13,8 @@ import io
 import sys
 from pathlib import Path
 
+from music21 import pitch
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -24,7 +26,7 @@ from core.engine.loop_engine import (
     generate_variants,
 )
 from core.engine.progression import parse_progression
-from core.models import LoopVariant
+from core.models import GenerationTrace, LoopVariant
 from core.presets.registry import get_preset, list_presets
 from core.theory.explainer import explain
 
@@ -38,7 +40,6 @@ DUET_VELOCITIES = {
 DUET_SHOWCASE_TRANSPOSE = {
     "sexy_duet": "P8",
     "simple_sexy_duet": "P8",
-    "dorian_sexy_duet": "P8",
 }
 
 
@@ -48,6 +49,121 @@ def _truncate(text: str, max_words: int = MAX_EXPLANATION_WORDS) -> str:
     if len(words) <= max_words:
         return text
     return " ".join(words[:max_words]) + "..."
+
+
+def analyze_progression(
+    chord_progression: str,
+    preset_name: str,
+    seed: int | None = 0,
+) -> list[dict]:
+    """Analyze the entered chords with the latest explainer without rendering a score."""
+    try:
+        chords = parse_progression(chord_progression)
+    except ValueError as exc:
+        return [{"error": f"Chord parsing failed: {exc}"}]
+
+    try:
+        preset = get_preset(preset_name)
+    except KeyError:
+        return [{"error": f"Unknown mood preset: {preset_name!r}"}]
+
+    trace = GenerationTrace(
+        seed=seed,
+        pattern_strategy="progression_driven_register_mapped",
+        register_choices=["analysis"] * len(chords),
+        voice_leading_steps=None,
+        chord_tones_used=[list(chord.components) for chord in chords],
+        register_bias=None,
+    )
+    progression_label = " ".join(chord.name for chord in chords)
+    variant = LoopVariant(
+        id=f"theory-{preset.name}",
+        preset_name=preset.name,
+        label=progression_label,
+        musicxml_path=None,
+        midi_path=None,
+        svg_bytes=None,
+        midi_bytes=None,
+        theory_explanation=None,
+        trace=trace,
+    )
+    explanation = explain(variant, preset)
+
+    canonical_dorian = preset.name == "dorian_sexy_duet" and progression_label != "Dm9 G9"
+    chord_details = " → ".join(
+        f"{chord.name} ({', '.join(chord.components)})" for chord in chords
+    )
+    adjacent_links: list[str] = []
+    for current, following in zip(chords, chords[1:]):
+        shared = [tone for tone in current.components if tone in following.components]
+        if shared:
+            adjacent_links.append(
+                f"{current.name} and {following.name} keep {', '.join(shared)} in common"
+            )
+        else:
+            adjacent_links.append(
+                f"{current.name} and {following.name} share no chord tones"
+            )
+
+    borrowed_flat_two = any(
+        (pitch.Pitch(chord.components[0]).pitchClass - pitch.Pitch(preset.key_tonic).pitchClass)
+        % 12
+        == 1
+        for chord in chords[1:]
+    )
+    if canonical_dorian:
+        relationship_text = "; ".join(adjacent_links) or "The progression contains one chord."
+        borrowed_text = (
+            " In a D-centered reading, the root a semitone above D acts as a borrowed "
+            "flat-II (Neapolitan-color) chord, not as part of the diatonic D-Dorian vamp."
+            if borrowed_flat_two
+            else ""
+        )
+        why_it_works = (
+            f"Analyzing the entered chords: {chord_details}. {relationship_text}."
+            f"{borrowed_text} The selected D-Dorian style is a phrasing reference only; "
+            "its canonical Dm9-G9 explanation is not substituted for this progression."
+        )
+        how_to_start = (
+            f"Establish {chords[0].name} first and make its tones "
+            f"{', '.join(chords[0].components)} clearly audible before changing harmony."
+        )
+        how_to_develop = (
+            f"Shape the move through the actual sequence {progression_label}. "
+            f"{relationship_text.capitalize()}; make that contrast deliberate in the voice leading."
+        )
+        how_to_end = (
+            f"Return to {chords[0].name} to confirm it as the center, or stop on "
+            f"{chords[-1].name} if you want the borrowed color to remain unresolved."
+        )
+        how_to_transition = (
+            "To move back into the canonical D-Dorian color, continue through G9 and then Dm9."
+        )
+        context_note = (
+            "D Dorian itself has no sharps or flats in the key signature. The entered chords "
+            "are different from the canonical Dm9-G9 vamp and are analyzed exactly as written."
+        )
+    else:
+        why_it_works = explanation.why_it_works
+        how_to_start = explanation.how_to_start
+        how_to_develop = explanation.how_to_develop
+        how_to_end = explanation.how_to_end
+        how_to_transition = explanation.how_to_transition
+        context_note = ""
+    return [
+        {
+            "variant_label": f"Harmony analysis: {progression_label}",
+            "why_it_works": _truncate(why_it_works),
+            "how_to_start": _truncate(how_to_start),
+            "how_to_develop": _truncate(how_to_develop),
+            "how_to_end": _truncate(how_to_end),
+            "how_to_transition": _truncate(how_to_transition),
+            "harmony_context": context_note,
+            "chord_progression": progression_label,
+            "preset_name": preset_name,
+            "error": None,
+        }
+    ]
 
 
 def _prepare_duet_showcase_score(score, preset_name: str):

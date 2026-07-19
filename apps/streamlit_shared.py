@@ -6,7 +6,7 @@ import base64
 
 import streamlit as st
 
-from app.services.generation import generate_loop_variants
+from app.services.generation import analyze_progression, generate_loop_variants
 from core.presets.registry import list_presets
 
 
@@ -68,3 +68,8 @@ def generate_cached(
         include_audio=include_audio,
         count=count,
     )
+
+
+@st.cache_data(show_spinner=False)
+def analyze_cached(progression: str, preset_name: str) -> list[dict]:
+    return analyze_progression(progression, preset_name, seed=0)

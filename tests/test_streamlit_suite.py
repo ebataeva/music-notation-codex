@@ -37,8 +37,18 @@ def test_streamlit_pages_load_without_exceptions(relative_path: str, expected_te
         assert any(expected_text in value for value in rendered_labels)
 
 
+def test_entrypoint_shows_all_studio_pages_in_mobile_safe_navigation() -> None:
+    app = _run_page("streamlit_app.py")
+
+    assert not app.exception
+    assert len(app.segmented_control) == 1
+    navigation = app.segmented_control[0]
+    assert navigation.label == "Studio pages"
+    assert navigation.options == ["Loop Lab", "Theory", "Cloud audio", "Practice Partner"]
+
+
 def test_theory_page_renders_latest_explanation_fields(monkeypatch) -> None:
-    monkeypatch.setattr(shared, "generate_cached", lambda *args, **kwargs: [_fake_result()])
+    monkeypatch.setattr(shared, "analyze_cached", lambda *args, **kwargs: [_fake_result()])
     app = _run_page("app_pages/theory.py")
 
     app.button[0].click().run()
