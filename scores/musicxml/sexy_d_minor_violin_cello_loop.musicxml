@@ -5,7 +5,7 @@
   <identification>
     <creator type="composer">Music21</creator>
     <encoding>
-      <encoding-date>2026-07-15</encoding-date>
+      <encoding-date>2026-07-20</encoding-date>
       <software>music21 v.10.5.0</software>
       <supports element="beam" type="yes" />
       <supports element="stem" type="yes" />
@@ -19,33 +19,33 @@
     </scaling>
   </defaults>
   <part-list>
-    <score-part id="Pe808956f206472816303ba9463803e51">
+    <score-part id="P70a514a8ed7ab967183ef475391d7877">
       <part-name>Violin</part-name>
       <part-abbreviation>Vln</part-abbreviation>
-      <score-instrument id="I754c1dbcd24cc994ce6a8a6b1f5269ed">
+      <score-instrument id="I21a32416c9fe756f1d794cb3689cb60e">
         <instrument-name>Violin</instrument-name>
         <instrument-abbreviation>Vln</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I754c1dbcd24cc994ce6a8a6b1f5269ed">
+      <midi-instrument id="I21a32416c9fe756f1d794cb3689cb60e">
         <midi-channel>1</midi-channel>
         <midi-program>41</midi-program>
       </midi-instrument>
     </score-part>
-    <score-part id="P5963ac62b56ecce0325f2953e8990f81">
+    <score-part id="Pc9795064d9cebea640e3a2ecc5fa72ff">
       <part-name>Violoncello</part-name>
       <part-abbreviation>Vc</part-abbreviation>
-      <score-instrument id="I71a31dfdf4533a3cae5da0b3a33bf648">
+      <score-instrument id="Ibd8b26fb0960dfde552b3a48dc9338e1">
         <instrument-name>Violoncello</instrument-name>
         <instrument-abbreviation>Vc</instrument-abbreviation>
       </score-instrument>
-      <midi-instrument id="I71a31dfdf4533a3cae5da0b3a33bf648">
+      <midi-instrument id="Ibd8b26fb0960dfde552b3a48dc9338e1">
         <midi-channel>2</midi-channel>
         <midi-program>43</midi-program>
       </midi-instrument>
     </score-part>
   </part-list>
   <!--=========================== Part 1 ===========================-->
-  <part id="Pe808956f206472816303ba9463803e51">
+  <part id="P70a514a8ed7ab967183ef475391d7877">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>
@@ -445,7 +445,7 @@
     </measure>
   </part>
   <!--=========================== Part 2 ===========================-->
-  <part id="P5963ac62b56ecce0325f2953e8990f81">
+  <part id="Pc9795064d9cebea640e3a2ecc5fa72ff">
     <!--========================= Measure 1 ==========================-->
     <measure implicit="no" number="1">
       <attributes>
