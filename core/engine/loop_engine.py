@@ -552,12 +552,14 @@ def generate_variant_from_progression(
 
     register_choices: list[str] = []
     chord_tones_used: list[list[str]] = []
+    realized_pitches: list[list[str]] = []
     cello_part = score.parts[0]
     for measure, chord in zip(
         cello_part.getElementsByClass(stream.Measure), chords, strict=True
     ):
         bar_pitch_names = [n.pitch.nameWithOctave for n in measure.notes]
         chord_tones_used.append(list(chord.components))
+        realized_pitches.append(bar_pitch_names)
         register_choices.append(_classify_register(bar_pitch_names))
 
     generation_trace = GenerationTrace(
@@ -567,6 +569,7 @@ def generate_variant_from_progression(
         voice_leading_steps=None,  # Explicit step-interval trace is a future refinement.
         chord_tones_used=chord_tones_used,
         register_bias=register_bias,
+        realized_pitches=realized_pitches,
     )
 
     progression_label = " ".join(chord.name for chord in chords)

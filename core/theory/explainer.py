@@ -459,6 +459,10 @@ def _why_it_works_core(trace: GenerationTrace, preset: MoodPreset, policy: Style
     """
     clauses = []
 
+    realization = _realized_pitch_summary(trace)
+    if realization:
+        clauses.append(realization)
+
     # Chord-tone analysis (existing note-specific functions)
     headline = _headline_harmony_clause(trace, preset)
     if headline:
@@ -491,6 +495,59 @@ def _why_it_works_core(trace: GenerationTrace, preset: MoodPreset, policy: Style
         )
 
     return " ".join(clauses)
+
+
+def _realized_notes(trace: GenerationTrace) -> list[str]:
+    return [pitch for bar in (trace.realized_pitches or []) for pitch in bar if pitch]
+
+
+def _realized_pitch_summary(trace: GenerationTrace) -> str:
+    notes = _realized_notes(trace)
+    if not notes:
+        return ""
+
+    counts: dict[str, int] = {}
+    for pitch in notes:
+        counts[pitch] = counts.get(pitch, 0) + 1
+    focal_pitch = max(counts, key=counts.get)
+
+    return (
+        f"This take opens on {notes[0]}, closes on {notes[-1]}, "
+        f"and returns most often to {focal_pitch}."
+    )
+
+
+def _realized_development_clause(trace: GenerationTrace) -> str:
+    bars = [bar for bar in (trace.realized_pitches or []) if bar]
+    if not bars:
+        return ""
+
+    entry_notes = [bar[0] for bar in bars]
+    shown_path = entry_notes[:4]
+    path = " → ".join(shown_path)
+    if len(entry_notes) > len(shown_path):
+        path += " → …"
+
+    notes = _realized_notes(trace)
+    counts: dict[str, int] = {}
+    for pitch in notes:
+        counts[pitch] = counts.get(pitch, 0) + 1
+    focal_pitch = max(counts, key=counts.get)
+
+    return (
+        f"Shape this take's {path} bar-entry path as one phrase, "
+        f"using {focal_pitch}, its most repeated written pitch, as the center of gravity."
+    )
+
+
+def _realized_transition_clause(trace: GenerationTrace) -> str:
+    notes = _realized_notes(trace)
+    if not notes:
+        return ""
+    return (
+        f"Carry the final {notes[-1]} into the next phrase, then answer it from {notes[0]} "
+        "to preserve this take's contour."
+    )
 
 
 def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
@@ -538,6 +595,7 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     ]
     note_intro = " ".join(note_clauses) + " " if note_clauses else ""
 
+    realization_development = _realized_development_clause(trace)
     develop_parts = []
     if chromatic:
         develop_parts.append(chromatic)
@@ -545,10 +603,12 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
         develop_parts.append(mood_tip)
 
     if develop_parts:
-        how_to_develop = f"{note_intro}{' '.join(develop_parts)}"
+        take_intro = f"{realization_development} " if realization_development else ""
+        how_to_develop = f"{take_intro}{note_intro}{' '.join(develop_parts)}"
     else:
+        take_intro = f"{realization_development} " if realization_development else ""
         how_to_develop = (
-            f"{note_intro}Develop it by keeping the pulse steady and exploring the "
+            f"{take_intro}{note_intro}Develop it by keeping the pulse steady and exploring the "
             f"{policy.modal_center} color palette — let small dynamic changes create motion "
             f"within the {policy.texture_idiom.split('.')[0].lower()} texture."
         )
@@ -570,11 +630,13 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
 
     # --- how_to_transition: modulation-driven ---
     modulation = _first_or_fallback(preset.modulations, "")
+    realized_transition = _realized_transition_clause(trace)
+    take_transition = f"{realized_transition} " if realized_transition else ""
     if modulation:
-        how_to_transition = f"{transition_cue} {modulation}"
+        how_to_transition = f"{take_transition}{transition_cue} {modulation}"
     else:
         how_to_transition = (
-            f"{transition_cue} "
+            f"{take_transition}{transition_cue} "
             f"Move by repeating the {policy.modal_center} anchor once, "
             f"then shift the next loop entry to a nearby pitch within the mode."
         )

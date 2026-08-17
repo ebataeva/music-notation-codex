@@ -18,6 +18,7 @@ from core.engine.loop_engine import (
 from core.engine.progression import parse_progression
 from core.models import LoopVariant
 from core.presets.registry import get_preset
+from core.theory.explainer import explain
 
 # Default fixtures shared across all Phase 7 variant tests.
 DEFAULT_PRESET_NAME = "dark_trip_hop"
@@ -183,6 +184,35 @@ def test_register_bias_affects_register_choices():
     assert distinct >= 2, (
         f"Expected at least 2 distinct register_choices lists, got {distinct}"
     )
+
+
+def test_generate_variants_trace_records_distinct_realized_pitches():
+    chords = _make_chords()
+    preset = _make_preset()
+
+    results = generate_variants(chords, preset, seed=42, count=3)
+
+    realizations = [
+        tuple(tuple(bar) for bar in variant.trace.realized_pitches)
+        for variant in results
+    ]
+    assert all(realizations)
+    assert len(set(realizations)) == 3
+
+
+def test_generate_variants_receive_distinct_take_specific_theory():
+    chords = _make_chords()
+    preset = _make_preset()
+    variants = generate_variants(chords, preset, seed=42, count=3)
+
+    explanations = [explain(variant, preset) for variant in variants]
+
+    assert len({item.why_it_works for item in explanations}) == 3
+    assert len({item.how_to_develop for item in explanations}) == 3
+    for variant, explanation in zip(variants, explanations, strict=True):
+        opening_pitch = variant.trace.realized_pitches[0][0]
+        assert opening_pitch in explanation.why_it_works
+        assert opening_pitch in explanation.how_to_develop
 
 
 def test_generate_variants_count_parameter():

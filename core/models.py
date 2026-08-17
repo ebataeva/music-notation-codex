@@ -45,6 +45,9 @@ class GenerationTrace:
     # Phase 7: which register bias was used for this variant ("low", "default", "high").
     # None for preset-verbatim variants (Phase 1 path, no register mapping).
     register_bias: str | None = None
+    # Actual octave-bearing notes rendered in each bar. This lets downstream
+    # explanations describe the generated take rather than only its chord skeleton.
+    realized_pitches: list[list[str]] | None = None
 
 
 @dataclass
