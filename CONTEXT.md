@@ -1,8 +1,8 @@
 # Project Context — music-notation-codex
 
-**Last updated:** 2026-07-20 01:36
+**Last updated:** 2026-08-17 13:11
 **Branch:** `codex/streamlit-suite`
-**Last commit:** `10a5085 — fix(streamlit): correct theory and duet notation`
+**Last commit:** `cd5de99 — fix(theory): explain each generated take distinctly`
 **Progress:** 95% (Stage 4 done — explainer rewritten)
 
 ---
