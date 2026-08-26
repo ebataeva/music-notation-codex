@@ -14,6 +14,12 @@ from playwright.sync_api import Page
 CHORD_INPUT = "[data-testid=chord-input]"
 GENERATE_BTN = "[data-testid=generate-btn]"
 EXAMPLE_BTN = "[data-testid=example-btn]"
+SHEERAN_LOOPER_GUIDE = "[data-testid=sheeran-looper-guide]"
+SHEERAN_LOOPER_MANUAL_LINK = "[data-testid=sheeran-looper-manual-link]"
+SHEERAN_LOOPER_MANUAL_URL = (
+    "https://cdn.inmusicbrands.com/SLOOPERS/LP2/"
+    "Sheeran%20Looper%20%2B%20-%20User%20Guide%20-%20v2.0.0%20%28RevA%29.pdf"
+)
 VARIANT_CARDS = [
     "[data-testid=variant-card-0]",
     "[data-testid=variant-card-1]",
@@ -27,6 +33,41 @@ VARIANT_TITLES = [
 
 # NiceGUI uses Socket.IO for async DOM updates; allow generous wait time.
 ASYNC_TIMEOUT_MS = 30_000
+
+
+@allure.feature("Loop Coach")
+@allure.story("Sheeran Looper+ Guide")
+@allure.title("Quick setup guide is collapsed and exposes return-safe instructions")
+def test_sheeran_looper_guide(page: Page):
+    guide = page.locator(SHEERAN_LOOPER_GUIDE)
+    power_text = guide.get_by_text("Use 9 V DC, 500 mA minimum", exact=False)
+
+    with allure.step("Assert the guide is present and collapsed by default"):
+        guide.wait_for(state="visible", timeout=ASYNC_TIMEOUT_MS)
+        assert guide.is_visible()
+        assert not power_text.is_visible()
+
+    with allure.step("Expand the guide"):
+        guide.click()
+        power_text.wait_for(state="visible", timeout=ASYNC_TIMEOUT_MS)
+
+    with allure.step("Assert setup, control, tuner, and return-safe guidance"):
+        assert guide.get_by_text("Cello → INST L (MONO)", exact=False).is_visible()
+        assert guide.get_by_text("Left pedal: Record → Overdub → Play", exact=False).is_visible()
+        assert guide.get_by_text("There is no built-in tuner", exact=False).is_visible()
+        assert guide.get_by_text("Do not save the test loop", exact=False).is_visible()
+        assert guide.get_by_text("Factory reset — erases all user content", exact=True).is_visible()
+
+    with allure.step("Assert the manual link targets the official inMusic guide"):
+        manual_link = guide.locator(SHEERAN_LOOPER_MANUAL_LINK)
+        assert manual_link.get_attribute("href") == SHEERAN_LOOPER_MANUAL_URL
+
+    with allure.step("Assert the expanded guide fits a mobile viewport"):
+        page.set_viewport_size({"width": 390, "height": 844})
+        guide_box = guide.bounding_box()
+        assert guide_box is not None
+        assert guide_box["x"] >= 0
+        assert guide_box["x"] + guide_box["width"] <= 390
 
 
 @allure.feature("Loop Coach")

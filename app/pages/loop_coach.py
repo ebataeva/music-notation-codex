@@ -25,6 +25,12 @@ EXAMPLE_PRESET = "dark_trip_hop"
 # OSMD CDN (pinned version, not @latest). Added to the page body once.
 OSMD_JS_URL = "https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.9.0/build/opensheetmusicdisplay.min.js"
 
+SHEERAN_LOOPER_SUPPORT_URL = "https://sheeranloopers.com/support-plus.html"
+SHEERAN_LOOPER_MANUAL_URL = (
+    "https://cdn.inmusicbrands.com/SLOOPERS/LP2/"
+    "Sheeran%20Looper%20%2B%20-%20User%20Guide%20-%20v2.0.0%20%28RevA%29.pdf"
+)
+
 # Inline helper kept for parity with earlier phases; the CDN <script> tag below
 # is the primary load path, but loadOsmd remains available to client code.
 OSMD_INIT_SCRIPT = """
@@ -67,6 +73,72 @@ def _load_osmd_script() -> None:
     """
     ui.add_body_html(f'<script src="{OSMD_JS_URL}"></script>')
     ui.add_body_html(f"<script>{OSMD_INIT_SCRIPT}</script>")
+
+
+def _render_sheeran_looper_guide() -> None:
+    """Render a compact, return-safe setup guide for Sheeran Looper+."""
+
+    with (
+        ui.expansion(
+            "Sheeran Looper+ — Quick Setup",
+            icon="settings_input_component",
+            value=False,
+        )
+        .props("data-testid=sheeran-looper-guide")
+        .classes("w-full mt-4 border rounded-lg")
+    ):
+        with ui.column().classes("w-full gap-3 text-sm"):
+            ui.label("Power").classes("font-semibold")
+            ui.label(
+                "Use 9 V DC, 500 mA minimum, center-negative, 2.1 mm barrel, "
+                "or four AA batteries."
+            )
+
+            ui.label("Mono signal chain").classes("font-semibold")
+            ui.label(
+                "Cello → INST L (MONO) → MAIN OUT L (MONO) → "
+                "Scarlett LINE input → Mac. Keep 48 V off and start with low gain."
+            )
+
+            ui.label("Single-mode controls").classes("font-semibold")
+            ui.label(
+                "Left pedal: Record → Overdub → Play. Right pedal: Stop. "
+                "Hold left for Undo/Redo; hold right to permanently clear the current loop."
+            )
+
+            ui.label("Tuner").classes("font-semibold")
+            ui.label(
+                "There is no built-in tuner. Use a clip-on tuner, a phone app, "
+                "or a tuner on the connected computer."
+            )
+
+            ui.label("Return-safe test").classes("font-semibold")
+            ui.label(
+                "Do not save the test loop, register the device, or update firmware. "
+                "Clear the temporary loop when finished."
+            )
+
+            with ui.card().classes("w-full p-3 bg-orange-50").tight():
+                ui.label("Factory reset — erases all user content").classes(
+                    "font-semibold text-orange-900"
+                )
+                ui.label(
+                    "With the Looper+ powered off, hold STOP and the encoder while powering on. "
+                    "Push the encoder to proceed, then select YES and push it again. "
+                    "This cannot be undone."
+                ).classes("text-orange-900")
+
+            with ui.row().classes("gap-4 flex-wrap"):
+                ui.link(
+                    "Official Looper+ support",
+                    SHEERAN_LOOPER_SUPPORT_URL,
+                    new_tab=True,
+                ).classes("text-blue-600")
+                ui.link(
+                    "Official user guide v2.0.0",
+                    SHEERAN_LOOPER_MANUAL_URL,
+                    new_tab=True,
+                ).props("data-testid=sheeran-looper-manual-link").classes("text-blue-600")
 
 
 def _render_variant_cards(results: list[dict], container) -> None:
@@ -265,6 +337,8 @@ def create_loop_coach_page():
     ui.label("Enter a chord progression, pick a mood, and get a cello loop idea with theory guidance.").classes(
         "text-sm text-gray-500"
     )
+
+    _render_sheeran_looper_guide()
 
     # OSMD must load during initial page build, not after a later click handler.
     _load_osmd_script()
