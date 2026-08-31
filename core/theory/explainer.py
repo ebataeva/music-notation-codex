@@ -3,7 +3,13 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
-from core.models import GenerationTrace, LoopVariant, MoodPreset, TheoryExplanation
+from core.models import (
+    LOOP_SEAM_MARKER,
+    GenerationTrace,
+    LoopVariant,
+    MoodPreset,
+    TheoryExplanation,
+)
 from core.presets.style_policy import StylePolicy, get_style_policy
 from core.theory.cues import cue_pair_for, primary_register
 
@@ -359,6 +365,47 @@ def _voice_leading_clause(trace: GenerationTrace) -> str:
     )
 
 
+def _absolute_semitone(pitch_name: str) -> int | None:
+    """Semitone height of an octave-bearing name like "A2", or None if the
+    name carries no octave (the octave-less pitch classes some traces use)."""
+    octave_match = re.search(r"(-?\d+)", pitch_name)
+    semitone = _semitone(pitch_name)
+    if octave_match is None or semitone is None:
+        return None
+    return semitone + 12 * int(octave_match.group(1))
+
+
+def _loop_seam_clause(trace: GenerationTrace) -> str:
+    """Name the step from the loop's last note back to its first.
+
+    That step is the hardest physical moment in the loop -- the player
+    performs it on every repeat -- and until the trace started recording it,
+    the coaching text described how to end the loop while saying nothing
+    about it. Returns "" when the trace carries no seam, so traces without
+    voice-leading steps keep their original wording.
+    """
+    steps = trace.voice_leading_steps or []
+    seam = next((s for s in steps if s.endswith(LOOP_SEAM_MARKER)), None)
+    if not seam:
+        return ""
+
+    move = seam[: -len(LOOP_SEAM_MARKER)]
+    start_name, _, end_name = move.partition("->")
+    start = _absolute_semitone(start_name)
+    end = _absolute_semitone(end_name)
+    if start is None or end is None:
+        return ""
+    distance = abs(end - start)
+
+    if distance == 0:
+        return f" The loop closes back onto {start_name} itself, so the repeat needs no shift at all."
+    return (
+        f" The repeat itself is the move {move} — {distance} semitone"
+        f"{'s' if distance != 1 else ''} back to the opening note, so keep that "
+        "return in the hand and the loop comes round without a jump."
+    )
+
+
 def _register_quality_clause(trace: GenerationTrace) -> str:
     """Return a plain-language clause describing the variant's register character.
 
@@ -567,6 +614,9 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
             f"End by returning to {anchor}, then remove harmonic tension by softening the dynamics "
             "and letting the final bow stroke decay."
         )
+    # LOOP-CYCLE: a loop is played round and round, so name the step back to
+    # the top -- the one gesture the player repeats every single pass.
+    how_to_end += _loop_seam_clause(trace)
 
     # --- how_to_transition: modulation-driven ---
     modulation = _first_or_fallback(preset.modulations, "")

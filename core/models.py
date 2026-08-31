@@ -24,6 +24,13 @@ class TheoryExplanation:
     how_to_transition: str
 
 
+# Suffix marking the one entry in GenerationTrace.voice_leading_steps that
+# wraps from the loop's last note back to its first. Lives here, on the data
+# contract, so the engine that writes it and the explainer that reads it share
+# one literal without depending on each other.
+LOOP_SEAM_MARKER = " (loop)"
+
+
 @dataclass
 class GenerationTrace:
     """Per-generation provenance for a LoopVariant.
