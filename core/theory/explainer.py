@@ -375,6 +375,58 @@ def _absolute_semitone(pitch_name: str) -> int | None:
     return semitone + 12 * int(octave_match.group(1))
 
 
+def _melodic_shape_clause(trace: GenerationTrace) -> str:
+    """Describe the line this variant actually produced.
+
+    VAR-01: every other clause in `why_it_works` is derived from the
+    progression and the preset, which are identical across the three variants
+    -- so all three cards used to read the same even though their notes differ
+    by 50-100%. This one reads `voice_leading_steps`, which is per-variant, and
+    reports the shape the player will actually see: how much of it is stepwise,
+    where the widest leap is, and which pitch it keeps returning to.
+    """
+    steps = trace.voice_leading_steps or []
+    moves: list[tuple[str, str, int]] = []
+    for step in steps:
+        body = step[: -len(LOOP_SEAM_MARKER)] if step.endswith(LOOP_SEAM_MARKER) else step
+        start_name, _, end_name = body.partition("->")
+        start = _absolute_semitone(start_name)
+        end = _absolute_semitone(end_name)
+        if start is None or end is None:
+            continue
+        moves.append((start_name, end_name, end - start))
+
+    if not moves:
+        return ""
+
+    stepwise = sum(1 for *_, delta in moves if 0 < abs(delta) <= 2)
+    repeats = sum(1 for *_, delta in moves if delta == 0)
+    widest_start, widest_end, widest = max(moves, key=lambda m: abs(m[2]))
+
+    parts: list[str] = []
+    if stepwise * 2 >= len(moves):
+        parts.append(
+            f"{stepwise} of its {len(moves)} moves are a step or less, so the line "
+            "mostly walks rather than jumps"
+        )
+    elif abs(widest) >= 7:
+        parts.append(
+            f"its widest move is {widest_start}->{widest_end} at {abs(widest)} semitones, "
+            "so plan the shift rather than reaching for it"
+        )
+
+    if repeats:
+        held = max(
+            {name for name, _, delta in moves if delta == 0},
+            key=lambda n: sum(1 for s, _, d in moves if d == 0 and s == n),
+        )
+        parts.append(f"{held} repeats as a pedal, which is what anchors the bar")
+
+    if not parts:
+        return ""
+    return f"In this take, {'; '.join(parts)}."
+
+
 def _loop_seam_clause(trace: GenerationTrace) -> str:
     """Name the step from the loop's last note back to its first.
 
@@ -559,6 +611,12 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
         f"This works because {_strip_sentence_end(core_clauses)}. "
         f"At {tempo} BPM, the {feel} stays grounded in its {policy.modal_center} character."
     )
+    # VAR-01: everything above is progression- and preset-derived, so it is
+    # identical across the register variants. Lead with what makes THIS take
+    # different before the shared harmonic reasoning.
+    shape = _melodic_shape_clause(trace)
+    if shape:
+        why_it_works = f"{shape} {why_it_works}"
 
     # --- how_to_start: register-aware cue ---
     bias = trace.register_bias

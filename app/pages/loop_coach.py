@@ -12,7 +12,11 @@ import base64
 
 from nicegui import app, run, ui
 
-from app.services.generation import available_presets, generate_loop_variants
+from app.services.generation import (
+    available_presets,
+    generate_loop_variants,
+    suggest_progressions_for_key,
+)
 
 KEY_TONICS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
 KEY_MODES = ["minor", "major"]
@@ -468,6 +472,78 @@ def create_loop_coach_page():
             .props('data-testid=example-btn')
         )
 
+        suggest_btn = (
+            ui.button("Suggest progression", color="accent")
+            .props('data-testid=suggest-btn')
+        )
+
+    # Suggestions panel: filled on demand from the chosen key, hidden until then.
+    suggestions_container = (
+        ui.element("div")
+        .props('data-testid=suggestions-output')
+        .classes("mt-4 w-full")
+    )
+    suggestions_container.set_visibility(False)
+
+    def show_suggestions():
+        """KEY-02: the player names a key; the coach proposes the progressions
+        and spells out where every chord resolves. Picking one fills the chord
+        input, so the suggestion is a starting point rather than a dead end."""
+        suggestions_container.clear()
+        suggestions_container.set_visibility(True)
+
+        try:
+            suggestions = suggest_progressions_for_key(
+                key_tonic_select.value, key_mode_select.value
+            )
+        except ValueError as exc:
+            with suggestions_container:
+                ui.label(str(exc)).classes("text-sm text-red-600")
+            return
+
+        if not suggestions:
+            with suggestions_container:
+                ui.label(
+                    f"No progressions available for "
+                    f"{key_tonic_select.value} {key_mode_select.value}."
+                ).classes("text-sm text-red-600")
+            return
+
+        with suggestions_container:
+            ui.label(
+                f"Progressions in {key_tonic_select.value} {key_mode_select.value} — "
+                "pick one to load it"
+            ).classes("text-sm font-semibold mb-2")
+
+            for index, suggestion in enumerate(suggestions):
+                with (
+                    ui.card()
+                    .props(f"data-testid=suggestion-card-{index}")
+                    .classes("w-full p-3 mb-2")
+                    .tight()
+                ):
+                    with ui.row().classes("w-full items-center justify-between gap-4"):
+                        with ui.column().classes("gap-0"):
+                            ui.label(suggestion["chords"]).classes("text-base font-bold")
+                            ui.label(
+                                f"{suggestion['formula']} · {suggestion['source_preset']}"
+                            ).classes("text-xs text-gray-500 uppercase")
+                        ui.button(
+                            "Use",
+                            on_click=lambda _, c=suggestion["chords"]: (
+                                chord_input.set_value(c),
+                                suggestions_container.set_visibility(False),
+                            ),
+                        ).props(f"outline dense data-testid=use-suggestion-{index}")
+
+                    ui.label(suggestion["why"]).classes("text-sm mt-2")
+
+                    with ui.expansion("Resolutions", value=False).classes("w-full mt-1"):
+                        for line in suggestion["resolutions"]:
+                            ui.label(f"• {line}").classes("text-sm")
+
+    suggest_btn.on_click(show_suggestions)
+
     # Error/status area
     status_label = ui.label("").classes("text-sm text-gray-500 mt-2")
 
@@ -496,6 +572,12 @@ def create_loop_coach_page():
             preset_name=mood_select.value,
             include_audio=True,
             count=3,
+            # KEY-01: these two selectors used to be written to storage and
+            # nowhere else, so the score was always built in the preset's own
+            # key. That printed the wrong key signature and respelled accidentals
+            # against it (F# read as Gb in A minor).
+            key_tonic=key_tonic_select.value,
+            key_mode=key_mode_select.value,
         )
 
         # Persist to app.storage for refresh survival (SC-4).

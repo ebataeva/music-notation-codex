@@ -27,6 +27,7 @@ from core.engine.progression import parse_progression
 from core.models import LoopVariant
 from core.presets.registry import get_preset, list_presets
 from core.theory.explainer import explain
+from core.theory.progression_advisor import suggest_progressions
 
 MAX_EXPLANATION_WORDS = 500
 SOUNDFONT_PATH = "/opt/homebrew/Cellar/fluid-synth/2.5.5/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2"
@@ -364,6 +365,8 @@ def generate_loop_variants(
     seed: int | None = None,
     include_audio: bool = False,
     count: int = 3,
+    key_tonic: str | None = None,
+    key_mode: str | None = None,
 ) -> list[dict]:
     """Generate N distinct loop variants from the same chord progression.
 
@@ -443,7 +446,9 @@ def generate_loop_variants(
         return [result]
 
     try:
-        variants = generate_variants(chords, preset, seed=seed, count=count)
+        variants = generate_variants(
+            chords, preset, seed=seed, count=count, key_tonic=key_tonic, key_mode=key_mode
+        )
     except ValueError as exc:
         return [{"error": f"Generation failed: {exc}"}]
 
@@ -453,7 +458,12 @@ def generate_loop_variants(
 
         bias = variant.trace.register_bias or "default"
         score = build_progression_score(
-            chords, preset, seed=variant.trace.seed, register_bias=bias
+            chords,
+            preset,
+            seed=variant.trace.seed,
+            register_bias=bias,
+            key_tonic=key_tonic,
+            key_mode=key_mode,
         )
         musicxml_str = _score_to_musicxml_string(score)
         midi_bytes = _score_to_midi_bytes(score)
@@ -487,3 +497,31 @@ def generate_loop_variants(
         results.append(result)
 
     return results
+
+
+def suggest_progressions_for_key(
+    key_tonic: str,
+    key_mode: str,
+    preset_name: str | None = None,
+) -> list[dict]:
+    """KEY-02: progressions for a key the player named, as JSON-serializable
+    dicts for the UI layer (pages talk to services, services talk to core).
+
+    Returns [] rather than raising when the key is unusable, matching the
+    error-as-data contract the other generate_* helpers here use.
+    """
+    try:
+        suggestions = suggest_progressions(key_tonic, key_mode, preset_name)
+    except ValueError:
+        return []
+
+    return [
+        {
+            "chords": s.chords,
+            "formula": s.formula,
+            "why": s.why,
+            "resolutions": list(s.resolutions),
+            "source_preset": s.source_preset,
+        }
+        for s in suggestions
+    ]

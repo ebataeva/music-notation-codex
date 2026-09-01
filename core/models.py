@@ -89,3 +89,8 @@ class MoodPreset:
     duet_rhythm: dict[str, tuple[float, ...]] | None = None
     duet_bars: dict[str, tuple[tuple[str, ...], ...]] | None = None
     duet_tempo_bpm: int | None = None
+    # READ-01: the sight-readable rhythm the loop coach generates from, capped
+    # at MAX_LOOP_NOTES_PER_BAR notes per bar. `rhythm` stays as authored for
+    # the CLI ostinato scripts (5-16 notes/bar), which are a texture to listen
+    # to rather than a bar to read and loop live. None falls back to `rhythm`.
+    loop_rhythm: tuple[float, ...] | None = None

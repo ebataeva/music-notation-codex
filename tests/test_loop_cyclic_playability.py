@@ -24,6 +24,7 @@ from core.engine.loop_engine import (
     build_score,
     generate_variant,
     generate_variant_from_progression,
+    loop_rhythm_for,
 )
 from core.engine.progression import parse_progression
 from core.models import LOOP_SEAM_MARKER
@@ -129,7 +130,7 @@ def test_trace_records_the_seam_step():
     steps = variant.trace.voice_leading_steps
     assert steps, "voice_leading_steps must be populated, not None"
 
-    notes_per_loop = len(chords) * len(get_preset("dark_trip_hop").rhythm)
+    notes_per_loop = len(chords) * len(loop_rhythm_for(get_preset("dark_trip_hop")))
     assert len(steps) == notes_per_loop, "one step per performed adjacency, seam included"
     assert steps[-1].endswith(LOOP_SEAM_MARKER)
     assert not any(s.endswith(LOOP_SEAM_MARKER) for s in steps[:-1]), "exactly one seam"
