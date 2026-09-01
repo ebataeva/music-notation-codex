@@ -20,6 +20,9 @@ SHEERAN_LOOPER_MANUAL_URL = (
     "https://cdn.inmusicbrands.com/SLOOPERS/LP2/"
     "Sheeran%20Looper%20%2B%20-%20User%20Guide%20-%20v2.0.0%20%28RevA%29.pdf"
 )
+PEDALBOARD_GUIDE = "[data-testid=pedalboard-guide]"
+TWIN_LOOPER_MANUAL_LINK = "[data-testid=twin-looper-manual-link]"
+TWIN_LOOPER_MANUAL_URL = "https://www.manualslib.com/manual/1334821/Rowin-Twin-Looper.html"
 VARIANT_CARDS = [
     "[data-testid=variant-card-0]",
     "[data-testid=variant-card-1]",
@@ -61,6 +64,45 @@ def test_sheeran_looper_guide(page: Page):
     with allure.step("Assert the manual link targets the official inMusic guide"):
         manual_link = guide.locator(SHEERAN_LOOPER_MANUAL_LINK)
         assert manual_link.get_attribute("href") == SHEERAN_LOOPER_MANUAL_URL
+
+    with allure.step("Assert the expanded guide fits a mobile viewport"):
+        page.set_viewport_size({"width": 390, "height": 844})
+        guide_box = guide.bounding_box()
+        assert guide_box is not None
+        assert guide_box["x"] >= 0
+        assert guide_box["x"] + guide_box["width"] <= 390
+
+
+@allure.feature("Loop Coach")
+@allure.story("Pedalboard Guide")
+@allure.title("Pedalboard guide is collapsed and explains the loop-seam settings")
+def test_pedalboard_guide(page: Page):
+    guide = page.locator(PEDALBOARD_GUIDE)
+    chain_text = guide.get_by_text("Cello → Atmosphere (reverb)", exact=False)
+
+    with allure.step("Assert the guide is present and collapsed by default"):
+        guide.wait_for(state="visible", timeout=ASYNC_TIMEOUT_MS)
+        assert guide.is_visible()
+        assert not chain_text.is_visible()
+
+    with allure.step("Expand the guide"):
+        guide.click()
+        chain_text.wait_for(state="visible", timeout=ASYNC_TIMEOUT_MS)
+
+    with allure.step("Assert chain, two-looper, and Twin Looper control guidance"):
+        assert guide.get_by_text("printed into the take", exact=False).is_visible()
+        assert guide.get_by_text("Drive one of them", exact=False).is_visible()
+        assert guide.get_by_text("CHANGE picks FORWARD or REVERSE", exact=False).is_visible()
+
+    with allure.step("Assert the seam guidance names both offending controls"):
+        seam = guide.get_by_text("Set Atmosphere TRAIL to OFF", exact=False)
+        assert seam.is_visible()
+        assert guide.get_by_text("Keep Aquarius F.BACK low", exact=False).is_visible()
+        assert guide.get_by_text("Closing the loop cleanly", exact=True).is_visible()
+
+    with allure.step("Assert the manual link targets the Twin Looper manual"):
+        manual_link = guide.locator(TWIN_LOOPER_MANUAL_LINK)
+        assert manual_link.get_attribute("href") == TWIN_LOOPER_MANUAL_URL
 
     with allure.step("Assert the expanded guide fits a mobile viewport"):
         page.set_viewport_size({"width": 390, "height": 844})
