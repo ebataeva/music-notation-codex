@@ -253,14 +253,35 @@ def _render_single_variant(i: int, result: dict) -> None:
                 ui.label(result["error"]).classes("text-red-600 font-bold")
                 return
 
-            # Theory section
-            for title, text in _theory_sections(result):
-                if text:
-                    ui.label(title).classes("text-xs font-bold text-gray-500 uppercase tracking-wide mt-3")
-                    ui.label(text).classes("text-sm text-gray-700")
-
+            # READ-03: notation first. This is a coach for someone reading off
+            # the stave, so the notes are the deliverable and the prose is the
+            # commentary -- burying the score under five paragraphs made the
+            # card something to decipher before it was something to play.
             _render_variant_notation(i, result)
             _render_variant_audio(i, result)
+
+            # "Why it works" stays open because it is the one paragraph that is
+            # per-variant; the rest fold away so three cards side by side read
+            # as three loops rather than a wall of text.
+            sections = [(t, x) for t, x in _theory_sections(result) if x]
+            for title, text in sections[:1]:
+                ui.label(title).classes(
+                    "text-sm font-bold text-gray-500 uppercase tracking-wide mt-3"
+                )
+                ui.label(text).classes("text-base text-gray-800 leading-relaxed")
+
+            if len(sections) > 1:
+                with (
+                    ui.expansion("How to play it", value=False)
+                    .props(f"data-testid=variant-guidance-{i}")
+                    .classes("w-full mt-2")
+                ):
+                    for title, text in sections[1:]:
+                        ui.label(title).classes(
+                            "text-sm font-bold text-gray-500 uppercase tracking-wide mt-3"
+                        )
+                        ui.label(text).classes("text-base text-gray-800 leading-relaxed")
+
             _render_variant_export(i, result)
 
 
@@ -270,9 +291,14 @@ def _render_variant_notation(i: int, result: dict) -> None:
     if not musicxml:
         return
 
+    # READ-02: the `w-full` is load-bearing, not decoration. Without it the
+    # wrapper div NiceGUI puts around ui.html() shrinks to its content inside
+    # the flex column, the inner div's width:100% then resolves against a
+    # zero-width parent, and OSMD renders an SVG with width="0" -- notation
+    # present in the DOM and completely invisible on screen.
     ui.html(
         f'<div id="osmd-container-{i}" style="width:100%;overflow-x:auto;min-height:120px;"></div>'
-    )
+    ).classes("w-full")
 
     # Base64-encode the MusicXML to avoid quoting issues
     xml_b64 = base64.b64encode(musicxml.encode("utf-8")).decode("ascii")

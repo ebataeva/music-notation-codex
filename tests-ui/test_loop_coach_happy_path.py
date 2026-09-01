@@ -74,6 +74,41 @@ def test_sheeran_looper_guide(page: Page):
 
 
 @allure.feature("Loop Coach")
+@allure.story("Notation")
+@allure.title("Rendered notation is actually visible, not a zero-width SVG")
+def test_notation_renders_with_real_width(page: Page):
+    """READ-02 regression.
+
+    OSMD rendered into a container whose wrapper had collapsed to zero width
+    inside the flex column, so every variant carried a complete <svg> with
+    width="0" -- notation fully present in the DOM, and nothing at all on
+    screen. Asserting the element merely *exists* would have passed happily
+    throughout; the bug is only visible in its measured size.
+    """
+    with allure.step("Generate a loop"):
+        page.wait_for_selector(CHORD_INPUT, timeout=ASYNC_TIMEOUT_MS)
+        chord_field = page.locator(CHORD_INPUT)
+        chord_field.click()
+        chord_field.fill("Am F C G")
+        page.locator(GENERATE_BTN).click()
+        page.wait_for_selector(VARIANT_CARDS[0], timeout=ASYNC_TIMEOUT_MS)
+
+    with allure.step("Assert every variant's stave has non-zero rendered size"):
+        for i in range(len(VARIANT_CARDS)):
+            svg = page.locator(f"#osmd-container-{i} svg")
+            svg.wait_for(state="attached", timeout=ASYNC_TIMEOUT_MS)
+            box = svg.bounding_box()
+            assert box is not None, f"variant {i}: notation SVG has no layout box"
+            assert box["width"] > 100, (
+                f"variant {i}: notation SVG rendered {box['width']}px wide — "
+                "present in the DOM but invisible on screen"
+            )
+            assert box["height"] > 50, (
+                f"variant {i}: notation SVG rendered {box['height']}px tall"
+            )
+
+
+@allure.feature("Loop Coach")
 @allure.story("Pedalboard Guide")
 @allure.title("Pedalboard guide is collapsed and explains the loop-seam settings")
 def test_pedalboard_guide(page: Page):
