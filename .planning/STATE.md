@@ -83,6 +83,7 @@ None yet.
 | 260706-21y | Fix v1 audit tech-debt tails: SAFE-01 max-notes guard, English preset/CLI copy (PLAT-02), MoodPreset deep-immutability (WR-05) | 2026-07-06 | 77594d2 | [260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max](./quick/260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max/) |
 | 260714-v3b | Fix explainer crash: duet presets have dict texture_idiom, explainer expects string | 2026-07-14 | 9b29371 | [260714-v3b-fix-explainer-crash-duet-presets-have-di](./quick/260714-v3b-fix-explainer-crash-duet-presets-have-di/) |
 | 260916-bta | Prompt 2: concise Theory cards, 19 contextual dictionary articles with notation/audio, and transition guidance; 1115 Python and 7 Playwright tests passed | 2026-09-16 | uncommitted | Approved plan in conversation; executed inline without new documentation |
+| 260831-s8m | Close the loop seam: tessitura anchor + closing-tone selection so generated loops come home instead of jumping up to 22 semitones at the repeat | 2026-08-31 | dfc71cf | [260831-s8m-fix-loop-seam-cyclic-playability](./quick/260831-s8m-fix-loop-seam-cyclic-playability/) |
 
 ## Deferred Items
 

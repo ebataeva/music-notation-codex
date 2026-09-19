@@ -12,7 +12,12 @@ import base64
 
 from nicegui import app, run, ui
 
-from app.services.generation import authored_presets, available_presets, generate_loop_variants
+from app.services.generation import (
+    authored_presets,
+    available_presets,
+    generate_loop_variants,
+    suggest_progressions_for_key,
+)
 from app.services.theory_dictionary import dictionary_entries
 from app.pages.theory_dictionary import theory_url
 from app.components.notation import load_notation_script, render_musicxml
@@ -30,6 +35,15 @@ EXAMPLE_PRESET = "dark_trip_hop"
 
 # OSMD CDN (pinned version, not @latest). Added to the page body once.
 OSMD_JS_URL = "https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.9.0/build/opensheetmusicdisplay.min.js"
+
+SHEERAN_LOOPER_SUPPORT_URL = "https://sheeranloopers.com/support-plus.html"
+SHEERAN_LOOPER_MANUAL_URL = (
+    "https://cdn.inmusicbrands.com/SLOOPERS/LP2/"
+    "Sheeran%20Looper%20%2B%20-%20User%20Guide%20-%20v2.0.0%20%28RevA%29.pdf"
+)
+
+TWIN_LOOPER_MANUAL_URL = "https://www.manualslib.com/manual/1334821/Rowin-Twin-Looper.html"
+AQUARIUS_PRODUCT_URL = "https://www.joyoaudio.com/product/10.html"
 
 # Inline helper kept for parity with earlier phases; the CDN <script> tag below
 # is the primary load path, but loadOsmd remains available to client code.
@@ -70,6 +84,146 @@ def _load_osmd_script() -> None:
     load_notation_script()
 
 
+def _render_sheeran_looper_guide() -> None:
+    """Render a compact, return-safe setup guide for Sheeran Looper+."""
+
+    with (
+        ui.expansion(
+            "Sheeran Looper+ — Quick Setup",
+            icon="settings_input_component",
+            value=False,
+        )
+        .props("data-testid=sheeran-looper-guide")
+        .classes("w-full mt-4 border rounded-lg")
+    ):
+        with ui.column().classes("w-full gap-3 text-sm"):
+            ui.label("Power").classes("font-semibold")
+            ui.label(
+                "Use 9 V DC, 500 mA minimum, center-negative, 2.1 mm barrel, "
+                "or four AA batteries."
+            )
+
+            ui.label("Mono signal chain").classes("font-semibold")
+            ui.label(
+                "Cello → INST L (MONO) → MAIN OUT L (MONO) → "
+                "Scarlett LINE input → Mac. Keep 48 V off and start with low gain."
+            )
+
+            ui.label("Single-mode controls").classes("font-semibold")
+            ui.label(
+                "Left pedal: Record → Overdub → Play. Right pedal: Stop. "
+                "Hold left for Undo/Redo; hold right to permanently clear the current loop."
+            )
+
+            ui.label("Tuner").classes("font-semibold")
+            ui.label(
+                "There is no built-in tuner. Use a clip-on tuner, a phone app, "
+                "or a tuner on the connected computer."
+            )
+
+            ui.label("Return-safe test").classes("font-semibold")
+            ui.label(
+                "Do not save the test loop, register the device, or update firmware. "
+                "Clear the temporary loop when finished."
+            )
+
+            with ui.card().classes("w-full p-3 bg-orange-50").tight():
+                ui.label("Factory reset — erases all user content").classes(
+                    "font-semibold text-orange-900"
+                )
+                ui.label(
+                    "With the Looper+ powered off, hold STOP and the encoder while powering on. "
+                    "Push the encoder to proceed, then select YES and push it again. "
+                    "This cannot be undone."
+                ).classes("text-orange-900")
+
+            with ui.row().classes("gap-4 flex-wrap"):
+                ui.link(
+                    "Official Looper+ support",
+                    SHEERAN_LOOPER_SUPPORT_URL,
+                    new_tab=True,
+                ).classes("text-blue-600")
+                ui.link(
+                    "Official user guide v2.0.0",
+                    SHEERAN_LOOPER_MANUAL_URL,
+                    new_tab=True,
+                ).props("data-testid=sheeran-looper-manual-link").classes("text-blue-600")
+
+
+def _render_pedalboard_guide() -> None:
+    """Render the guide for the board this coach is actually played through:
+    JOYO Atmosphere -> JOYO Aquarius -> VSN Twin Looper.
+
+    The section that earns its place is the last one. Both loopers on this
+    board splice the take at the punch-out point, which is exactly the loop
+    seam the generator now closes -- and the two time-based pedals sit
+    *before* them, so their tails get printed into that splice.
+    """
+
+    with (
+        ui.expansion(
+            "Pedalboard — Atmosphere → Aquarius → Twin Looper",
+            icon="graphic_eq",
+            value=False,
+        )
+        .props("data-testid=pedalboard-guide")
+        .classes("w-full mt-4 border rounded-lg")
+    ):
+        with ui.column().classes("w-full gap-3 text-sm"):
+            ui.label("Signal chain").classes("font-semibold")
+            ui.label(
+                "Cello → Atmosphere (reverb) → Aquarius (delay) → Twin Looper LEFT IN → "
+                "LEFT/RIGHT OUT → amp or interface. Both time-based pedals sit before the "
+                "loopers, so whatever they are doing at the moment you punch out is printed "
+                "into the take and repeats on every pass — you cannot dial it back afterwards."
+            )
+
+            ui.label("Two loopers, one master").classes("font-semibold")
+            ui.label(
+                "The Aquarius has its own 5-minute looper on top of its 8 delay modes, and "
+                "the Twin Looper records 10 minutes with unlimited overdubs. Drive one of "
+                "them and leave the other on delay-only duty — two splice points fighting "
+                "each other is the fastest way to lose the downbeat."
+            )
+
+            ui.label("Twin Looper controls").classes("font-semibold")
+            ui.label(
+                "LOOPER footswitch cycles record → play → overdub; FX footswitch triggers "
+                "the play mode set by the toggles. CHANGE picks FORWARD or REVERSE, SPEED "
+                "picks NORMAL or FAST, and LEVEL L / LEVEL R trim the two channels "
+                "independently. Stereo in and out, 44.1 kHz / 24-bit, true bypass."
+            )
+
+            with ui.card().classes("w-full p-3 bg-emerald-50").tight():
+                ui.label("Closing the loop cleanly").classes(
+                    "font-semibold text-emerald-900"
+                )
+                ui.label(
+                    "The loop the coach generates now comes home: its last note lands "
+                    "within a few semitones of its first, so the splice falls on a step "
+                    "your hand already knows instead of a two-octave jump. Two things on "
+                    "this board can still smear that splice. Set Atmosphere TRAIL to OFF "
+                    "while you record the foundation layer, or the reverb tail keeps "
+                    "ringing past the punch-out and gets printed on top of the next pass. "
+                    "Keep Aquarius F.BACK low for that first layer for the same reason — "
+                    "repeats still sounding when you close the loop are baked into the "
+                    "seam. Raise both once the foundation is down and you are overdubbing "
+                    "over it. Punch out on the beat, not on the decay."
+                ).classes("text-emerald-900")
+
+            with ui.row().classes("gap-4 flex-wrap"):
+                ui.link(
+                    "Twin Looper manual",
+                    TWIN_LOOPER_MANUAL_URL,
+                    new_tab=True,
+                ).props("data-testid=twin-looper-manual-link").classes("text-blue-600")
+                ui.link(
+                    "JOYO Aquarius R-07",
+                    AQUARIUS_PRODUCT_URL,
+                    new_tab=True,
+                ).classes("text-blue-600")
+
+
 def _render_variant_cards(results: list[dict], container) -> None:
     """Render up to 3 variant cards side by side inside `container`.
 
@@ -106,26 +260,66 @@ def _render_single_variant(i: int, result: dict) -> None:
             if result.get("is_duet"):
                 ui.label("Authored duet · explanations follow this score").classes("text-sm font-medium")
 
-            for section_index, (title, text) in enumerate(_theory_sections(result)):
-                if text:
-                    ui.label(title).classes("text-xs font-bold text-gray-500 uppercase tracking-wide mt-3")
-                    section_key = _THEORY_KEYS[section_index]
-                    ui.label(text).classes("text-sm text-gray-700").props(f'data-testid=theory-{i}-{section_key}')
-                    term_ids = result.get("term_ids", {}).get(section_key, ())
-                    if term_ids:
-                        with ui.row().classes("gap-3"):
-                            for term_id in term_ids:
-                                if term_id in _TERM_TITLES:
-                                    target = theory_url(term_id, result.get("key_tonic", "C"), result.get("key_mode", "major"), result.get("preset_name", ""))
-                                    ui.link(_TERM_TITLES[term_id], target, new_tab=True).classes("text-xs text-blue-600").props(f'data-testid=term-{i}-{section_key}-{term_id}')
-
+            # READ-03: notation first. This is a coach for someone reading off
+            # the stave, so the notes are the deliverable and the prose is the
+            # commentary -- burying the score under five paragraphs made the
+            # card something to decipher before it was something to play.
             _render_variant_notation(i, result)
             _render_variant_audio(i, result)
+
+            # "Why it works" stays open because it is the one paragraph that is
+            # per-variant; the rest fold away so three cards side by side read
+            # as three loops rather than a wall of text.
+            sections = [
+                (key, title, text)
+                for key, (title, text) in zip(_THEORY_KEYS, _theory_sections(result), strict=True)
+                if text
+            ]
+            for key, title, text in sections[:1]:
+                _render_theory_section(i, key, title, text, result)
+
+            if len(sections) > 1:
+                with (
+                    ui.expansion("How to play it", value=False)
+                    .props(f"data-testid=variant-guidance-{i}")
+                    .classes("w-full mt-2")
+                ):
+                    for key, title, text in sections[1:]:
+                        _render_theory_section(i, key, title, text, result)
+
             _render_variant_export(i, result)
 
 
+def _render_theory_section(i: int, section_key: str, title: str, text: str, result: dict) -> None:
+    """One short section: title, the text at reading size, and dictionary links."""
+    ui.label(title).classes("text-sm font-bold text-gray-500 uppercase tracking-wide mt-3")
+    ui.label(text).classes("text-base text-gray-800 leading-relaxed").props(
+        f'data-testid=theory-{i}-{section_key}'
+    )
+    term_ids = result.get("term_ids", {}).get(section_key, ())
+    if not term_ids:
+        return
+    with ui.row().classes("gap-3"):
+        for term_id in term_ids:
+            if term_id in _TERM_TITLES:
+                target = theory_url(
+                    term_id,
+                    result.get("key_tonic", "C"),
+                    result.get("key_mode", "major"),
+                    result.get("preset_name", ""),
+                )
+                ui.link(_TERM_TITLES[term_id], target, new_tab=True).classes("text-xs text-blue-600").props(
+                    f'data-testid=term-{i}-{section_key}-{term_id}'
+                )
+
+
 def _render_variant_notation(i: int, result: dict) -> None:
-    """Render notation using the same component as the dictionary."""
+    """Render notation using the same component as the dictionary.
+
+    READ-02: the component's `w-full` on the container is load-bearing. Without
+    it the flex column shrinks the wrapper to its content, `width:100%` resolves
+    against a zero-width parent, and OSMD renders an SVG with width="0".
+    """
     render_musicxml(result.get("musicxml_string", ""), f"osmd-container-{i}")
 
 
@@ -230,6 +424,9 @@ def create_loop_coach_page():
         "text-sm text-gray-500"
     )
 
+    _render_sheeran_looper_guide()
+    _render_pedalboard_guide()
+
     # OSMD must load during initial page build, not after a later click handler.
     _load_osmd_script()
 
@@ -294,6 +491,78 @@ def create_loop_coach_page():
             .props('data-testid=example-btn')
         )
 
+        suggest_btn = (
+            ui.button("Suggest progression", color="accent")
+            .props('data-testid=suggest-btn')
+        )
+
+    # Suggestions panel: filled on demand from the chosen key, hidden until then.
+    suggestions_container = (
+        ui.element("div")
+        .props('data-testid=suggestions-output')
+        .classes("mt-4 w-full")
+    )
+    suggestions_container.set_visibility(False)
+
+    def show_suggestions():
+        """KEY-02: the player names a key; the coach proposes the progressions
+        and spells out where every chord resolves. Picking one fills the chord
+        input, so the suggestion is a starting point rather than a dead end."""
+        suggestions_container.clear()
+        suggestions_container.set_visibility(True)
+
+        try:
+            suggestions = suggest_progressions_for_key(
+                key_tonic_select.value, key_mode_select.value
+            )
+        except ValueError as exc:
+            with suggestions_container:
+                ui.label(str(exc)).classes("text-sm text-red-600")
+            return
+
+        if not suggestions:
+            with suggestions_container:
+                ui.label(
+                    f"No progressions available for "
+                    f"{key_tonic_select.value} {key_mode_select.value}."
+                ).classes("text-sm text-red-600")
+            return
+
+        with suggestions_container:
+            ui.label(
+                f"Progressions in {key_tonic_select.value} {key_mode_select.value} — "
+                "pick one to load it"
+            ).classes("text-sm font-semibold mb-2")
+
+            for index, suggestion in enumerate(suggestions):
+                with (
+                    ui.card()
+                    .props(f"data-testid=suggestion-card-{index}")
+                    .classes("w-full p-3 mb-2")
+                    .tight()
+                ):
+                    with ui.row().classes("w-full items-center justify-between gap-4"):
+                        with ui.column().classes("gap-0"):
+                            ui.label(suggestion["chords"]).classes("text-base font-bold")
+                            ui.label(
+                                f"{suggestion['formula']} · {suggestion['source_preset']}"
+                            ).classes("text-xs text-gray-500 uppercase")
+                        ui.button(
+                            "Use",
+                            on_click=lambda _, c=suggestion["chords"]: (
+                                chord_input.set_value(c),
+                                suggestions_container.set_visibility(False),
+                            ),
+                        ).props(f"outline dense data-testid=use-suggestion-{index}")
+
+                    ui.label(suggestion["why"]).classes("text-sm mt-2")
+
+                    with ui.expansion("Resolutions", value=False).classes("w-full mt-1"):
+                        for line in suggestion["resolutions"]:
+                            ui.label(f"• {line}").classes("text-sm")
+
+    suggest_btn.on_click(show_suggestions)
+
     # Error/status area
     status_label = ui.label("").classes("text-sm text-gray-500 mt-2")
 
@@ -322,6 +591,10 @@ def create_loop_coach_page():
             preset_name=mood_select.value,
             include_audio=True,
             count=3,
+            # KEY-01: these two selectors used to be written to storage and
+            # nowhere else, so the score was always built in the preset's own
+            # key. That printed the wrong key signature and respelled accidentals
+            # against it (F# read as Gb in A minor).
             key_tonic=key_tonic_select.value,
             key_mode=key_mode_select.value,
         )

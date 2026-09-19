@@ -56,6 +56,7 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
             "Sexy effect: keep a steady low pulse and move the upper notes chromatically by a semitone. The semitone sounds bodily and tense because the ear is waiting for resolution.",
             "Drive: shorten the durations to sixteenths and repeat the anchor note between the moving notes. Repetition provides the motor, note movement provides direction.",
         ),
+        loop_rhythm=(1.5, 0.5, 1.0, 1.0),
     ),
     "ritual_tribal": MoodPreset(
         name="ritual_tribal",
@@ -89,6 +90,7 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
             "Drive: place accents not only on 1 and 3, but on 1, the last eighth of beat 2, and 4. The shifted accent creates a tribal push.",
             "Sexy effect: alternate a dry low pulse with a soft answer a fourth/fifth above. The contrast of body and answer creates a conversational feel.",
         ),
+        loop_rhythm=(1.0, 1.0, 1.5, 0.5),
     ),
     "noir_slow_burn": MoodPreset(
         name="noir_slow_burn",
@@ -122,6 +124,7 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
             "Sexy effect: use slow descending semitones, e.g. C -> B -> Bb -> A. Descending chromaticism sounds like an exhale and a pull.",
             "Drive without speeding up: add ghost notes on weak beats. The tempo stays slow, but a nervous energy appears inside.",
         ),
+        loop_rhythm=(2.0, 1.0, 1.0),
     ),
     "driving_cinematic": MoodPreset(
         name="driving_cinematic",
@@ -155,6 +158,7 @@ MOOD_PRESETS: dict[str, MoodPreset] = {
             "Mystery: just before the harmony changes, slip a foreign note onto a weak beat. It flickers and vanishes, so it intrigues without breaking the mode.",
             "Sexy effect: add a syncopation just before the strong beat. The body hears the anticipation of the hit, and the delay makes the groove stickier.",
         ),
+        loop_rhythm=(1.0, 1.0, 1.0, 1.0),
     ),
     # Duet presets: theory tuples generated from harmonic analysis of duet bar
     # data and genre research (2026). Originally migrated from standalone duet

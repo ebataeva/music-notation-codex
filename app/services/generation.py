@@ -31,6 +31,7 @@ from core.theory.explainer import explain
 from core.theory.summaries import explain_duet_score
 from core.theory.harmony import compatible_collections
 from core.theory.transitions import normalize_context, transition_guides
+from core.theory.progression_advisor import suggest_progressions
 
 MAX_EXPLANATION_WORDS = 500
 SOUNDFONT_PATH = "/opt/homebrew/Cellar/fluid-synth/2.5.5/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2"
@@ -436,6 +437,8 @@ def generate_loop_variants(
 
         return [result]
 
+    # KEY-01 has one path: the preset was replaced above with the player's key,
+    # so the engine, the score and the explanation all read it from the preset.
     try:
         variants = generate_variants(chords, preset, seed=seed, count=count)
     except ValueError as exc:
@@ -447,7 +450,10 @@ def generate_loop_variants(
 
         bias = variant.trace.register_bias or "default"
         score = build_progression_score(
-            chords, preset, seed=variant.trace.seed, register_bias=bias
+            chords,
+            preset,
+            seed=variant.trace.seed,
+            register_bias=bias,
         )
         musicxml_str = _score_to_musicxml_string(score)
         midi_bytes = _score_to_midi_bytes(score)
@@ -484,3 +490,31 @@ def generate_loop_variants(
         results.append(result)
 
     return results
+
+
+def suggest_progressions_for_key(
+    key_tonic: str,
+    key_mode: str,
+    preset_name: str | None = None,
+) -> list[dict]:
+    """KEY-02: progressions for a key the player named, as JSON-serializable
+    dicts for the UI layer (pages talk to services, services talk to core).
+
+    Returns [] rather than raising when the key is unusable, matching the
+    error-as-data contract the other generate_* helpers here use.
+    """
+    try:
+        suggestions = suggest_progressions(key_tonic, key_mode, preset_name)
+    except ValueError:
+        return []
+
+    return [
+        {
+            "chords": s.chords,
+            "formula": s.formula,
+            "why": s.why,
+            "resolutions": list(s.resolutions),
+            "source_preset": s.source_preset,
+        }
+        for s in suggestions
+    ]

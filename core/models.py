@@ -26,6 +26,13 @@ class TheoryExplanation:
     term_ids: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
 
+# Suffix marking the one entry in GenerationTrace.voice_leading_steps that
+# wraps from the loop's last note back to its first. Lives here, on the data
+# contract, so the engine that writes it and the explainer that reads it share
+# one literal without depending on each other.
+LOOP_SEAM_MARKER = " (loop)"
+
+
 @dataclass
 class GenerationTrace:
     """Per-generation provenance for a LoopVariant.
@@ -47,6 +54,11 @@ class GenerationTrace:
     # Phase 7: which register bias was used for this variant ("low", "default", "high").
     # None for preset-verbatim variants (Phase 1 path, no register mapping).
     register_bias: str | None = None
+    # READ-01 keeps a bar to a few notes, so a bar rarely sounds every tone of
+    # its chord. `chord_tones_used` records what was supplied; this records what
+    # the bar actually plays (octave-bearing names, one inner list per bar) so
+    # the explainer can describe the loop rather than the input.
+    played_pitches: list[list[str]] | None = None
 
 
 @dataclass
@@ -84,3 +96,8 @@ class MoodPreset:
     duet_rhythm: dict[str, tuple[float, ...]] | None = None
     duet_bars: dict[str, tuple[tuple[str, ...], ...]] | None = None
     duet_tempo_bpm: int | None = None
+    # READ-01: the sight-readable rhythm the loop coach generates from, capped
+    # at MAX_LOOP_NOTES_PER_BAR notes per bar. `rhythm` stays as authored for
+    # the CLI ostinato scripts (5-16 notes/bar), which are a texture to listen
+    # to rather than a bar to read and loop live. None falls back to `rhythm`.
+    loop_rhythm: tuple[float, ...] | None = None

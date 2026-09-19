@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import re
 from collections.abc import Sequence
 
-from core.models import GenerationTrace, LoopVariant, MoodPreset, TheoryExplanation
+from core.models import (
+    LOOP_SEAM_MARKER,
+    GenerationTrace,
+    LoopVariant,
+    MoodPreset,
+    TheoryExplanation,
+)
 from core.presets.style_policy import StylePolicy, get_style_policy
 from core.theory.cues import cue_pair_for
 from core.theory.summaries import summarize_trace
@@ -39,14 +46,104 @@ def _collection_clause(tones: Sequence[str], preset: MoodPreset) -> str:
     )
 
 
-def _chord_inventory(chords: Sequence[ChordFacts]) -> str:
+def _chord_inventory(chords: Sequence[ChordFacts], played_by_bar: Sequence[Sequence[str]] | None) -> str:
+    """List what was supplied and, separately, what the loop actually sounds.
+
+    READ-01 keeps a bar to a few notes, so a Dm9 bar usually plays D-F-A and
+    not all five tones. Claiming the full chord as "the notes" would make the
+    explanation describe the input rather than the loop the player reads.
+    """
     items = []
     for chord in dict.fromkeys(chords):
         item = f"{chord.symbol}: {'-'.join(chord.tones)}"
         if chord.respellings:
             item += f" ({'; '.join(chord.respellings)}; enharmonic pitch-class reading)"
         items.append(item)
-    return "Chord tones: " + "; ".join(items) + "."
+    text = "Chord tones: " + "; ".join(items) + "."
+    if played_by_bar:
+        bars = []
+        for chord, names in zip(chords, played_by_bar):
+            sounded = list(dict.fromkeys(_pitch_class(name) for name in names))
+            bars.append(f"{chord.symbol} sounds {'-'.join(sounded)}")
+        text += " Each bar keeps only a few of them so the line reads at sight; in this loop " + "; ".join(bars) + "."
+    return text
+
+
+_OCTAVE_NAME_RE = re.compile(r"^([A-Ga-g][#b\-x♭♯]*)(\d+)$")
+
+
+def _absolute_semitone(pitch_name: str) -> int | None:
+    """Semitone height of an octave-bearing name like "A2" or "D-3" (music21
+    spells flats with "-"), or None for the octave-less pitch classes some
+    traces use."""
+    match = _OCTAVE_NAME_RE.match(pitch_name.strip())
+    if match is None:
+        return None
+    return _semitone(match.group(1)) + 12 * int(match.group(2))
+
+
+def _melodic_shape_clause(trace: GenerationTrace) -> str:
+    """One short sentence about the line this variant actually produced.
+
+    VAR-01: every other clause is derived from the progression and the preset,
+    which are identical across the three variants, so the three cards used to
+    read the same even though their notes differ. This reads
+    `voice_leading_steps`, which is per-variant, and leads the card with it.
+    """
+    steps = trace.voice_leading_steps or []
+    moves: list[tuple[str, str, int]] = []
+    for step in steps:
+        body = step[: -len(LOOP_SEAM_MARKER)] if step.endswith(LOOP_SEAM_MARKER) else step
+        start_name, _, end_name = body.partition("->")
+        start = _absolute_semitone(start_name)
+        end = _absolute_semitone(end_name)
+        if start is None or end is None:
+            continue
+        moves.append((start_name, end_name, end - start))
+    if not moves:
+        return ""
+
+    stepwise = sum(1 for *_, delta in moves if 0 < abs(delta) <= 2)
+    widest_start, widest_end, widest = max(moves, key=lambda m: abs(m[2]))
+    if stepwise * 2 >= len(moves):
+        shape = (
+            f"This take mostly walks ({stepwise} of {len(moves)} moves are a step or less); "
+            f"its widest move is {widest_start}->{widest_end}."
+        )
+    else:
+        shape = (
+            f"This take leaps: its widest move is {widest_start}->{widest_end} "
+            f"({abs(widest)} semitones), so plan that shift."
+        )
+    repeated = [name for name, _, delta in moves if delta == 0]
+    if repeated:
+        held = max(set(repeated), key=repeated.count)
+        shape += f" {held} repeats as a pedal and anchors the bar."
+    return shape
+
+
+def _loop_seam_clause(trace: GenerationTrace) -> str:
+    """Name the step from the loop's last note back to its first.
+
+    The player performs that step on every repeat, and it is the hardest
+    physical moment in the loop. Returns "" when the trace carries no seam so
+    preset-verbatim variants keep their wording.
+    """
+    steps = trace.voice_leading_steps or []
+    seam = next((s for s in steps if s.endswith(LOOP_SEAM_MARKER)), None)
+    if not seam:
+        return ""
+    move = seam[: -len(LOOP_SEAM_MARKER)]
+    start_name, _, end_name = move.partition("->")
+    start = _absolute_semitone(start_name)
+    end = _absolute_semitone(end_name)
+    if start is None or end is None:
+        return ""
+    distance = abs(end - start)
+    if distance == 0:
+        return f"The repeat lands back on {start_name} itself; no shift is needed."
+    unit = "semitone" if distance == 1 else "semitones"
+    return f"The repeat is {move}, {distance} {unit} back to the top; keep that return in the hand."
 
 
 def _cadence_clause(chords: Sequence[ChordFacts], preset: MoodPreset) -> str:
@@ -209,12 +306,15 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     policy = get_style_policy(preset.name)
     start, transition = cue_pair_for(preset, trace)
     chords = []
-    clauses = [f"Using {tonic} as the reference tonic; the tonal center is not inferred from a preset."]
+    # VAR-01: lead with what makes THIS take different; everything after it is
+    # progression- and preset-derived and identical across the three variants.
+    shape = _melodic_shape_clause(trace)
+    clauses = [shape, f"Using {tonic} as the reference tonic; the tonal center is not inferred from a preset."]
     if trace.pattern_strategy == "progression_driven_register_mapped":
         chords = [chord_facts(tones) for tones in tones_by_bar]
         clauses.append("Harmony: " + " -> ".join(roman_label(chord, tonic) for chord in chords) + ".")
         clauses.append("Roman numerals use major-scale degree numbers; case and suffixes describe the supplied chord quality.")
-        clauses.append(_chord_inventory(chords))
+        clauses.append(_chord_inventory(chords, trace.played_pitches))
         clauses.append(_collection_clause(all_tones, preset))
         clauses.append(_cadence_clause(chords, preset))
         clauses.append(_borrowed_clause(chords, preset))
@@ -245,12 +345,24 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
         )
     else:
         ending = f"To close, return to {anchor}, then soften the dynamics and let the final bow stroke decay."
+    # LOOP-CYCLE: a loop is played round and round, so name the step back to
+    # the top, the one gesture the player repeats every single pass.
+    seam = _loop_seam_clause(trace)
     result = TheoryExplanation(
         why_it_works=" ".join(filter(None, clauses)),
         how_to_start=start,
         how_to_develop=develop,
-        how_to_end=ending,
+        how_to_end=" ".join(filter(None, [ending, seam])),
         how_to_transition=f"{transition} {_transition_clause(preset, policy)}",
     )
     result.short_sections, result.term_ids = summarize_trace(variant, preset)
+    # The cards show the short sections, so they carry the per-take sentence
+    # and the seam too; otherwise three cards read identically on screen.
+    if shape:
+        result.short_sections["why_it_works"] = f"{shape} {result.short_sections['why_it_works']}"
+    if seam:
+        # Two sentences on the card: the return itself, then the seam. The
+        # "not an inferred cadence" hedge stays in the long text only.
+        first_sentence = result.short_sections["how_to_end"].split(". ")[0].rstrip(".") + "."
+        result.short_sections["how_to_end"] = f"{first_sentence} {seam}"
     return result

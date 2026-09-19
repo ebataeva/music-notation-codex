@@ -19,7 +19,7 @@ from core.engine.validators import (
     validate_bar_duration,
     validate_pitch,
 )
-from core.models import GenerationTrace, LoopVariant, MoodPreset
+from core.models import LOOP_SEAM_MARKER, GenerationTrace, LoopVariant, MoodPreset
 from core.presets.registry import list_solo_presets
 
 # Maximum bars a single generation request may produce (SAFE-02: denial-of-service
@@ -322,6 +322,17 @@ def _classify_register(pitches: list[str]) -> str:
 # register that satisfies root/fifth preference and the max-leap constraint.
 _CANDIDATE_OCTAVES = [2, 3, 4, 5]
 
+# Largest interval the line may cross between two consecutive notes.
+MAX_MELODIC_LEAP_SEMITONES = 12
+
+# Half-width of the tessitura band the whole loop is kept inside, measured from
+# the loop's opening note (the "anchor"). LOOP-CYCLE: a generated loop is a
+# *cycle*, so the wrap-around pair (last note -> first note) is an adjacency the
+# player actually performs on every repeat. Anchoring every note to within one
+# octave of the opening note makes |last - first| <= 12 true by construction,
+# which the linear leap rule above can never guarantee on its own.
+LOOP_TESSITURA_SEMITONES = 12
+
 
 def _all_candidate_pitches(pitch_class: str) -> list[pitch.Pitch]:
     """Every concrete Pitch for a pitch class across the cello's playable
@@ -335,23 +346,14 @@ def _all_candidate_pitches(pitch_class: str) -> list[pitch.Pitch]:
     return sorted(candidates, key=lambda p: p.midi)
 
 
-def _choose_register_for_chord_tone(
+def _playable_candidates(
     pitch_class: str,
-    is_root_or_fifth: bool,
     previous_pitch: pitch.Pitch | None,
-    rng: random.Random,
-    register_bias: str = "default",
-) -> pitch.Pitch:
-    """Pick one concrete octave for a chord-tone pitch class.
-
-    Judgment call (per the plan's autonomy contract -- register mapping has
-    no single obviously-correct answer, but this stays within Task 2's blast
-    radius as an algorithmic choice, not an architectural one): root/fifth
-    tones are biased toward the low register (octaves 2-3); other chord
-    tones (e.g. the third) default to the mid register (octave 3-4) so the
-    line doesn't collapse onto a single drone pitch. Whenever a previous
-    note exists, the candidate closest to it -- within an octave leap -- is
-    preferred over the register bias, so voice-leading stays smooth.
+    anchor_pitch: pitch.Pitch | None,
+) -> list[pitch.Pitch]:
+    """Concrete pitches for a chord tone that satisfy both loop constraints:
+    the tessitura band around the loop's opening note, then the max-leap rule
+    against the preceding note. Never empty -- see the proofs at each filter.
     """
     candidates = _all_candidate_pitches(pitch_class)
     if not candidates:
@@ -364,6 +366,27 @@ def _choose_register_for_chord_tone(
             f"the cello's default range (MIDI {CELLO_MIN_MIDI}-{CELLO_MAX_MIDI_DEFAULT})."
         )
 
+    # LOOP-CYCLE: confine the whole loop to one tessitura around its opening
+    # note. This is what makes the seam safe by construction rather than by
+    # luck -- see LOOP_TESSITURA_SEMITONES.
+    #
+    # The band is never empty, so the `if in_band` guard below is a totality
+    # measure, not a silent fallback: candidates for one pitch class sit 12
+    # semitones apart across [CELLO_MIN_MIDI, CELLO_MAX_MIDI_DEFAULT] = [36, 74].
+    # For any anchor inside that range the intersection of the +/-12 band with
+    # the range is at least 12 semitones wide (13 integers) -- at the extremes
+    # it is exactly [anchor, anchor+12] or [anchor-12, anchor] clipped to the
+    # range -- and a window of 13 consecutive integers contains exactly one
+    # member of every residue class mod 12. So at least one candidate always
+    # survives.
+    if anchor_pitch is not None:
+        in_band = [
+            c for c in candidates
+            if abs(c.midi - anchor_pitch.midi) <= LOOP_TESSITURA_SEMITONES
+        ]
+        if in_band:
+            candidates = in_band
+
     # WR-01: the max-leap rule *constrains* the candidate set, it does not by
     # itself pick the note. Short-circuiting on "closest to previous" made the
     # line ratchet upward (root->third->fifth cycles up 3-5 semitones each
@@ -372,9 +395,75 @@ def _choose_register_for_chord_tone(
     # Instead: narrow to within-leap candidates, then apply the register bias
     # inside that set so root/fifth tones still favour the low octaves.
     if previous_pitch is not None:
-        within_leap = [c for c in candidates if abs(c.midi - previous_pitch.midi) <= 12]
+        within_leap = [
+            c for c in candidates
+            if abs(c.midi - previous_pitch.midi) <= MAX_MELODIC_LEAP_SEMITONES
+        ]
         if within_leap:
             candidates = within_leap
+
+    return candidates
+
+
+def _closing_pitch(
+    chord: ParsedChord,
+    previous_pitch: pitch.Pitch | None,
+    anchor_pitch: pitch.Pitch,
+) -> pitch.Pitch:
+    """Choose the loop's final note: the chord tone -- any of them, in any
+    playable octave -- that lands nearest the loop's opening note.
+
+    LOOP-CYCLE: this is the one slot where *which* chord tone sounds is
+    decided by the cycle rather than by the round-robin over
+    `chord.components`. The hand-authored presets close 0-7 semitones from
+    their own opening note (three of four return to it exactly), and they
+    achieve that by choosing which tone ends the bar, not merely its octave.
+    Restricting the closing slot to its round-robin tone strands the seam
+    whenever that tone has no octave near the anchor -- a B against a C2
+    anchor is a major seventh away no matter which octave is picked, while
+    the same chord's D sits two semitones off.
+
+    Every candidate considered here has already passed the tessitura band and
+    the max-leap rule, so closing the loop can never introduce an unplayable
+    interval. Ties resolve to the lower pitch, keeping the choice
+    deterministic for a given seed.
+    """
+    return min(
+        (
+            candidate
+            for pitch_class in chord.components
+            for candidate in _playable_candidates(
+                pitch_class, previous_pitch, anchor_pitch
+            )
+        ),
+        key=lambda c: (abs(c.midi - anchor_pitch.midi), c.midi),
+    )
+
+
+def _choose_register_for_chord_tone(
+    pitch_class: str,
+    is_root_or_fifth: bool,
+    previous_pitch: pitch.Pitch | None,
+    rng: random.Random,
+    register_bias: str = "default",
+    anchor_pitch: pitch.Pitch | None = None,
+) -> pitch.Pitch:
+    """Pick one concrete octave for a chord-tone pitch class.
+
+    Judgment call (per the plan's autonomy contract -- register mapping has
+    no single obviously-correct answer, but this stays within Task 2's blast
+    radius as an algorithmic choice, not an architectural one): root/fifth
+    tones are biased toward the low register (octaves 2-3); other chord
+    tones (e.g. the third) default to the mid register (octave 3-4) so the
+    line doesn't collapse onto a single drone pitch. Whenever a previous
+    note exists, the candidate closest to it -- within an octave leap -- is
+    preferred over the register bias, so voice-leading stays smooth.
+
+    `anchor_pitch` is the loop's opening note; every note is confined to a
+    +/-LOOP_TESSITURA_SEMITONES band around it so the cycle cannot drift away
+    and leave an unplayable jump at the repeat.
+    """
+    candidates = _playable_candidates(pitch_class, previous_pitch, anchor_pitch)
 
     # Phase 7: register_bias shifts the octave pool per variant so 3 variants
     # get clearly different tonal characters ("low", "default/mid", "high").
@@ -403,12 +492,18 @@ def _register_map_chord(
     previous_pitch: pitch.Pitch | None,
     rng: random.Random,
     register_bias: str = "default",
-) -> tuple[list[pitch.Pitch], pitch.Pitch]:
+    anchor_pitch: pitch.Pitch | None = None,
+    close_last: bool = False,
+) -> tuple[list[pitch.Pitch], pitch.Pitch, pitch.Pitch]:
     """Map a single chord's tones onto `count` concrete pitches (one per
     rhythm slot in a bar), monophonic, favoring root/fifth in the low
     register and avoiding leaps larger than an octave between consecutive
-    notes. Returns (pitches, last_pitch) so the caller can thread
-    voice-leading continuity into the next bar."""
+    notes. Returns (pitches, last_pitch, anchor_pitch) so the caller can
+    thread both voice-leading continuity and the loop's tessitura anchor
+    into the next bar.
+
+    `close_last` marks the loop's final bar, whose last note closes the cycle
+    back onto the anchor."""
     root = chord.components[0]
     # IN-03: find the fifth by interval from the root (6/7/8 semitones =
     # dim/perfect/aug fifth) rather than assuming triadic index 2 -- power
@@ -426,13 +521,29 @@ def _register_map_chord(
     for i in range(count):
         pitch_class = chord.components[i % len(chord.components)]
         is_root_or_fifth = pitch_class in (root, fifth)
-        chosen = _choose_register_for_chord_tone(
-            pitch_class, is_root_or_fifth, current_previous, rng, register_bias=register_bias
-        )
+        # Only arm loop closure once an anchor exists. Without that guard the
+        # degenerate single-chord/single-note loop would try to close the very
+        # note that *is* the anchor.
+        if close_last and i == count - 1 and anchor_pitch is not None:
+            chosen = _closing_pitch(chord, current_previous, anchor_pitch)
+        else:
+            chosen = _choose_register_for_chord_tone(
+                pitch_class,
+                is_root_or_fifth,
+                current_previous,
+                rng,
+                register_bias=register_bias,
+                anchor_pitch=anchor_pitch,
+            )
         bar_pitches.append(chosen)
         current_previous = chosen
+        # The loop's very first note defines the tessitura every later note is
+        # held to. Setting it here (rather than pre-computing it before the bar
+        # loop) leaves the rng draw order for that first note untouched.
+        if anchor_pitch is None:
+            anchor_pitch = chosen
 
-    return bar_pitches, current_previous
+    return bar_pitches, current_previous, anchor_pitch
 
 
 def _respell_pitch_to_key(p: pitch.Pitch, key_obj: key.Key) -> pitch.Pitch:
@@ -451,18 +562,38 @@ def _respell_pitch_to_key(p: pitch.Pitch, key_obj: key.Key) -> pitch.Pitch:
     return p
 
 
+def loop_rhythm_for(preset: MoodPreset) -> tuple[float, ...]:
+    """The rhythm the loop coach reads from, which is not the preset's own.
+
+    READ-01: `preset.rhythm` is authored for the CLI ostinato scripts and runs
+    5-16 notes per bar. That is a texture to listen to, not a bar to sight-read
+    and loop live on a cello, so the coach uses `preset.loop_rhythm` -- capped
+    at MAX_LOOP_NOTES_PER_BAR -- and falls back to `preset.rhythm` only for
+    presets that have not been given one.
+    """
+    return preset.loop_rhythm or preset.rhythm
+
+
 def build_progression_score(
     chords: list[ParsedChord],
     preset: MoodPreset,
     seed: int | None = None,
     register_bias: str = "default",
+    key_tonic: str | None = None,
+    key_mode: str | None = None,
 ) -> stream.Score:
     """Build a music21 Score from an arbitrary parsed chord progression, using
     `preset` only for its rhythm/tempo/meter/velocity strategy (the *when* --
     existing MoodPreset data), while this function decides *which* pitch (the
     chord-tone -> register mapping above). One bar per chord, matching the
-    preset's rhythm pattern per bar. The preset-verbatim build_score() path
+    preset's loop rhythm per bar. The preset-verbatim build_score() path
     above is completely untouched by this function.
+
+    KEY-01: `key_tonic`/`key_mode` are the key the player actually chose. They
+    drive the printed key signature and the enharmonic respelling, so a D chord
+    in A minor reads F#, not the G-flat the preset's own C-minor signature used
+    to force. Falling back to the preset's key keeps every existing caller
+    behaving as before.
     """
     # SAFE-02: same bar-count guard as the preset-only path, applied to the
     # progression's chord count (each chord produces exactly one bar here).
@@ -471,25 +602,27 @@ def build_progression_score(
     if not chords:
         raise ValueError("Progression must contain at least one chord to build a score.")
 
-    # WR-02: the progression path drives its bars from preset.rhythm; a
+    rhythm = loop_rhythm_for(preset)
+
+    # WR-02: the progression path drives its bars from the loop rhythm; a
     # duet-only preset has none, so guard here with an actionable message
     # instead of leaking the internal "Rhythm is empty for meter 4/4."
-    if not preset.rhythm:
+    if not rhythm:
         raise ValueError(
             f"Preset {preset.name!r} has no solo rhythm (duet-only preset); "
             f"choose one of: {', '.join(list_solo_presets())}."
         )
 
-    # SAFE-01: one bar per chord, notes_per_bar = len(preset.rhythm) (matching
+    # SAFE-01: one bar per chord, notes_per_bar = len(rhythm) (matching
     # this function's own later notes_per_bar assignment below).
-    total_notes = len(chords) * len(preset.rhythm)
+    total_notes = len(chords) * len(rhythm)
     if total_notes > MAX_NOTES:
         raise ValueError(f"Requested variant has {total_notes} notes, exceeding the maximum of {MAX_NOTES}.")
 
     _resolved_seed, rng = _resolve_seed(seed)
 
-    validate_bar_duration(preset.rhythm, preset.meter_signature)
-    notes_per_bar = len(preset.rhythm)
+    validate_bar_duration(rhythm, preset.meter_signature)
+    notes_per_bar = len(rhythm)
 
     score = stream.Score(id=f"progression_{preset.name}")
     cello_part = stream.Part(id="cello")
@@ -498,18 +631,25 @@ def build_progression_score(
     cello_part.append(clef.BassClef())
 
     cello_part.append(tempo.MetronomeMark(number=preset.tempo_bpm))
-    preset_key = key.Key(preset.key_tonic, preset.key_mode)
+    preset_key = key.Key(key_tonic or preset.key_tonic, key_mode or preset.key_mode)
     cello_part.append(preset_key)
     cello_part.append(meter.TimeSignature(preset.meter_signature))
 
     previous_pitch: pitch.Pitch | None = None
+    anchor_pitch: pitch.Pitch | None = None
     for measure_number, chord in enumerate(chords, start=1):
-        bar_pitches, previous_pitch = _register_map_chord(
-            chord, notes_per_bar, previous_pitch, rng, register_bias=register_bias
+        bar_pitches, previous_pitch, anchor_pitch = _register_map_chord(
+            chord,
+            notes_per_bar,
+            previous_pitch,
+            rng,
+            register_bias=register_bias,
+            anchor_pitch=anchor_pitch,
+            close_last=(measure_number == len(chords)),
         )
 
         measure = stream.Measure(number=measure_number)
-        for concrete_pitch, quarter_length in zip(bar_pitches, preset.rhythm, strict=True):
+        for concrete_pitch, quarter_length in zip(bar_pitches, rhythm, strict=True):
             pitch_name = _respell_pitch_to_key(concrete_pitch, preset_key).nameWithOctave
             validate_pitch(pitch_name)
             cello_note = note.Note(pitch_name)
@@ -522,11 +662,26 @@ def build_progression_score(
     return score
 
 
+def _voice_leading_steps(pitch_names: list[str]) -> list[str]:
+    """Every step the player performs, seam included.
+
+    The last entry wraps from the loop's final note back to its first and is
+    marked with LOOP_SEAM_MARKER -- that step is the one the player repeats
+    forever and the one nothing used to record."""
+    if len(pitch_names) < 2:
+        return []
+    steps = [f"{a}->{b}" for a, b in zip(pitch_names, pitch_names[1:], strict=False)]
+    steps.append(f"{pitch_names[-1]}->{pitch_names[0]}{LOOP_SEAM_MARKER}")
+    return steps
+
+
 def generate_variant_from_progression(
     chords: list[ParsedChord],
     preset: MoodPreset,
     seed: int | None = None,
     register_bias: str = "default",
+    key_tonic: str | None = None,
+    key_mode: str | None = None,
 ) -> LoopVariant:
     """High-level API mirroring generate_variant(), but for an arbitrary
     parsed chord progression instead of a preset's own baked-in bars.
@@ -542,31 +697,44 @@ def generate_variant_from_progression(
     # above). A duet-only preset has empty rhythm; skip the check here so it
     # reaches build_progression_score's own actionable "no solo rhythm" error
     # instead of a spurious MAX_NOTES message.
-    if preset.rhythm and len(chords) * len(preset.rhythm) > MAX_NOTES:
-        total_notes = len(chords) * len(preset.rhythm)
+    loop_rhythm = loop_rhythm_for(preset)
+    if loop_rhythm and len(chords) * len(loop_rhythm) > MAX_NOTES:
+        total_notes = len(chords) * len(loop_rhythm)
         raise ValueError(f"Requested variant has {total_notes} notes, exceeding the maximum of {MAX_NOTES}.")
 
     resolved_seed, _rng = _resolve_seed(seed)
 
-    score = build_progression_score(chords, preset, seed=resolved_seed, register_bias=register_bias)
+    score = build_progression_score(
+        chords,
+        preset,
+        seed=resolved_seed,
+        register_bias=register_bias,
+        key_tonic=key_tonic,
+        key_mode=key_mode,
+    )
 
     register_choices: list[str] = []
     chord_tones_used: list[list[str]] = []
+    played_pitches: list[list[str]] = []
+    all_pitch_names: list[str] = []
     cello_part = score.parts[0]
     for measure, chord in zip(
         cello_part.getElementsByClass(stream.Measure), chords, strict=True
     ):
         bar_pitch_names = [n.pitch.nameWithOctave for n in measure.notes]
         chord_tones_used.append(list(chord.components))
+        played_pitches.append(bar_pitch_names)
         register_choices.append(_classify_register(bar_pitch_names))
+        all_pitch_names.extend(bar_pitch_names)
 
     generation_trace = GenerationTrace(
         seed=resolved_seed,
         pattern_strategy="progression_driven_register_mapped",
         register_choices=register_choices,
-        voice_leading_steps=None,  # Explicit step-interval trace is a future refinement.
+        voice_leading_steps=_voice_leading_steps(all_pitch_names),
         chord_tones_used=chord_tones_used,
         register_bias=register_bias,
+        played_pitches=played_pitches,
     )
 
     progression_label = " ".join(chord.name for chord in chords)
@@ -596,6 +764,8 @@ def generate_variants(
     preset: MoodPreset,
     seed: int | None = None,
     count: int = 3,
+    key_tonic: str | None = None,
+    key_mode: str | None = None,
 ) -> list[LoopVariant]:
     """Generate N distinct cello loop variants from the same chord progression.
 
@@ -617,7 +787,12 @@ def generate_variants(
     for i in range(count):
         variant_seed = base_seed + i * 1000
         variant = generate_variant_from_progression(
-            chords, preset, seed=variant_seed, register_bias=biases[i]
+            chords,
+            preset,
+            seed=variant_seed,
+            register_bias=biases[i],
+            key_tonic=key_tonic,
+            key_mode=key_mode,
         )
         variants.append(variant)
     return variants

@@ -215,9 +215,21 @@ def test_parsed_input_score_and_explanation_agree(preset_name, bias):
     generated = generate_variant_from_progression(chords, preset, seed=7, register_bias=bias)
     explanation = explain(generated, preset)
     assert "Harmony: i9 -> IV9 -> V7 -> i." in explanation.why_it_works
+    # READ-01 caps a bar at a few notes, so a five-tone chord is never sounded
+    # in full: every played note must belong to the supplied chord, and the
+    # trace must record exactly what was played so the explanation can say so.
+    played_by_bar = []
     for measure, parsed in zip(score.parts[0].getElementsByClass("Measure"), chords, strict=True):
-        expected = {pitch.Pitch(name).pitchClass for name in parsed.components}
-        assert {note.pitch.pitchClass for note in measure.notes} == expected
+        supplied = {pitch.Pitch(name).pitchClass for name in parsed.components}
+        played = {note.pitch.pitchClass for note in measure.notes}
+        assert played and played <= supplied
+        assert len(measure.notes) <= 4
+        played_by_bar.append(played)
+    assert generated.trace.played_pitches is not None
+    for names, played in zip(generated.trace.played_pitches, played_by_bar, strict=True):
+        assert {pitch.Pitch(name).pitchClass for name in names} == played
+    assert "Chord tones: Dm9: D-F-A-C-E" in explanation.why_it_works
+    assert "in this loop Dm9 sounds" in explanation.why_it_works
     assert "B" in explanation.why_it_works and "C#" in explanation.why_it_works
     assert "do not fit a single" in explanation.why_it_works
 
