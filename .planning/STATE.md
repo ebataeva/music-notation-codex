@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 Phase: 09 (recorder-feedback) — COMPLETE (implemented and smoke-tested 2026-07-06)
 Plan: 1 of 1
 Status: Phase 09 implemented; next up Phase 10 (Loop Library)
-Last activity: 2026-09-16 - Completed quick task 260916-bta: Concise Theory, contextual audio dictionary, and distinct transition guidance; uncommitted
+Last activity: 2026-09-20 - Completed quick task 260920-0xn: merged pedal (loop seam, READ-01, KEY-01, advisor, pedalboard) into codex/theory-dictionary with short per-take cards
 
 Progress: [█████████░] 90%
 
@@ -82,8 +82,9 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260706-21y | Fix v1 audit tech-debt tails: SAFE-01 max-notes guard, English preset/CLI copy (PLAT-02), MoodPreset deep-immutability (WR-05) | 2026-07-06 | 77594d2 | [260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max](./quick/260706-21y-fix-v1-audit-tech-debt-tails-safe-01-max/) |
 | 260714-v3b | Fix explainer crash: duet presets have dict texture_idiom, explainer expects string | 2026-07-14 | 9b29371 | [260714-v3b-fix-explainer-crash-duet-presets-have-di](./quick/260714-v3b-fix-explainer-crash-duet-presets-have-di/) |
-| 260916-bta | Prompt 2: concise Theory cards, 19 contextual dictionary articles with notation/audio, and transition guidance; 1115 Python and 7 Playwright tests passed | 2026-09-16 | uncommitted | Approved plan in conversation; executed inline without new documentation |
+| 260916-bta | Prompt 2: concise Theory cards, 19 contextual dictionary articles with notation/audio, and transition guidance; 1115 Python and 7 Playwright tests passed | 2026-09-16 | bb9c822 | Approved plan in conversation; executed inline without new documentation |
 | 260831-s8m | Close the loop seam: tessitura anchor + closing-tone selection so generated loops come home instead of jumping up to 22 semitones at the repeat | 2026-08-31 | dfc71cf | [260831-s8m-fix-loop-seam-cyclic-playability](./quick/260831-s8m-fix-loop-seam-cyclic-playability/) |
+| 260920-0xn | Merge pedal into codex/theory-dictionary: seam, READ-01, KEY-01 single path, advisor, pedalboard; played_pitches in the trace; short per-take cards; 1144 Python and 10 Playwright tests passed | 2026-09-20 | b50b321 | [260920-0xn-merge-pedal-into-codex-theory-dictionary](./quick/260920-0xn-merge-pedal-into-codex-theory-dictionary/) |
 
 ## Deferred Items
 
