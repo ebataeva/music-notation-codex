@@ -99,12 +99,10 @@ def test_duet_preset_generates_violin_cello_musicxml_and_midi() -> None:
     assert result["instruments"] == ["violin", "cello"]
     assert "Violin" in result["musicxml_string"]
     assert "Violoncello" in result["musicxml_string"]
-    assert result["phrase_map"] == [
-        "Bars 1-2: statement",
-        "Bars 3-4: answer",
-        "Bars 5-6: variation",
-        "Bars 7-8: return",
-    ]
+    assert result["key_tonic"] == "D"
+    assert result["key_mode"] == "dorian"
+    assert "B (6)" in result["short_sections"]["why_it_works"]
+    assert "Violin" in result["short_sections"]["how_to_start"]
     assert "<alter>0</alter>" not in result["musicxml_string"]
     assert base64.b64decode(result["midi_bytes_b64"])
 

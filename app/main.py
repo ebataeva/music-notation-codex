@@ -18,6 +18,7 @@ from nicegui import app, ui
 
 from app.pages.loop_coach import create_loop_coach_page
 from app.pages.recorder import create_recorder_page
+from app.pages.theory_dictionary import create_theory_dictionary_page
 
 STORAGE_SECRET = "cello-loop-coach-v1"
 
@@ -30,6 +31,11 @@ def main_page():
 @ui.page("/practice")
 def practice_page():
     create_recorder_page()
+
+
+@ui.page("/theory")
+def theory_page(term: str = "tonic", tonic: str = "C", mode: str = "major", preset: str = ""):
+    create_theory_dictionary_page(term, tonic, mode, preset)
 
 
 app.storage.secret = STORAGE_SECRET

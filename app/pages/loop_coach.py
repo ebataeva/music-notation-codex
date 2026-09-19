@@ -12,7 +12,13 @@ import base64
 
 from nicegui import app, run, ui
 
-from app.services.generation import available_presets, generate_loop_variants
+from app.services.generation import authored_presets, available_presets, generate_loop_variants
+from app.services.theory_dictionary import dictionary_entries
+from app.pages.theory_dictionary import theory_url
+from app.components.notation import load_notation_script, render_musicxml
+
+_THEORY_KEYS = ("why_it_works", "how_to_start", "how_to_develop", "how_to_end", "how_to_transition")
+_TERM_TITLES = {entry["id"]: entry["title"] for entry in dictionary_entries()}
 
 KEY_TONICS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
 KEY_MODES = ["minor", "major"]
@@ -48,14 +54,10 @@ _BLOB_KEYS = (
 
 
 def _theory_sections(result: dict) -> list[tuple[str, str]]:
-    """Return the (title, text) theory pairs that have non-empty text."""
-    return [
-        ("Why it works", result.get("why_it_works", "")),
-        ("How to start", result.get("how_to_start", "")),
-        ("How to develop", result.get("how_to_develop", "")),
-        ("How to end", result.get("how_to_end", "")),
-        ("How to transition", result.get("how_to_transition", "")),
-    ]
+    """Prefer short explanations while accepting previously stored results."""
+    titles = ("Why it works", "How to start", "How to develop", "How to end", "How to transition")
+    brief = result.get("short_sections", {})
+    return [(title, brief.get(key, result.get(key, ""))) for key, title in zip(_THEORY_KEYS, titles, strict=True)]
 
 
 def _load_osmd_script() -> None:
@@ -65,8 +67,7 @@ def _load_osmd_script() -> None:
     from a later click handler — ui.add_body_html only takes effect while the
     page is still being delivered; calling it afterwards is a silent no-op.
     """
-    ui.add_body_html(f'<script src="{OSMD_JS_URL}"></script>')
-    ui.add_body_html(f"<script>{OSMD_INIT_SCRIPT}</script>")
+    load_notation_script()
 
 
 def _render_variant_cards(results: list[dict], container) -> None:
@@ -100,11 +101,23 @@ def _render_single_variant(i: int, result: dict) -> None:
                 ui.label(result["error"]).classes("text-red-600 font-bold")
                 return
 
-            # Theory section
-            for title, text in _theory_sections(result):
+            if result.get("key_tonic"):
+                ui.label(f"Reference key: {result['key_tonic']} {result.get('key_mode', '')}").classes("text-sm text-gray-600").props(f'data-testid=variant-key-{i}')
+            if result.get("is_duet"):
+                ui.label("Authored duet · explanations follow this score").classes("text-sm font-medium")
+
+            for section_index, (title, text) in enumerate(_theory_sections(result)):
                 if text:
                     ui.label(title).classes("text-xs font-bold text-gray-500 uppercase tracking-wide mt-3")
-                    ui.label(text).classes("text-sm text-gray-700")
+                    section_key = _THEORY_KEYS[section_index]
+                    ui.label(text).classes("text-sm text-gray-700").props(f'data-testid=theory-{i}-{section_key}')
+                    term_ids = result.get("term_ids", {}).get(section_key, ())
+                    if term_ids:
+                        with ui.row().classes("gap-3"):
+                            for term_id in term_ids:
+                                if term_id in _TERM_TITLES:
+                                    target = theory_url(term_id, result.get("key_tonic", "C"), result.get("key_mode", "major"), result.get("preset_name", ""))
+                                    ui.link(_TERM_TITLES[term_id], target, new_tab=True).classes("text-xs text-blue-600").props(f'data-testid=term-{i}-{section_key}-{term_id}')
 
             _render_variant_notation(i, result)
             _render_variant_audio(i, result)
@@ -112,59 +125,8 @@ def _render_single_variant(i: int, result: dict) -> None:
 
 
 def _render_variant_notation(i: int, result: dict) -> None:
-    """Render MusicXML as SVG notation via OSMD into variant i's container."""
-    musicxml = result.get("musicxml_string", "")
-    if not musicxml:
-        return
-
-    ui.html(
-        f'<div id="osmd-container-{i}" style="width:100%;overflow-x:auto;min-height:120px;"></div>'
-    )
-
-    # Base64-encode the MusicXML to avoid quoting issues
-    xml_b64 = base64.b64encode(musicxml.encode("utf-8")).decode("ascii")
-
-    ui.run_javascript(
-        f"""
-        (function() {{
-            var xml = atob("{xml_b64}");
-            var container = document.getElementById('osmd-container-{i}');
-            if (!container) return;
-            container.innerHTML = '';
-
-            function render() {{
-                try {{
-                    var osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(container);
-                    osmd.load(xml).then(function() {{
-                        osmd.setOptions({{
-                            autoResize: true,
-                            backend: 'svg',
-                            drawTitle: false,
-                            drawSubtitle: false,
-                            drawComposer: false,
-                        }});
-                        osmd.render();
-                    }}).catch(function(e) {{
-                        container.innerHTML = '<p style="color:red">Notation render error: ' + e.message + '</p>';
-                    }});
-                }} catch(e) {{
-                    container.innerHTML = '<p style="color:red">OSMD error: ' + e.message + '</p>';
-                }}
-            }}
-
-            if (window.opensheetmusicdisplay) {{
-                render();
-            }} else {{
-                var checkInterval = setInterval(function() {{
-                    if (window.opensheetmusicdisplay) {{
-                        clearInterval(checkInterval);
-                        render();
-                    }}
-                }}, 200);
-            }}
-        }})();
-        """
-    )
+    """Render notation using the same component as the dictionary."""
+    render_musicxml(result.get("musicxml_string", ""), f"osmd-container-{i}")
 
 
 def _render_variant_audio(i: int, result: dict) -> None:
@@ -191,7 +153,7 @@ def _render_variant_audio(i: int, result: dict) -> None:
             <source src="data:audio/wav;base64,{track_wav_b64}" type="audio/wav">
             Your browser does not support audio playback.
         </audio>
-        """)
+        """).classes("w-full")
 
 
 def _render_variant_export(i: int, result: dict) -> None:
@@ -260,7 +222,9 @@ def create_loop_coach_page():
     """Build the loop coach UI with stable element ids for Playwright (Phase 8)."""
 
     # Page header
-    ui.link("Practice Partner", "/practice").classes("text-sm text-blue-600")
+    with ui.row().classes("gap-4"):
+        ui.link("Practice Partner", "/practice").classes("text-sm text-blue-600")
+        ui.link("Theory Dictionary", "/theory", new_tab=True).classes("text-sm text-blue-600")
     ui.label("Cello Loop Coach").classes("text-2xl font-bold")
     ui.label("Enter a chord progression, pick a mood, and get a cello loop idea with theory guidance.").classes(
         "text-sm text-gray-500"
@@ -284,6 +248,7 @@ def create_loop_coach_page():
                 value=EXAMPLE_KEY_TONIC,
             )
             .props('data-testid=key-tonic-select')
+            .classes("w-28")
         )
 
         key_mode_select = (
@@ -293,6 +258,7 @@ def create_loop_coach_page():
                 value=EXAMPLE_KEY_MODE,
             )
             .props('data-testid=key-mode-select')
+            .classes("w-28")
         )
 
         mood_select = (
@@ -303,6 +269,18 @@ def create_loop_coach_page():
             )
             .props('data-testid=mood-select')
         )
+
+    authored = authored_presets()
+    source_label = ui.label("").classes("text-sm text-gray-600").props("data-testid=score-source")
+
+    def update_source_controls():
+        is_authored = mood_select.value in authored
+        for control in (chord_input, key_tonic_select, key_mode_select):
+            control.set_enabled(not is_authored)
+        source_label.text = f"Authored duet in {authored[mood_select.value]}: the fixed score supplies its own notes and harmony." if is_authored else "Your chord progression and selected reference key guide the solo loop."
+
+    mood_select.on_value_change(update_source_controls)
+    update_source_controls()
 
     # Button row
     with ui.row().classes("gap-4 mt-4"):
@@ -344,6 +322,8 @@ def create_loop_coach_page():
             preset_name=mood_select.value,
             include_audio=True,
             count=3,
+            key_tonic=key_tonic_select.value,
+            key_mode=key_mode_select.value,
         )
 
         # Persist to app.storage for refresh survival (SC-4).
@@ -364,8 +344,7 @@ def create_loop_coach_page():
         if errors:
             status_label.text = "Generation failed."
         else:
-            seeds = [str(r.get("seed", "?")) for r in results]
-            status_label.text = f"Ready — 3 variants (seeds: {', '.join(seeds)})"
+            status_label.text = "Ready — authored violin + cello duet" if results[0].get("is_duet") else f"Ready — {len(results)} loop variants"
 
         spinner.set_visibility(False)
         example_btn.enable()
@@ -392,5 +371,6 @@ def create_loop_coach_page():
         mood_select.value = app.storage.user.get("last_preset", EXAMPLE_PRESET)
         key_tonic_select.value = app.storage.user.get("last_key_tonic", EXAMPLE_KEY_TONIC)
         key_mode_select.value = app.storage.user.get("last_key_mode", EXAMPLE_KEY_MODE)
+        update_source_controls()
         _render_variant_cards(last_results, variants_container)
         status_label.text = "Restored from previous session — click Generate to refresh notation and audio"

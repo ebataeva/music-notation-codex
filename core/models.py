@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -22,6 +22,8 @@ class TheoryExplanation:
     how_to_develop: str
     how_to_end: str
     how_to_transition: str
+    short_sections: dict[str, str] = field(default_factory=dict)
+    term_ids: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
 
 @dataclass

@@ -95,7 +95,7 @@ def test_preset_verbatim_anchor_uses_octave_bearing_pitch() -> None:
         voice_leading_steps=None,
         chord_tones_used=[["C2", "G2"]],
     )
-    assert _select_anchor(trace) == "the repeated cello tone C2"
+    assert _select_anchor(trace) == "the opening cello tone C2"
 
 
 def test_progression_anchor_uses_pitch_class_with_register_choice() -> None:
@@ -140,11 +140,12 @@ def test_explanation_text_contains_no_cyrillic() -> None:
     assert re.search(r"[\u0400-\u04ff]", text) is None
 
 
-def test_explanation_avoids_unexplained_jargon_terms() -> None:
+def test_style_and_degree_terms_have_plain_language_descriptions() -> None:
     preset = get_preset("dark_trip_hop")
     text = all_text(explain(make_variant(trace_for_preset("dark_trip_hop")), preset)).lower()
-    banned_terms = ["phrygian", "dominant", "subdominant", "tritone", "cadence"]
-    assert not any(term in text for term in banned_terms)
+    assert "aeolian (natural minor)" in text
+    assert "b2, the flat second" in text
+    assert "a semitone above c" in text
 
 
 def test_cue_selection_is_not_keyed_by_preset_name() -> None:
@@ -188,10 +189,12 @@ def test_noir_progression_explains_notes_and_resolutions() -> None:
     explanation = explain(make_variant(trace), preset)
     text = all_text(explanation)
 
-    assert "A connects Am, Dm and F" in text
+    assert "A can be retained between Am and Dm" in text
     assert "C gives Am its minor color" in text
-    assert "G# wants to resolve up to A" in text
-    assert "E major creates the strongest pull back to Am" in text
+    assert "G# -> A is an available voice-leading move" in text
+    assert "On repeat, E -> Am" in text
+    assert "at a phrase ending" in text
+    assert "strongest pull" not in text
 
 
 def test_noir_progression_still_names_harmonic_function_path() -> None:
@@ -211,34 +214,31 @@ def test_noir_progression_still_names_harmonic_function_path() -> None:
     )
     explanation = explain(make_variant(trace), preset)
 
-    assert "i (tonic)" in explanation.why_it_works
-    assert "iv (subdominant pull)" in explanation.why_it_works
-    assert "bVI (dark warmth)" in explanation.why_it_works
-    assert "V (leading-tone tension)" in explanation.why_it_works
+    assert "Harmony: i -> iv -> bVI -> V." in explanation.why_it_works
+    assert "Am: A-C-E" in explanation.why_it_works
+    assert "F: F-A-C" in explanation.why_it_works
+    assert "E: E-G#-B" in explanation.why_it_works
 
 
-def test_solo_preset_why_it_works_includes_style_policy_modal_center() -> None:
-    """Stage 4: why_it_works now uses style_policy modal_center (not preset.progressions)."""
+def test_solo_preset_labels_style_palette_as_optional() -> None:
     preset = get_preset("dark_trip_hop")
     explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
-    # dark_trip_hop policy has modal_center: Aeolian
-    assert "Aeolian" in explanation.why_it_works
+    assert "Style option: Aeolian (natural minor)" in explanation.why_it_works
 
 
-def test_solo_preset_mood_tip_text_appears_in_how_to_develop() -> None:
-    """FINDING-1: D-09 — preset.mood_tips text surfaces in how_to_develop for solo presets."""
+def test_solo_preset_development_explains_optional_phrygian_color() -> None:
     preset = get_preset("ritual_tribal")
     explanation = explain(make_variant(trace_for_preset("ritual_tribal")), preset)
-    # ritual_tribal mood_tips[0] mentions "Phrygian b2 degree"
     assert "phrygian" in explanation.how_to_develop.lower()
+    assert "Eb -> D" in explanation.how_to_develop
+    assert "Optional development:" in explanation.how_to_develop
 
 
-def test_solo_preset_modulation_text_appears_in_how_to_transition() -> None:
-    """FINDING-1: D-09 — preset.modulations text surfaces in how_to_transition for solo presets."""
+def test_transition_proposes_a_common_chord_without_claiming_a_modulation() -> None:
     preset = get_preset("noir_slow_burn")
     explanation = explain(make_variant(trace_for_preset("noir_slow_burn")), preset)
-    # noir_slow_burn modulations[0] mentions "common chord"
-    assert "common chord" in explanation.how_to_transition.lower()
+    assert "try Am (A-C-E) as a common chord" in explanation.how_to_transition
+    assert "shared chord alone is not a modulation" in explanation.how_to_transition
 
 
 def test_duet_presets_use_style_policy_data() -> None:
@@ -250,8 +250,8 @@ def test_duet_presets_use_style_policy_data() -> None:
     assert explanation.how_to_transition
     # sexy_duet policy has modal_center: Aeolian (with harmonic minor)
     assert "aeolian" in explanation.why_it_works.lower()
-    # mood_tip text should appear in how_to_develop
-    assert "chromatic" in explanation.how_to_develop.lower() or "mystery" in explanation.how_to_develop.lower()
+    assert "Optional development:" in explanation.how_to_develop
+    assert "C# (7) -> D (1)" in explanation.how_to_develop
 
 
 # ── Stage 4: Style-policy-driven snapshot tests ──
@@ -288,13 +288,11 @@ def test_why_it_works_includes_modal_center_for_all_solo_presets() -> None:
         )
 
 
-def test_how_to_end_includes_cadence_from_policy() -> None:
-    """Stage 4: how_to_end references the first cadence from style_policy for presets with cadences."""
-    # dark_trip_hop has cadences like i - bVI - v - i
+def test_how_to_end_uses_recorded_anchor_without_inventing_policy_chords() -> None:
     preset = get_preset("dark_trip_hop")
     explanation = explain(make_variant(trace_for_preset("dark_trip_hop")), preset)
-    # dark_trip_hop's first cadence is "i - bVI - v - i"
-    assert "i - bVI - v - i" in explanation.how_to_end
+    assert "C2" in explanation.how_to_end
+    assert "i - bVI - v - i" not in all_text(explanation)
 
 
 def test_how_to_develop_includes_chromatic_approaches() -> None:
@@ -335,8 +333,8 @@ def test_dark_trip_hop_explanation_is_note_specific() -> None:
 
     # Modal center
     assert "Aeolian" in explanation.why_it_works
-    # First cadence: "i - bVI - v - i"
-    assert "i - bVI - v - i" in explanation.why_it_works or "i - bVI - v - i" in explanation.how_to_end
+    assert "sequential cello notes" in explanation.why_it_works
+    assert "C2" in explanation.why_it_works
     # Chromatic approaches: bII
     assert "bII" in explanation.how_to_develop
     # Genre references: Massive Attack / Portishead
@@ -349,8 +347,8 @@ def test_ritual_tribal_explanation_is_note_specific() -> None:
     explanation = explain(make_variant(trace_for_preset("ritual_tribal")), preset)
 
     assert "Phrygian" in explanation.why_it_works
-    # First cadence: bII → i
-    assert "bII" in explanation.why_it_works or "bII" in explanation.how_to_end
+    assert "bII" in explanation.how_to_develop
+    assert "D2" in explanation.how_to_end
     # Mood tip: "Phrygian b2 degree"
     assert "phrygian" in explanation.how_to_develop.lower()
 
@@ -369,4 +367,3 @@ def test_driving_cinematic_explanation_is_note_specific() -> None:
     explanation = explain(make_variant(trace_for_preset("driving_cinematic")), preset)
 
     assert "Aeolian" in explanation.why_it_works
-

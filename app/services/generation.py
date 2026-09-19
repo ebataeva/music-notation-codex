@@ -11,6 +11,7 @@ import base64
 import copy
 import io
 import sys
+from dataclasses import asdict, replace
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -27,6 +28,9 @@ from core.engine.progression import parse_progression
 from core.models import LoopVariant
 from core.presets.registry import get_preset, list_presets
 from core.theory.explainer import explain
+from core.theory.summaries import explain_duet_score
+from core.theory.harmony import compatible_collections
+from core.theory.transitions import normalize_context, transition_guides
 
 MAX_EXPLANATION_WORDS = 500
 SOUNDFONT_PATH = "/opt/homebrew/Cellar/fluid-synth/2.5.5/share/fluid-synth/sf2/VintageDreamsWaves-v2.sf2"
@@ -66,44 +70,21 @@ def _prepare_duet_showcase_score(score, preset_name: str):
     return score
 
 
-def _duet_showcase_copy(preset_name: str, preset) -> dict:
-    if preset_name == "dorian_sexy_duet":
-        return {
-            "why_it_works": (
-                "Dorian color, not generic minor: the loop is Dm9 <-> G9. "
-                "Listen for B natural: it is the warm 6th that keeps the phrase from sounding funeral-dark."
-            ),
-            "how_to_start": (
-                "Think in two-bar blocks. Bars 1-2 state the cell: cello pulses D/G, "
-                "violin sings A-B-C-B-A, then answers downward."
-            ),
-            "how_to_develop": (
-                "Bars 3-4 repeat the idea with a small lift. Bars 5-6 vary the contour. "
-                "Bars 7-8 return home, so the loop is easy to hear and rehearse."
-            ),
-            "how_to_end": (
-                "End by letting the violin release first, then let the cello land quietly on D."
-            ),
-            "how_to_transition": (
-                "For another pass, keep the last cello pulse soft and let the violin re-enter on A."
-            ),
-            "phrase_map": [
-                "Bars 1-2: statement",
-                "Bars 3-4: answer",
-                "Bars 5-6: variation",
-                "Bars 7-8: return",
-            ],
-            "notation_note": "No key signature is shown for the Dorian showcase, so the B natural reads as part of the mode rather than a page full of natural signs.",
-        }
+def _duet_showcase_copy(preset_name: str, preset, score) -> dict:
+    result = asdict(explain_duet_score(score, preset))
+    result["phrase_map"] = []
+    result["notation_note"] = "Authored violin + cello score; chord and key inputs do not rearrange this duet."
+    return result
 
+
+def _theory_context(preset, score) -> dict:
+    tones = [p.name for event in score.recurse().notes for p in event.pitches]
+    collections = compatible_collections(tones, preset.key_tonic)
+    mode = "dorian" if collections == ["Dorian"] else preset.key_mode
     return {
-        "why_it_works": f"{preset.feel}. {preset.progressions[0] if preset.progressions else ''}".strip(),
-        "how_to_start": "Cello sets the pulse first; violin enters as a close answer above it.",
-        "how_to_develop": "Hear it in short call-and-response chunks instead of one long melody.",
-        "how_to_end": "Let the violin soften first, then let the cello close the loop.",
-        "how_to_transition": "Repeat the last cello pulse quietly and bring the violin back by step.",
-        "phrase_map": ["Bars 1-2: statement", "Bars 3-4: answer", "Bars 5-6: variation"],
-        "notation_note": "The duet is transposed up an octave in the showcase so the parts speak more clearly.",
+        "key_tonic": preset.key_tonic,
+        "key_mode": mode,
+        "transition_guides": [asdict(guide) for guide in transition_guides(preset.key_tonic, mode, preset.name)],
     }
 
 
@@ -270,9 +251,11 @@ def _render_wav(midi_bytes: bytes) -> tuple[bytes, str]:
 
     Returns (wav_bytes, source) where source is 'fluidsynth' or 'cello_synth_reverb'.
     """
+    import subprocess
+
     try:
         return _midi_to_wav_bytes(midi_bytes), "fluidsynth"
-    except (FileNotFoundError, OSError):
+    except (OSError, subprocess.SubprocessError):
         return _midi_to_wav_pretty_midi(midi_bytes), "cello_synth_reverb"
 
 
@@ -358,12 +341,18 @@ def available_presets() -> list[str]:
     return list_presets()
 
 
+def authored_presets() -> dict[str, str]:
+    return {name: get_preset(name).key_tonic for name in list_presets() if get_preset(name).duet_bars is not None}
+
+
 def generate_loop_variants(
     chord_progression: str,
     preset_name: str,
     seed: int | None = None,
     include_audio: bool = False,
     count: int = 3,
+    key_tonic: str | None = None,
+    key_mode: str | None = None,
 ) -> list[dict]:
     """Generate N distinct loop variants from the same chord progression.
 
@@ -373,17 +362,19 @@ def generate_loop_variants(
     contains fixed interlocking parts.
     """
     try:
-        chords = parse_progression(chord_progression)
-    except ValueError as exc:
-        return [{"error": f"Chord parsing failed: {exc}"}]
-
-    if not chords:
-        return [{"error": "Progression must contain at least one chord."}]
-
-    try:
         preset = get_preset(preset_name)
     except KeyError:
         return [{"error": f"Unknown mood preset: {preset_name!r}"}]
+
+    if preset.duet_bars is None:
+        try:
+            tonic, mode = normalize_context(key_tonic or preset.key_tonic, key_mode or preset.key_mode)
+            preset = replace(preset, key_tonic=tonic, key_mode=mode)
+            chords = parse_progression(chord_progression)
+        except ValueError as exc:
+            return [{"error": f"Chord or key input failed: {exc}"}]
+        if not chords:
+            return [{"error": "Progression must contain at least one chord."}]
 
     if preset.duet_bars is not None:
         try:
@@ -403,7 +394,7 @@ def generate_loop_variants(
         musicxml_str = _score_to_musicxml_string(score)
         midi_bytes = _score_to_midi_bytes(score)
 
-        copy = _duet_showcase_copy(preset.name, preset)
+        copy = _duet_showcase_copy(preset.name, preset, score)
         result = {
             "variant_index": 0,
             "variant_label": "Violin + cello duet",
@@ -418,6 +409,8 @@ def generate_loop_variants(
             "how_to_transition": _truncate(copy["how_to_transition"]),
             "phrase_map": copy["phrase_map"],
             "notation_note": copy["notation_note"],
+            "short_sections": copy["short_sections"],
+            "term_ids": copy["term_ids"],
             "musicxml_string": musicxml_str,
             "midi_bytes_b64": base64.b64encode(midi_bytes).decode("ascii"),
             "wav_bytes_b64": "",
@@ -426,6 +419,7 @@ def generate_loop_variants(
             "chord_progression": chord_progression,
             "error": None,
         }
+        result.update(_theory_context(preset, score))
 
         if include_audio:
             try:
@@ -467,6 +461,8 @@ def generate_loop_variants(
             "how_to_develop": _truncate(explanation.how_to_develop),
             "how_to_end": _truncate(explanation.how_to_end),
             "how_to_transition": _truncate(explanation.how_to_transition),
+            "short_sections": explanation.short_sections,
+            "term_ids": explanation.term_ids,
             "musicxml_string": musicxml_str,
             "midi_bytes_b64": base64.b64encode(midi_bytes).decode("ascii"),
             "wav_bytes_b64": "",
@@ -475,6 +471,7 @@ def generate_loop_variants(
             "chord_progression": chord_progression,
             "error": None,
         }
+        result.update(_theory_context(preset, score))
 
         if include_audio:
             try:

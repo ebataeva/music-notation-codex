@@ -128,14 +128,14 @@ def test_missing_audio_renders_unavailable_message(monkeypatch) -> None:
 
 
 def test_load_osmd_script_adds_body_html_exactly_once(monkeypatch) -> None:
+    from app.components import notation
     fake_ui = _FakeUi()
-    monkeypatch.setattr(loop_coach, "ui", fake_ui)
+    monkeypatch.setattr(notation, "ui", fake_ui)
 
     loop_coach._load_osmd_script()
 
-    assert len(fake_ui.add_body_html_calls) == 2
-    assert loop_coach.OSMD_JS_URL in fake_ui.add_body_html_calls[0]
-    assert "loadOsmd" in fake_ui.add_body_html_calls[1]
+    assert len(fake_ui.add_body_html_calls) == 1
+    assert notation.OSMD_JS_URL in fake_ui.add_body_html_calls[0]
 
 
 def test_render_variant_cards_does_not_call_add_body_html(monkeypatch) -> None:
