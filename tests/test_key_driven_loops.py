@@ -94,6 +94,22 @@ def test_chosen_key_drives_signature_and_spelling():
     assert "Gb" not in spelled
 
 
+def test_flat_key_signature_does_not_flatten_a_raised_leading_tone():
+    # SPELL-01, the mirror of KEY-01. D minor carries one flat, and the old
+    # respelling took that as licence to flip every sharp it met -- including
+    # the third of the dominant. C# is the leading tone of D minor, not Db.
+    # The key signature itself must stay untouched: only spelling changed.
+    result = generate_loop_variants(
+        "Dm9 G9 A7 Dm", "dark_trip_hop", seed=7, count=1,
+        key_tonic="D", key_mode="minor",
+    )[0]
+
+    assert _key_fifths(result["musicxml_string"]) == -1, "D minor has one flat"
+    spelled = _accidentals(result["musicxml_string"])
+    assert "C#" in spelled
+    assert "Db" not in spelled
+
+
 def test_key_defaults_to_the_preset_when_not_supplied():
     # Existing callers that pass no key keep the old behaviour exactly.
     result = generate_loop_variants("D A G", "dark_trip_hop", seed=952013977, count=1)[0]

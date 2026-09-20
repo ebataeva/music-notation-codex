@@ -486,6 +486,54 @@ def test_build_progression_score_respells_sharps_to_flats_in_flat_key():
     names = [n.pitch.name for m in score.parts[0].getElementsByClass(stream.Measure) for n in m.notes]
     assert names  # sanity
     assert not any("#" in n for n in names)
+    # SPELL-01: name the note the chord actually asks for, so the assertion
+    # cannot pass on a score that merely happens to avoid sharps.
+    assert "B-" in names, "the minor third of Gm must print as Bb"
+
+
+def test_build_progression_score_spells_chord_tones_from_the_root_not_the_key():
+    # SPELL-01: the third of A7 is the leading tone of D minor. The old
+    # respelling asked the key signature, saw one flat, and printed D-flat --
+    # a flattened tonic where the music has a raised seventh.
+    from core.engine.loop_engine import build_progression_score
+    from core.engine.progression import parse_progression
+
+    chords = parse_progression("Dm9 G9 A7 Dm")
+    preset = get_preset("dark_trip_hop")
+    score = build_progression_score(chords, preset, seed=7, key_tonic="D", key_mode="minor")
+
+    names = [
+        n.pitch.nameWithOctave
+        for m in score.parts[0].getElementsByClass(stream.Measure)
+        for n in m.notes
+    ]
+    assert "C#3" in names
+    assert not any(n.startswith("D-") for n in names)  # music21 writes a flat as "-"
+
+
+def test_chord_tone_respelling_never_moves_the_sounding_pitch():
+    # SPELL-01: renaming is printing, not transposing. This is the standing
+    # guard on the audio -- if an octave is ever recomputed wrongly, the loop
+    # changes key silently and only this assertion notices.
+    from music21 import pitch
+
+    from core.engine.loop_engine import _respell_to_chord_tone
+
+    for source, target, expected in [
+        ("D-3", "C#", "C#3"),
+        ("A#2", "Bb", "B-2"),
+        ("C4", "B#", "B#3"),
+        ("B3", "Cb", "C-4"),
+        ("G3", "F##", "F##3"),
+        ("A4", "Bbb", "B--4"),
+    ]:
+        original = pitch.Pitch(source)
+        renamed = _respell_to_chord_tone(original, target)
+        assert renamed.nameWithOctave == expected
+        assert renamed.midi == original.midi, f"{source} -> {target} moved the pitch"
+
+    untouched = pitch.Pitch("C3")
+    assert _respell_to_chord_tone(untouched, None).nameWithOctave == "C3"
 
 
 def test_build_progression_score_handles_power_chords():

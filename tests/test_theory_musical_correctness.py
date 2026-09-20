@@ -232,6 +232,42 @@ def test_parsed_input_score_and_explanation_agree(preset_name, bias):
     assert "in this loop Dm9 sounds" in explanation.why_it_works
     assert "B" in explanation.why_it_works and "C#" in explanation.why_it_works
     assert "do not fit a single" in explanation.why_it_works
+    # SPELL-01: the pitch-class comparison above passed happily while the score
+    # printed Db where the card said C#. Compare the written name too.
+    printed = {
+        note.pitch.name.replace("-", "b")
+        for measure in score.parts[0].getElementsByClass("Measure")
+        for note in measure.notes
+    }
+    assert "C#" in printed and "Db" not in printed
+
+
+@pytest.mark.parametrize("key_tonic,key_mode", [
+    ("D", "minor"), ("C", "minor"), ("A", "minor"), ("E", "major"),
+])
+@pytest.mark.parametrize("progression", [
+    "Dm9 G9 A7 Dm", "Bb Eb Gm F", "D A G", "F#m D A E", "Cm Ab Eb G",
+])
+def test_every_printed_note_is_named_the_way_the_card_names_it(progression, key_tonic, key_mode):
+    # SPELL-01: the stave and the paragraph beside it must call a tone by the
+    # same name. They used to run two independent spellers, so one card read
+    # "A7: A-C#-E-G" and "A7 sounds A-Db-E-G" in consecutive sentences.
+    from core.theory.harmony import chord_facts
+
+    preset = replace(get_preset("dark_trip_hop"), key_tonic=key_tonic, key_mode=key_mode)
+    chords = parse_progression(progression)
+    score = build_progression_score(
+        chords, preset, seed=7, key_tonic=key_tonic, key_mode=key_mode
+    )
+
+    for measure, parsed in zip(score.parts[0].getElementsByClass("Measure"), chords, strict=True):
+        named_by_card = set(chord_facts(parsed.components).tones)
+        for note in measure.notes:
+            printed = note.pitch.name.replace("-", "b")
+            assert printed in named_by_card, (
+                f"{progression} in {key_tonic} {key_mode}: the score prints "
+                f"{note.pitch.nameWithOctave}, the card lists {sorted(named_by_card)}"
+            )
 
 
 def test_changing_style_alone_does_not_change_the_musical_facts():
