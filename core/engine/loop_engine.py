@@ -21,6 +21,7 @@ from core.engine.validators import (
 )
 from core.models import LOOP_SEAM_MARKER, GenerationTrace, LoopVariant, MoodPreset
 from core.presets.registry import list_solo_presets
+from core.spelling import chord_tone_spellings, pitch_class
 
 # Maximum bars a single generation request may produce (SAFE-02: denial-of-service
 # guard against unbounded loop generation).
@@ -546,20 +547,30 @@ def _register_map_chord(
     return bar_pitches, current_previous, anchor_pitch
 
 
-def _respell_pitch_to_key(p: pitch.Pitch, key_obj: key.Key) -> pitch.Pitch:
-    """IN-02: pychord spells some qualities with sharps regardless of key
-    context (Gm -> G, A#, D), so a flat-key progression can leak A# where the
-    notation should read Bb. Respell a single-accidental pitch to match the
-    key's flat/sharp preference; leave naturals and neutral keys (0 sharps)
-    untouched. Playback is unchanged -- getEnharmonic preserves pitch/MIDI."""
-    if p.accidental is None or p.accidental.alter == 0:
+def _respell_to_chord_tone(p: pitch.Pitch, spelled: str | None) -> pitch.Pitch:
+    """SPELL-01: rename a note without moving it.
+
+    The octave number is recomputed so the sounding pitch -- and therefore the
+    MIDI, the audio and every range check -- stays exactly where the register
+    mapping put it; only the printed name changes. `spelled` comes from
+    core.spelling, which names a tone by its interval above the chord's root,
+    and None means the chord implies no name for it.
+
+    This replaces a respelling driven by the key signature (IN-02), which
+    flipped *every* sharp in a flat key and so printed the third of A7 as
+    D-flat in D minor -- a flattened tonic where the music has a raised leading
+    tone. The case IN-02 was written for (pychord hands back G-A#-D for Gm) is
+    now fixed by the chord instead: a minor third above G is B-flat in any key.
+    """
+    if spelled is None:
         return p
-    has_sharp = p.accidental.alter > 0
-    if key_obj.sharps < 0 and has_sharp:
-        return p.getEnharmonic()
-    if key_obj.sharps > 0 and not has_sharp:
-        return p.getEnharmonic()
-    return p
+    target = spelled.replace("b", "-")  # music21 writes a flat as "-"
+    if p.name == target:
+        return p
+    renamed = pitch.Pitch(target)
+    renamed.octave = p.octave
+    renamed.octave += (p.midi - renamed.midi) // 12
+    return renamed
 
 
 def loop_rhythm_for(preset: MoodPreset) -> tuple[float, ...]:
@@ -590,10 +601,12 @@ def build_progression_score(
     above is completely untouched by this function.
 
     KEY-01: `key_tonic`/`key_mode` are the key the player actually chose. They
-    drive the printed key signature and the enharmonic respelling, so a D chord
-    in A minor reads F#, not the G-flat the preset's own C-minor signature used
-    to force. Falling back to the preset's key keeps every existing caller
-    behaving as before.
+    drive the printed key signature. Falling back to the preset's key keeps
+    every existing caller behaving as before.
+
+    SPELL-01: the key no longer decides how a note is spelled -- the chord does,
+    via core.spelling. A D chord reads F# because a major third above D is the
+    letter F raised, in A minor and in C minor alike.
     """
     # SAFE-02: same bar-count guard as the preset-only path, applied to the
     # progression's chord count (each chord produces exactly one bar here).
@@ -648,9 +661,21 @@ def build_progression_score(
             close_last=(measure_number == len(chords)),
         )
 
+        # SPELL-01: the register mapping picks pitches, not names. Look the name
+        # up by pitch class -- _register_map_chord does not report which
+        # component produced which note, and two components never share one.
+        spelled_by_class = {
+            pitch.Pitch(pitch_class(tone).replace("b", "-")).pitchClass: spelled
+            for tone, spelled in zip(
+                chord.components, chord_tone_spellings(chord.components), strict=True
+            )
+        }
+
         measure = stream.Measure(number=measure_number)
         for concrete_pitch, quarter_length in zip(bar_pitches, rhythm, strict=True):
-            pitch_name = _respell_pitch_to_key(concrete_pitch, preset_key).nameWithOctave
+            pitch_name = _respell_to_chord_tone(
+                concrete_pitch, spelled_by_class.get(concrete_pitch.pitchClass)
+            ).nameWithOctave
             validate_pitch(pitch_name)
             cello_note = note.Note(pitch_name)
             cello_note.duration = duration.Duration(quarterLength=quarter_length)
