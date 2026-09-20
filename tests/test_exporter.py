@@ -60,12 +60,42 @@ def test_export_combined_returns_both_paths_and_writes_both_files(tmp_path):
     assert midi_path.exists()
 
 
-def test_export_engine_defaults_base_dir_to_project_root_scores():
+def test_export_engine_defaults_base_dir_to_project_root_scores(monkeypatch):
     from core.export.exporter import ExportEngine
 
+    # Drop the test-isolation override so the default path is exercised even
+    # when the golden regression test left it set in the ambient environment.
+    monkeypatch.delenv("MNC_SCORES_DIR", raising=False)
     engine = ExportEngine()
     # Compute the project root independently of the module under test
     # (tests/ sits one level below the root) so a parents[] miscount
     # in exporter.PROJECT_ROOT would be caught instead of restated.
     expected_root = Path(__file__).resolve().parents[1]
     assert engine.base_dir == expected_root / "scores"
+
+
+def test_export_engine_honours_scores_dir_env_override(monkeypatch, tmp_path):
+    from core.export.exporter import ExportEngine
+
+    monkeypatch.setenv("MNC_SCORES_DIR", str(tmp_path))
+
+    assert ExportEngine().base_dir == tmp_path
+
+
+def test_export_engine_explicit_base_dir_beats_env_override(monkeypatch, tmp_path):
+    from core.export.exporter import ExportEngine
+
+    monkeypatch.setenv("MNC_SCORES_DIR", str(tmp_path))
+    explicit = tmp_path / "explicit"
+
+    assert ExportEngine(base_dir=explicit).base_dir == explicit
+
+
+def test_export_engine_ignores_empty_scores_dir_env(monkeypatch):
+    from core.export.exporter import ExportEngine
+
+    # An empty value is treated as unset, not as "write to the cwd".
+    monkeypatch.setenv("MNC_SCORES_DIR", "")
+
+    expected_root = Path(__file__).resolve().parents[1]
+    assert ExportEngine().base_dir == expected_root / "scores"
