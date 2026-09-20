@@ -7,6 +7,7 @@ decisions this class implements.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from music21 import stream
@@ -18,7 +19,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 class ExportEngine:
     def __init__(self, base_dir: Path | None = None) -> None:
-        self.base_dir = base_dir or (PROJECT_ROOT / "scores")
+        # Resolution order: explicit argument, then the MNC_SCORES_DIR
+        # environment hook, then the default PROJECT_ROOT/scores.
+        if base_dir is not None:
+            self.base_dir = base_dir
+            return
+        # Test-isolation hook, read at construction time (never at import) so
+        # both monkeypatch in-process and a per-subprocess env= take effect:
+        # the golden regression test sets it to redirect the CLI scripts'
+        # output out of the repo working tree. An empty value means unset.
+        env_dir = os.environ.get("MNC_SCORES_DIR")
+        self.base_dir = Path(env_dir) if env_dir else (PROJECT_ROOT / "scores")
 
     def _safe_path(self, subdir: str, output_name: str, ext: str) -> Path:
         # WR-01: output_name must be a bare file name -- reject separators and
