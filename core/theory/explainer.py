@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
+from music21 import pitch
+
 from core.models import (
     LOOP_SEAM_MARKER,
     GenerationTrace,
@@ -75,11 +77,19 @@ _OCTAVE_NAME_RE = re.compile(r"^([A-Ga-g][#b\-x♭♯]*)(\d+)$")
 def _absolute_semitone(pitch_name: str) -> int | None:
     """Semitone height of an octave-bearing name like "A2" or "D-3" (music21
     spells flats with "-"), or None for the octave-less pitch classes some
-    traces use."""
+    traces use.
+
+    SPELL-01: the octave number belongs to the letter, not to the sound, so a
+    name can cross the octave boundary -- B#3 is written on the B line of
+    octave 3 but sounds as C4, and Cb4 sounds as B3. Adding twelve per octave
+    to the pitch class therefore misplaces those names by a whole octave, which
+    is how "B#3->D#4" was once reported as a leap of fifteen semitones instead
+    of three. music21 resolves the name properly.
+    """
     match = _OCTAVE_NAME_RE.match(pitch_name.strip())
     if match is None:
         return None
-    return _semitone(match.group(1)) + 12 * int(match.group(2))
+    return pitch.Pitch(pitch_name.strip().replace("b", "-")).midi
 
 
 def _melodic_shape_clause(trace: GenerationTrace) -> str:

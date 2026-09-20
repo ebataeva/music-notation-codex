@@ -170,3 +170,25 @@ def test_curated_presets_still_close_their_own_loops():
             f"{notes[0].pitch.nameWithOctave} = {seam} st, "
             f"above the {MAX_SEAM_SEMITONES} st reference."
         )
+
+
+def test_interval_in_coaching_text_matches_the_sounding_distance():
+    # SPELL-01: the octave number belongs to the letter, not to the sound.
+    # B#3 is written on the B line of octave 3 but sounds as C4, and Cb4 sounds
+    # as B3, so adding twelve per octave to the pitch class misplaces those
+    # names by a whole octave. That made the card report "B#3->D#4" -- three
+    # semitones -- as a leap of fifteen, telling a cellist to prepare a shift
+    # that is not there. Unreachable until chord-driven spelling could print
+    # B# at all, which is why it surfaced only now.
+    from music21 import pitch
+
+    from core.theory.explainer import _absolute_semitone
+
+    for name in ("B#3", "D#4", "A2", "D-3", "C-4", "F##3", "B--4"):
+        assert _absolute_semitone(name) == pitch.Pitch(name).midi, (
+            f"{name} must report the height it actually sounds at"
+        )
+
+    assert _absolute_semitone("D#4") - _absolute_semitone("B#3") == 3
+    assert _absolute_semitone("C-4") - _absolute_semitone("B3") == 0
+    assert _absolute_semitone("C") is None  # octave-less names stay unreadable
