@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 Phase: 09 (recorder-feedback) — COMPLETE (implemented and smoke-tested 2026-07-06)
 Plan: 1 of 1
 Status: Phase 09 implemented; next up Phase 10 (Loop Library)
-Last activity: 2026-09-20 - Completed quick task 260920-0xn: merged pedal (loop seam, READ-01, KEY-01, advisor, pedalboard) into codex/theory-dictionary with short per-take cards
+Last activity: 2026-09-20 - Completed quick task 260920-pxe: pytest no longer rewrites the tracked files under scores/ (MNC_SCORES_DIR override + tmp_path-driven golden test)
 
 Progress: [█████████░] 90%
 
@@ -85,6 +85,7 @@ None yet.
 | 260916-bta | Prompt 2: concise Theory cards, 19 contextual dictionary articles with notation/audio, and transition guidance; 1115 Python and 7 Playwright tests passed | 2026-09-16 | bb9c822 | Approved plan in conversation; executed inline without new documentation |
 | 260831-s8m | Close the loop seam: tessitura anchor + closing-tone selection so generated loops come home instead of jumping up to 22 semitones at the repeat | 2026-08-31 | dfc71cf | [260831-s8m-fix-loop-seam-cyclic-playability](./quick/260831-s8m-fix-loop-seam-cyclic-playability/) |
 | 260920-0xn | Merge pedal into codex/theory-dictionary: seam, READ-01, KEY-01 single path, advisor, pedalboard; played_pitches in the trace; short per-take cards; 1144 Python and 10 Playwright tests passed | 2026-09-20 | b50b321 | [260920-0xn-merge-pedal-into-codex-theory-dictionary](./quick/260920-0xn-merge-pedal-into-codex-theory-dictionary/) |
+| 260920-pxe | Stop the golden regression test overwriting scores/: MNC_SCORES_DIR override on ExportEngine, test runs the 7 CLI invocations into tmp_path; baseline untouched; 1147 Python tests passed and the tree stays clean | 2026-09-20 | 8801797 | [260920-pxe-stop-golden-regression-test-from-overwri](./quick/260920-pxe-stop-golden-regression-test-from-overwri/) |
 
 ## Deferred Items
 
@@ -98,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-09-16T07:03:38.000Z
-Stopped at: Prompt 2 implemented and verified; prior Theory audit preserved; no commit or deployment authorized
-Resume file: CONTEXT.md
+Last session: 2026-09-20T00:00:00.000Z
+Stopped at: Completed quick task 260920-pxe (golden regression test no longer writes into scores/)
+Resume file: None
