@@ -1,31 +1,36 @@
 # Project Context — music-notation-codex
 
-**Last updated:** 2026-07-13 14:39
-**Branch:** `codex/violin-cello-showcase`
-**Last commit:** `419d21c — chore: add gstack skill routing rules to CLAUDE.md`
-**Progress:** 95% (Stage 4 done — explainer rewritten)
+**Last updated:** 2026-09-16 20:39
+**Branch:** `hotfix/loop-coach-notation-audio`
+**Last commit:** `0002e10 — chore: add showcase push helpers (deploy.sh, git-push.mk); update .deepseek state`
+**Progress:** Theory correctness audit complete; fixes remain uncommitted
 
 ---
 
 ## Active Task
 
-**Style-aware harmony policy implementation** — replace generic TheoryExplainer output with note-specific, preset-aware harmonic explanations grounded in modern genre research.
+**Prompt 2 — concise Theory cards, contextual Theory Dictionary, and transition guidance — implemented 2026-09-16, uncommitted.** The user approved the plan in the conversation; implementation used GSD quick task `260916-bta` inline. The earlier Theory musical correctness audit remains completed and was not restarted.
+
+Read [the audit handoff](handoffs/context-handoff-20260916-030200.md) for the earlier audit state and [today's daily entry](daily/2026-09-16.md) for both the audit evidence and the complete Prompt 2 implementation record, including verification, fixes, and UI examples.
 
 ### Current Status
 
-✅ **Completed:**
-- Research: 7 parallel agents researched harmonic language for all presets (in transposable scale degrees, not fixed notes)
-- Policy modules: `core/presets/style_policy.py`, `effects_policy.py`, `classical_formulas.py`
-- Duet presets: filled empty progressions/modulations/mood_tips tuples
-- Tests: 174 tests (10 new snapshot tests for style-policy-driven explainer)
-- **Stage 4: `core/theory/explainer.py` rewritten** — note-specific, policy-driven explanations
-  - Removed: "keeps the loop identity clear", "changing one harmonic parameter"
-  - Added: `_cadence_clause`, `_style_context_clause`, `_chromatic_approach_clause`, `_mood_tip_clause`, `_why_it_works_core`
-  - why_it_works: cadence + style context (modal center, texture, genre refs)
-  - how_to_develop: chromatic approaches + mood tips
-  - how_to_end: cadence-driven resolution
+- Prompt 2 adds concise text and term IDs while preserving the five existing `TheoryExplanation` fields and detailed solo analysis.
+- Solo generation uses the UI reference key. Authored duet explanations use the actual fixed score; the musical material is unchanged.
+- `/theory` provides 19 articles with lazy cached notation and audio from one Score, contextual links in new tabs, and distinct transition examples. Standalone examples default to C.
+- Verification after implementation: **1115 Python tests passed; 7 Playwright tests passed**. Coverage includes all 12 tonics and seven presets, MusicXML/MIDI pitch and timing agreement, audible fallback synthesis, visible OSMD scores, and continued loop playback while the dictionary opens in another tab. The 14 warnings are occurrences of the existing legacy A1-range warning.
+- Main new files: `core/theory/{summaries,dictionary,transitions}.py`, `app/services/theory_dictionary.py`, `app/pages/theory_dictionary.py`, `app/components/notation.py`, `tests/test_theory_dictionary.py`, and `tests-ui/test_theory_dictionary.py`.
+- FluidSynth subprocess errors now activate the existing fallback synthesizer. Both dictionary and loop audio containers have explicit widths.
 
-⏳ **Next: Run tests, verify all 7 presets produce distinct note-specific explanations**
+Historical audit results, retained:
+
+- Fixed three error groups: chord quality/degree/spelling errors; unsupported mode/cadence claims from preset policy; and advice tied to the original key.
+- Modified: `core/theory/explainer.py`, `tests/test_theory_explainer.py`.
+- New, untracked: `core/theory/harmony.py`, `tests/test_theory_musical_correctness.py`.
+- Verification: **776 passed**, one legacy A1-range warning; `git diff --check` passed.
+- Coverage includes six independent patterns in all 12 tonics across all seven presets, plus counterexamples and generated-score checks.
+- The separate duet showcase bypass was outside the audit and is addressed by Prompt 2. Parser spelling limitations and source policy prose remain outside these fixes.
+- No commit, push, or deployment. Do not repeat the completed audit by default.
 
 ---
 
@@ -70,18 +75,9 @@
 
 ## Next Steps
 
-1. **Run tests** — verify Stage 4 changes work
-   - Run `pytest tests/test_theory_explainer.py -v`
-   - Verify output is note-specific, not generic
-   - Check all 7 presets produce distinct explanations
-
-2. **Optional: Integrate effects policy**
-   - Surface characteristic effects in UI or export
-   - Decision needed: where/how
-
-3. **Optional: Use classical formulas in explanations**
-   - Cite T35, D7, etc. when relevant
-   - Decision needed: when to use classical vs modern language
+1. Review the completed Prompt 2 UI and continue according to the newest user request. The linked handoff describes the earlier audit; today's daily and this file also record the completed Prompt 2 implementation.
+2. Prompt 4, parser work, commit, push, and deployment have not been authorized for this stage.
+3. Preserve all earlier uncommitted audit and unrelated changes. Do not restart the completed audit or extend scope solely because a handoff lists an unresolved item.
 
 ---
 
@@ -91,7 +87,8 @@
 - `core/presets/mood_presets.py` — preset registry (7 presets: 4 solo + 3 duet)
 - `core/presets/style_policy.py` — **NEW** harmonic language policy per preset
 - `core/presets/effects_policy.py` — **NEW** audio effects policy per preset
-- `core/theory/explainer.py` — **REWRITTEN** theory explanation generator (policy-driven)
+- `core/theory/explainer.py` — evidence-grounded explanations with optional style suggestions
+- `core/theory/harmony.py` — pitch spelling, chord quality, Roman numerals, collection compatibility
 - `core/theory/classical_formulas.py` — **NEW** classical harmony formulas reference
 - `core/engine/loop_engine.py` — loop generation engine
 
@@ -100,13 +97,16 @@
 - `pravila_po_garmonii.pdf` — classical harmony reference (Russian)
 
 ### Tests
-- `tests/test_theory_explainer.py` — explainer tests (29 tests, incl. 10 Stage 4 snapshot tests)
+- `tests/test_theory_explainer.py` — explainer contracts updated for evidence-grounded output
+- `tests/test_theory_musical_correctness.py` — independent musical corpus, all tonics/presets, counterexamples, and integration checks
 - `tests/test_style_policy.py` — **NEW** style policy tests (9 tests)
 - `tests/test_effects_policy.py` — **NEW** effects policy tests (5 tests)
 - `tests/test_classical_formulas.py` — **NEW** classical formulas tests (8 tests)
 
 ### Documentation
-- `daily/2026-07-09.md` — today's session log (all user questions preserved)
+- `daily/2026-09-16.md` — current audit results and before/after examples
+- `handoffs/context-handoff-20260916-030200.md` — current new-chat handoff
+- `daily/2026-07-09.md` — earlier style-policy research history
 - `Brain/music-notation-codex.md` — project wiki (architecture, status)
 - `.planning/STATE.md` — GSD state (progress, phases)
 - `.planning/ROADMAP.md` — GSD roadmap (phases, success criteria)
@@ -115,37 +115,19 @@
 
 ## Git State
 
-```
-Branch: style-harmony-policy (tracks origin/style-harmony-policy)
-Recent commits:
-  54d03c2 docs(daily): update 2026-07-09 with full research report
-  ddfba48 feat(style-harmony-policy): fill duet presets
-  9984411 feat(style-harmony-policy): add research YAML, policy modules
-  fcc44c0 docs(daily): log Streamlit fallback cello synth
-  cae35d6 docs(harmony): add style-aware harmony research plan
-
-Untracked:
-  ?? Brain/meta-orchestrator.md (generic router prompt, keep local)
-
-Dirty:
-   M .deepseek/state/subagents.v1.json (don't touch — not our mutation)
-```
+- Branch: `hotfix/loop-coach-notation-audio`.
+- HEAD: `0002e10` — chore: add showcase push helpers (deploy.sh, git-push.mk); update .deepseek state.
+- Both the earlier audit and Prompt 2 implementation remain uncommitted.
+- Prompt 2 updates this existing CONTEXT.md and `.planning/STATE.md`. At the user's subsequent request, its full record was appended to the existing `daily/2026-09-16.md`; no new summary, README, or handoff documents were created.
+- Pre-existing unrelated changes include AGENTS.md, Brain/meta-orchestrator.md, README.md, seven scores/musicxml files, and untracked duet_card.png. CONTEXT.md already had changes before this audit; earlier project decisions and open questions are retained above.
+- The historical style-harmony-policy branch snapshot previously in this file is superseded by this live checkout state.
 
 ---
 
 ## How to Resume
 
-**New session should:**
-1. Read this `CONTEXT.md` (you're here)
-2. Read `daily/2026-07-09.md` for detailed session history
-3. Check current branch: `git branch --show-current`
-4. Run tests: `.venv/bin/python -m pytest tests/ -q`
-5. Continue with next steps: run tests, verify outputs
-
-**Key context:**
-- All research is done (7 presets, effects, classical formulas)
-- Policy modules are ready (`style_policy.py`, `effects_policy.py`, `classical_formulas.py`)
-- Duet presets have filled theory tuples
-- 174 tests (29 explainer + 9 style_policy + 5 effects_policy + 8 classical_formulas + rest)
-- Explainer is now policy-driven, no generic phrases
-- Next: run tests, verify outputs
+1. Read this CONTEXT.md and CLAUDE.md through MCP first, then the linked handoff.
+2. Use jCodemunch for code and jDocMunch for documents; refresh a stale index before relying on it.
+3. Follow the existing GSD workflow for any new edits. The completed audit used the GSD debug entry point.
+4. Review only the pending Theory/test changes for the next step; avoid restarting the whole investigation.
+5. Test results above distinguish the earlier audit from Prompt 2 verification. Rerun appropriate tests after new implementation changes, not merely to transfer context.
