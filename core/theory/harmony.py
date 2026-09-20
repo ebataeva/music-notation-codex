@@ -1,32 +1,18 @@
 from __future__ import annotations
 
-import re
 from collections.abc import Sequence
 from dataclasses import dataclass
-from functools import lru_cache
 
-from music21 import interval, pitch
-
-
-@lru_cache(maxsize=512)
-def pitch_class(tone: str) -> str:
-    match = re.fullmatch(r"([A-Ga-g])([#b\-x♭♯]*)(\d*)", tone.strip())
-    if not match:
-        raise ValueError(f"Invalid pitch in theory trace: {tone!r}.")
-    letter, accidental, _ = match.groups()
-    accidental = accidental.replace("♭", "b").replace("♯", "#").replace("x", "##")
-    return pitch.Pitch(letter.upper() + accidental.replace("b", "-")).name.replace("-", "b")
-
-
-@lru_cache(maxsize=512)
-def semitone(tone: str) -> int:
-    return pitch.Pitch(pitch_class(tone).replace("b", "-")).pitchClass
-
-
-@lru_cache(maxsize=512)
-def transpose_name(tone: str, distance: str) -> str:
-    source = pitch.Pitch(pitch_class(tone).replace("b", "-"))
-    return interval.Interval(distance).transposePitch(source).name.replace("-", "b")
+# SPELL-01: naming a chord tone lives in core.spelling, which the notation path
+# reads from too -- the card and the stave must not disagree about a note. The
+# helpers are re-exported because half the theory package imports them from here.
+from core.spelling import (  # noqa: F401
+    chord_quality,
+    chord_tone_spellings,
+    pitch_class,
+    semitone,
+    transpose_name,
+)
 
 
 def degree_name(tone: str, tonic: str) -> str:
@@ -54,22 +40,7 @@ def chord_facts(tones: Sequence[str]) -> ChordFacts:
     names = tuple(dict.fromkeys(pitch_class(tone) for tone in tones))
     root = names[0]
     offsets = {(semitone(name) - semitone(root)) % 12 for name in names}
-    quality = "incomplete"
-    if not {3, 4}.issubset(offsets):
-        for candidate, required in (
-            ("diminished", {0, 3, 6}), ("minor", {0, 3, 7}),
-            ("major", {0, 4, 7}), ("augmented", {0, 4, 8}),
-        ):
-            if required <= offsets:
-                quality = candidate
-                break
-    if quality == "incomplete" and not offsets & {3, 4}:
-        if offsets == {0, 5, 7}:
-            quality = "sus4"
-        elif offsets == {0, 2, 7}:
-            quality = "sus2"
-        elif offsets == {0, 7}:
-            quality = "power"
+    quality = chord_quality(offsets)
 
     suffix = {"major": "", "minor": "m", "diminished": "dim", "augmented": "aug",
               "sus4": "sus4", "sus2": "sus2", "power": "5",
@@ -95,19 +66,9 @@ def chord_facts(tones: Sequence[str]) -> ChordFacts:
 
     # pychord can return G-A#-D for Gm. Disclose analytical respelling rather
     # than presenting its augmented-second spelling as a written minor third.
-    spellings = {0: "P1", 2: "M9", 3: "m3", 4: "M3", 7: "P5", 10: "m7", 11: "M7"}
-    if quality == "diminished":
-        spellings.update({6: "d5", 9: "d7"})
-    elif quality == "augmented":
-        spellings[8] = "A5"
-    else:
-        spellings[9] = "M6"
-    if quality == "sus4":
-        spellings[5] = "P4"
     corrected, respellings = [], []
-    for name in names:
-        offset = (semitone(name) - semitone(root)) % 12
-        spelled = transpose_name(root, spellings[offset]) if offset in spellings and quality != "incomplete" else name
+    for name, spelled in zip(names, chord_tone_spellings(names), strict=True):
+        spelled = spelled or name
         if spelled != name:
             respellings.append(f"{spelled} is supplied as {name}")
         if spelled not in corrected:
