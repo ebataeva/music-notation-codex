@@ -17,7 +17,7 @@ from core.engine.loop_engine import (
 )
 from core.engine.progression import parse_progression
 from core.models import LoopVariant
-from core.presets.registry import get_preset
+from core.presets.registry import get_preset, list_solo_presets
 
 # Default fixtures shared across all Phase 7 variant tests.
 DEFAULT_PRESET_NAME = "dark_trip_hop"
@@ -221,3 +221,59 @@ def test_variant_trace_has_register_bias():
         assert variant.trace.register_bias in valid_biases, (
             f"Variant {i} register_bias {variant.trace.register_bias!r} not in {valid_biases}"
         )
+
+
+# LOOP-02: the three takes are labelled low/default/high and shown as three
+# cards, so two of them sounding note-for-note the same is a visible bug. The
+# register-bias pools overlap (root/fifth: low <= octave 2, default <= octave 3)
+# and the pick inside a pool is random, so short loops -- a single chord above
+# all -- used to collide for a large share of seeds.
+DISTINCT_TAKE_PROGRESSIONS = ["C", "Em", "Am F C G", "Dm7 G7 Cmaj7", "Cm Ab Eb Bb"]
+
+
+@pytest.mark.parametrize("preset_name", list_solo_presets())
+@pytest.mark.parametrize("progression", DISTINCT_TAKE_PROGRESSIONS)
+def test_generate_variants_takes_never_sound_identical(preset_name, progression):
+    chords = parse_progression(progression)
+    preset = get_preset(preset_name)
+
+    for seed in range(10):
+        takes = [
+            variant.trace.played_pitches
+            for variant in generate_variants(chords, preset, seed=seed, count=3)
+        ]
+        for i in range(len(takes)):
+            for j in range(i + 1, len(takes)):
+                assert takes[i] != takes[j], (
+                    f"{preset_name} {progression!r} seed={seed}: takes {i} and {j} "
+                    f"play the same notes {takes[i]}"
+                )
+
+
+def test_generate_variants_trace_seed_rebuilds_the_take_it_describes():
+    # The app rebuilds each card's score from trace.seed + register_bias, so a
+    # take that had to be re-drawn must record the seed that actually made it.
+    chords = parse_progression("C")
+    preset = get_preset(DEFAULT_PRESET_NAME)
+
+    for seed in range(10):
+        for variant in generate_variants(chords, preset, seed=seed, count=3):
+            score = build_progression_score(
+                chords,
+                preset,
+                seed=variant.trace.seed,
+                register_bias=variant.trace.register_bias,
+            )
+            rebuilt = [
+                [n.pitch.nameWithOctave for n in measure.notes]
+                for measure in score.parts[0].getElementsByClass("Measure")
+            ]
+            assert rebuilt == variant.trace.played_pitches
+
+
+def test_generate_variants_keeps_the_derived_seed_when_takes_already_differ():
+    # Re-drawing is only for collisions: a take that was already distinct keeps
+    # base_seed + i * 1000, so existing seeds reproduce the same loops as before.
+    results = generate_variants(_make_chords(), _make_preset(), seed=42, count=3)
+
+    assert [v.trace.seed for v in results] == [42, 1042, 2042]
