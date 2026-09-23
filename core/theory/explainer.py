@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from collections.abc import Sequence
 
 from music21 import pitch
@@ -66,12 +67,99 @@ def _chord_inventory(chords: Sequence[ChordFacts], played_by_bar: Sequence[Seque
         bars = []
         for chord, names in zip(chords, played_by_bar):
             sounded = list(dict.fromkeys(_pitch_class(name) for name in names))
-            bars.append(f"{chord.symbol} sounds {'-'.join(sounded)}")
+            # VAR-01: the written notes, octaves included, are the one detail
+            # that always tells two takes apart -- the low and default takes
+            # can differ by a single octave that no summary sentence catches.
+            played = "-".join(written_name(name) for name in names)
+            bars.append(f"{chord.symbol} sounds {'-'.join(sounded)} (played {played})")
         text += " Each bar keeps only a few of them so the line reads at sight; in this loop " + "; ".join(bars) + "."
     return text
 
 
 _OCTAVE_NAME_RE = re.compile(r"^([A-Ga-g][#b\-x♭♯]*)(\d+)$")
+
+
+def written_name(name: str) -> str:
+    """The note as the stave prints it: "B-2" (music21's flat) -> "Bb2".
+
+    SPELL-01: only the accidental's notation changes. The letter comes from the
+    engine, which spelled it from the chord, and the octave digit is kept as
+    written -- B#3 sounds as C4 but sits on the B line of octave 3.
+    """
+    match = _OCTAVE_NAME_RE.match(name.strip())
+    if match is None:
+        return _pitch_class(name)
+    return _pitch_class(match.group(1)) + match.group(2)
+
+
+# Cards are capped at this many words (see summaries); an optional take
+# sentence is dropped from a card rather than pushing it over.
+_CARD_WORD_LIMIT = 65
+
+
+class _Take:
+    """What one generated take actually plays, in written names.
+
+    VAR-01: the progression, key and preset are shared by all takes, so this is
+    the only per-take evidence the sections can draw on. Built from
+    `played_pitches`; preset-verbatim traces have none and get no take clauses.
+    """
+
+    def __init__(self, played: Sequence[Sequence[str]]):
+        self.bars = [[written_name(name) for name in bar] for bar in played if bar]
+        notes = [name for bar in self.bars for name in bar]
+        self.opening = notes[0]
+        self.closing = notes[-1]
+        # Counter keeps first-seen order on ties, so the choice is stable.
+        self.center = Counter(notes).most_common(1)[0][0]
+        heights = sorted(notes, key=lambda name: _absolute_semitone(name) or 0)
+        self.span = f"{heights[0]}–{heights[-1]}"
+
+    @classmethod
+    def of(cls, trace: GenerationTrace) -> _Take | None:
+        if not any(trace.played_pitches or []):
+            return None
+        return cls(trace.played_pitches)
+
+    def outline(self) -> str:
+        ends = (
+            f"opens and closes on {self.opening}"
+            if self.opening == self.closing
+            else f"opens on {self.opening}, closes on {self.closing}"
+        )
+        return f"This take {ends}, stays within {self.span} and returns most often to {self.center}."
+
+    def phrase(self) -> str:
+        entries = [bar[0] for bar in self.bars]
+        path = " -> ".join(entries[:4]) + (" -> ..." if len(entries) > 4 else "")
+        return (
+            f"Shape this take's bar entries {path} as one phrase inside {self.span}, "
+            f"leaning on {self.center}, its most repeated note."
+        )
+
+    def last_bar(self) -> str:
+        return f"This take's last bar plays {'-'.join(self.bars[-1])}; let its final {self.closing} settle."
+
+    def hand_off(self) -> str:
+        if self.opening == self.closing:
+            return f"Carry the final {self.closing}, also this take's opening note, into the next phrase as its first note."
+        return f"Carry the final {self.closing} into the next phrase and answer it from the opening {self.opening}."
+
+    def register_hint(self) -> str:
+        return f"Staying inside {self.span} keeps the new section in this take's voice."
+
+
+def _lead(parts: Sequence[str], body: str) -> str:
+    return " ".join(filter(None, [*parts, body]))
+
+
+def _fit_card(required: str, optional: str, body: str) -> str:
+    """Card text with the take sentence(s) up front, dropping `optional` when
+    the card would otherwise exceed its word limit."""
+    full = _lead([required, optional], body)
+    if len(full.split()) <= _CARD_WORD_LIMIT:
+        return full
+    return _lead([required], body)
 
 
 def _absolute_semitone(pitch_name: str) -> int | None:
@@ -109,7 +197,7 @@ def _melodic_shape_clause(trace: GenerationTrace) -> str:
         end = _absolute_semitone(end_name)
         if start is None or end is None:
             continue
-        moves.append((start_name, end_name, end - start))
+        moves.append((written_name(start_name), written_name(end_name), end - start))
     if not moves:
         return ""
 
@@ -150,8 +238,9 @@ def _loop_seam_clause(trace: GenerationTrace) -> str:
     if start is None or end is None:
         return ""
     distance = abs(end - start)
+    move = f"{written_name(start_name)}->{written_name(end_name)}"
     if distance == 0:
-        return f"The repeat lands back on {start_name} itself; no shift is needed."
+        return f"The repeat lands back on {written_name(start_name)} itself; no shift is needed."
     unit = "semitone" if distance == 1 else "semitones"
     return f"The repeat is {move}, {distance} {unit} back to the top; keep that return in the hand."
 
@@ -318,8 +407,12 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     chords = []
     # VAR-01: lead with what makes THIS take different; everything after it is
     # progression- and preset-derived and identical across the three variants.
+    # The shape alone is not enough -- the low and default takes often share
+    # their widest move -- so the take's own notes come first.
+    take = _Take.of(trace)
+    outline = take.outline() if take else ""
     shape = _melodic_shape_clause(trace)
-    clauses = [shape, f"Using {tonic} as the reference tonic; the tonal center is not inferred from a preset."]
+    clauses = [outline, shape, f"Using {tonic} as the reference tonic; the tonal center is not inferred from a preset."]
     if trace.pattern_strategy == "progression_driven_register_mapped":
         chords = [chord_facts(tones) for tones in tones_by_bar]
         clauses.append("Harmony: " + " -> ".join(roman_label(chord, tonic) for chord in chords) + ".")
@@ -344,6 +437,7 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
     elif trace.register_bias == "high":
         start += " Use a light bow so the upper register sings."
     develop = " ".join(filter(None, [
+        take and take.phrase(),
         _note_development(chords),
         _chromatic_approach_clause(policy, preset),
         "Keep the pulse steady and leave space after the color note.",
@@ -362,14 +456,20 @@ def explain(variant: LoopVariant, preset: MoodPreset) -> TheoryExplanation:
         why_it_works=" ".join(filter(None, clauses)),
         how_to_start=start,
         how_to_develop=develop,
-        how_to_end=" ".join(filter(None, [ending, seam])),
-        how_to_transition=f"{transition} {_transition_clause(preset, policy)}",
+        how_to_end=" ".join(filter(None, [ending, take and take.last_bar(), seam])),
+        how_to_transition=_lead(
+            [take.hand_off(), take.register_hint()] if take else [],
+            f"{transition} {_transition_clause(preset, policy)}",
+        ),
     )
     result.short_sections, result.term_ids = summarize_trace(variant, preset)
     # The cards show the short sections, so they carry the per-take sentence
     # and the seam too; otherwise three cards read identically on screen.
-    if shape:
-        result.short_sections["why_it_works"] = f"{shape} {result.short_sections['why_it_works']}"
+    short = result.short_sections
+    short["why_it_works"] = _fit_card(outline, shape, short["why_it_works"])
+    if take:
+        short["how_to_develop"] = _fit_card(take.phrase(), "", short["how_to_develop"])
+        short["how_to_transition"] = _fit_card(take.hand_off(), "", short["how_to_transition"])
     if seam:
         # Two sentences on the card: the return itself, then the seam. The
         # "not an inferred cadence" hedge stays in the long text only.
