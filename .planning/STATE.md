@@ -69,7 +69,7 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- [major] Make the chosen key change the generated loop — [todo](./todos/pending/2026-09-23-make-the-chosen-key-change-the-generated-loop.md)
 
 ### Blockers/Concerns
 
