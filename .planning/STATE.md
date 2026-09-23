@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 Phase: 09 (recorder-feedback) — COMPLETE (implemented and smoke-tested 2026-07-06)
 Plan: 1 of 1
 Status: Phase 09 implemented; next up Phase 10 (Loop Library)
-Last activity: 2026-09-20 - Completed quick task 260920-pxe: pytest no longer rewrites the tracked files under scores/ (MNC_SCORES_DIR override + tmp_path-driven golden test)
+Last activity: 2026-09-23 - Completed quick task 260923-pge: distinct takes and take-specific explanations
 
 Progress: [█████████░] 90%
 
@@ -86,6 +86,7 @@ None yet.
 | 260831-s8m | Close the loop seam: tessitura anchor + closing-tone selection so generated loops come home instead of jumping up to 22 semitones at the repeat | 2026-08-31 | dfc71cf | [260831-s8m-fix-loop-seam-cyclic-playability](./quick/260831-s8m-fix-loop-seam-cyclic-playability/) |
 | 260920-0xn | Merge pedal into codex/theory-dictionary: seam, READ-01, KEY-01 single path, advisor, pedalboard; played_pitches in the trace; short per-take cards; 1144 Python and 10 Playwright tests passed | 2026-09-20 | b50b321 | [260920-0xn-merge-pedal-into-codex-theory-dictionary](./quick/260920-0xn-merge-pedal-into-codex-theory-dictionary/) |
 | 260920-pxe | Stop the golden regression test overwriting scores/: MNC_SCORES_DIR override on ExportEngine, test runs the 7 CLI invocations into tmp_path; baseline untouched; 1147 Python tests passed and the tree stays clean | 2026-09-20 | 8801797 | [260920-pxe-stop-golden-regression-test-from-overwri](./quick/260920-pxe-stop-golden-regression-test-from-overwri/) |
+| 260923-pge | Port cd5de99: distinct takes (engine re-draw) and take-specific explanations with Bb-style flats | 2026-09-23 | b205330 | [260923-pge-port-cd5de99-distinct-why-it-works-expla](./quick/260923-pge-port-cd5de99-distinct-why-it-works-expla/) |
 
 ## Deferred Items
 
