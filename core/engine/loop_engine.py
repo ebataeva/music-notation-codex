@@ -783,6 +783,11 @@ def generate_variant_from_progression(
 # Register biases cycled across variants to ensure audible distinctness.
 VARIANT_REGISTER_BIASES = ["low", "default", "high"]
 
+# How many neighbouring seeds a take may try before accepting a repeat of an
+# earlier take. Kept well below the 1000-seed stride so a re-drawn take never
+# borrows the seed block of the next one.
+MAX_DISTINCT_TAKE_ATTEMPTS = 50
+
 
 def generate_variants(
     chords: list[ParsedChord],
@@ -795,7 +800,15 @@ def generate_variants(
     """Generate N distinct cello loop variants from the same chord progression.
 
     Each variant gets a different register_bias (low → default → high) and a
-    unique derived seed, guaranteeing audible distinctness per Phase 7 LOOP-02.
+    unique derived seed (base_seed + i * 1000).
+
+    LOOP-02: a different bias alone does not make a different loop. The bias
+    octave pools overlap and the pick inside a pool is random, so short loops
+    -- one chord above all -- often came out note-for-note identical to the
+    previous take. A take that repeats an earlier one is re-drawn from the
+    next seeds in its own block; the seed that produced it is what the trace
+    records, so rebuilding from trace.seed still yields the same notes. Takes
+    that were already distinct keep their original seed.
     """
     if count < 1:
         raise ValueError("count must be at least 1.")
@@ -810,14 +823,24 @@ def generate_variants(
 
     variants: list[LoopVariant] = []
     for i in range(count):
-        variant_seed = base_seed + i * 1000
-        variant = generate_variant_from_progression(
-            chords,
-            preset,
-            seed=variant_seed,
-            register_bias=biases[i],
-            key_tonic=key_tonic,
-            key_mode=key_mode,
-        )
+        taken = [v.trace.played_pitches for v in variants]
+        first_draw: LoopVariant | None = None
+        for attempt in range(MAX_DISTINCT_TAKE_ATTEMPTS):
+            variant = generate_variant_from_progression(
+                chords,
+                preset,
+                seed=base_seed + i * 1000 + attempt,
+                register_bias=biases[i],
+                key_tonic=key_tonic,
+                key_mode=key_mode,
+            )
+            first_draw = first_draw or variant
+            if variant.trace.played_pitches not in taken:
+                break
+        else:
+            # The range leaves this bias no other loop (e.g. more takes than
+            # the chord has distinct realizations); keep the plain derived
+            # seed rather than fail the whole request.
+            variant = first_draw
         variants.append(variant)
     return variants
